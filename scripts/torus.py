@@ -77,11 +77,10 @@ def main():
         Rpt = ec_add(P, Q, a, p)
 
     # —— figure with GridSpec —— 
-    fig = plt.figure(figsize=(14,5))
-    gs = fig.add_gridspec(1,2, width_ratios=[1,1.5], wspace=0.2)
+    fig = plt.figure(figsize=(10,5), constrained_layout=True)
+    gs  = fig.add_gridspec(1, 2, width_ratios=[1, 1.5])
     ax1 = fig.add_subplot(gs[0])
     ax2 = fig.add_subplot(gs[1], projection='3d')
-
     # ─── 2D plot ──────────────────────────────────────
     ax1.scatter(xs, ys, c=cmap, s=30, edgecolor='k')
     mid = p/2
