@@ -13,7 +13,6 @@ def ec_add(P, Q, a, p):
     if P == Q:
         m = (3*x1*x1 + a) * inv_mod(2*y1, p) % p
     else:
-        # safe: x2 != x1
         m = (y2 - y1) * inv_mod(x2 - x1, p) % p
     x3 = (m*m - x1 - x2) % p
     y3 = (m*(x1 - x3) - y1) % p
@@ -39,9 +38,10 @@ def make_torus(R, r, nu=120, nv=60):
     return X, Y, Z
 
 def main():
+    # keep your a,b exactly as you have them
     a, b = 1, 1
 
-    # parse [sum] and [modulus]
+    # parse arguments
     args = [arg.lower() for arg in sys.argv[1:]]
     mode = 'sum' if 'sum' in args else 'normal'
     if 'sum' in args: args.remove('sum')
@@ -52,7 +52,7 @@ def main():
         print("Usage: python3 torus.py [sum] [modulus>1]")
         sys.exit(1)
 
-    # compute E-curve points
+    # get curve points
     pts = points_on_curve(a, b, p)
     if not pts:
         print(f"No points on y^2 = x^3 + x + 1 mod {p}")
@@ -60,91 +60,124 @@ def main():
     xs, ys = zip(*pts)
     N = len(pts)
 
-    # color each point uniquely
+    # each point its own color
     cmap = plt.colormaps['hsv'](np.linspace(0,1,N))
 
-    # torus‐embed everything
+    # torus embedding (wider torus)
     R, r = 6.0, 1.5
-    us = 2*np.pi*np.array(xs)/p
-    vs = 2*np.pi*np.array(ys)/p
+    us = 2*np.pi * np.array(xs)/p
+    vs = 2*np.pi * np.array(ys)/p
     XP = (R + r*np.cos(vs))*np.cos(us)
     YP = (R + r*np.cos(vs))*np.sin(us)
     ZP = r*np.sin(vs)
     Xs, Ys, Zs = make_torus(R, r)
 
-    # figure
+    # prepare P, Q  (distinct x's)
+    P = pts[N//2]
+    Q = next(q for q in pts if q[0] != P[0])
+    if mode == 'sum':
+        Rpt = ec_add(P, Q, a, p)
+
+    # ─── PLOT ───────────────────────────────────────────
     fig = plt.figure(figsize=(12,5))
     ax1 = fig.add_subplot(1,2,1)
     ax2 = fig.add_subplot(1,2,2, projection='3d')
 
-    # ─── 2D scatter + mid-lines ──────────────────────
+    # 2D scatter + mid‐lines
     ax1.scatter(xs, ys, c=cmap, s=30, edgecolor='k')
     mid = p/2
     ax1.axvline(mid, color='green', linestyle='--', label=r'$x=\frac{p}{2}$')
     ax1.axhline(mid, color='red',   linestyle='--', label=r'$y=\frac{p}{2}$')
 
-    # Only in sum-mode: pick P,Q, compute R, draw chord + points
+    # sum‐mode: extend line ℓ(P,Q) to box edges
     if mode == 'sum':
-        # pick P and Q (distinct x’s)
-        P = pts[N//2]
-        Q = next(q for q in pts if q[0] != P[0])
-        Rpt = ec_add(P, Q, a, p)
+        x1,y1 = P
+        x2,y2 = Q
+        if x2 == x1:
+            # vertical line
+            A = (x1, 0)
+            B = (x1, p)
+        else:
+            slope = (y2 - y1) / (x2 - x1)
+            intercept = y1 - slope * x1
+            candidates = []
+            # x=0
+            y0 = intercept
+            if 0 <= y0 <= p: candidates.append((0, y0))
+            # x=p
+            yp = slope*p + intercept
+            if 0 <= yp <= p: candidates.append((p, yp))
+            # y=0
+            x0 = -intercept/slope
+            if 0 <= x0 <= p: candidates.append((x0, 0))
+            # y=p
+            xp = (p - intercept)/slope
+            if 0 <= xp <= p: candidates.append((xp, p))
+            # pick two unique endpoints
+            unique = []
+            for u in candidates:
+                if not any(np.hypot(u[0]-v[0],u[1]-v[1])<1e-6 for v in unique):
+                    unique.append(u)
+            if len(unique) >= 2:
+                A, B = unique[:2]
+            else:
+                A, B = (x1,y1), (x2,y2)
 
-        # chord ℓ(P,Q)
-        ax1.plot([P[0],Q[0]], [P[1],Q[1]],
-                 color='tab:blue', lw=3, label='ℓ(P,Q)')
-        ax1.scatter([P[0],Q[0]], [P[1],Q[1]],
-                    s=100, facecolors='none', edgecolors='k', label='P,Q')
-        # the sum point R
-        x3,y3 = Rpt
-        ax1.scatter([x3],[y3],
-                    s=120, marker='*',
-                    c='tab:blue', edgecolor='k',
-                    label='R=P+Q')
+        # draw extended 2D line
+        ax1.plot([A[0], B[0]], [A[1], B[1]],
+                 color='tab:blue', lw=2, label='ℓ(P,Q)')
+        # mark P,Q,R
+        ax1.scatter([P[0], Q[0]], [P[1], Q[1]],
+                    s=100, facecolors='none', edgecolors='k', label='P, Q')
+        ax1.scatter([Rpt[0]], [Rpt[1]],
+                    s=120, marker='*', c='tab:blue', edgecolor='k',
+                    label='R = P+Q')
 
-    ax1.set_title(f"2D: $y^2=x^3 + x + 1$ (mod {p})")
-    ax1.set_xlim(-1,p); ax1.set_ylim(-1,p)
+    ax1.set_title(f"2D: $y^2 = x^3 + x + 1$ (mod {p})")
+    ax1.set_xlim(-1, p); ax1.set_ylim(-1, p)
     step = max(1, p//10)
-    ax1.set_xticks(np.arange(0,p+1,step))
-    ax1.set_yticks(np.arange(0,p+1,step))
+    ax1.set_xticks(np.arange(0, p+1, step))
+    ax1.set_yticks(np.arange(0, p+1, step))
     ax1.set_aspect('equal','box')
     ax1.grid(True, linestyle=':', alpha=0.5)
     ax1.legend(loc='upper right')
 
-
-    # ─── 3D TORUS ────────────────────────────────────
+    # 3D torus + points
     ax2.plot_surface(Xs, Ys, Zs,
                      rstride=4, cstride=4,
                      color='lightgray', alpha=0.05, linewidth=0)
-    ax2.scatter(XP, YP, ZP, c=cmap, s=12, depthshade=False)
+    ax2.scatter(XP, YP, ZP,
+                c=cmap, s=12, depthshade=False)
 
-    # mid-loops (always)
+    # mid‐loops
     Nloop = 200
-    v_ = np.linspace(0,2*np.pi,Nloop)
-    ax2.plot((R+r*np.cos(v_))*np.cos(np.pi),
-             (R+r*np.cos(v_))*np.sin(np.pi),
+    v_ = np.linspace(0, 2*np.pi, Nloop)
+    ax2.plot((R + r*np.cos(v_))*np.cos(np.pi),
+             (R + r*np.cos(v_))*np.sin(np.pi),
              r*np.sin(v_), c='green', lw=3)
-    u_ = np.linspace(0,2*np.pi,Nloop)
-    ax2.plot((R+r*np.cos(np.pi))*np.cos(u_),
-             (R+r*np.cos(np.pi))*np.sin(u_),
+    u_ = np.linspace(0, 2*np.pi, Nloop)
+    ax2.plot((R + r*np.cos(np.pi))*np.cos(u_),
+             (R + r*np.cos(np.pi))*np.sin(u_),
              r*np.sin(np.pi), c='red', lw=3)
 
-    # Only in sum-mode: draw chord geodesic + R
+    # sum‐mode: extended chord geodesic
     if mode == 'sum':
-        u1,v1 = 2*np.pi*P[0]/p, 2*np.pi*P[1]/p
-        u2,v2 = 2*np.pi*Q[0]/p, 2*np.pi*Q[1]/p
+        # convert A,B to (u,v) angles
+        uA, vA = 2*np.pi*A[0]/p, 2*np.pi*A[1]/p
+        uB, vB = 2*np.pi*B[0]/p, 2*np.pi*B[1]/p
         t = np.linspace(0,1,200)
-        u_seg = u1+(u2-u1)*t
-        v_seg = v1+(v2-v1)*t
-        Xseg = (R+r*np.cos(v_seg))*np.cos(u_seg)
-        Yseg = (R+r*np.cos(v_seg))*np.sin(u_seg)
+        u_seg = uA + (uB - uA)*t
+        v_seg = vA + (vB - vA)*t
+        Xseg = (R + r*np.cos(v_seg))*np.cos(u_seg)
+        Yseg = (R + r*np.cos(v_seg))*np.sin(u_seg)
         Zseg = r*np.sin(v_seg)
         ax2.plot(Xseg, Yseg, Zseg, color='tab:blue', lw=4)
 
+        # highlight R on torus
         x3,y3 = Rpt
-        u3,v3 = 2*np.pi*x3/p, 2*np.pi*y3/p
-        Xr = (R+r*np.cos(v3))*np.cos(u3)
-        Yr = (R+r*np.cos(v3))*np.sin(u3)
+        u3, v3 = 2*np.pi*x3/p, 2*np.pi*y3/p
+        Xr = (R + r*np.cos(v3))*np.cos(u3)
+        Yr = (R + r*np.cos(v3))*np.sin(u3)
         Zr = r*np.sin(v3)
         ax2.scatter([Xr],[Yr],[Zr],
                     s=150, marker='*',
@@ -152,7 +185,7 @@ def main():
 
     ax2.set_title(f"Torus embedding (mod {p})")
     M = R + r + 0.3
-    ax2.set_xlim(-M,M); ax2.set_ylim(-M,M); ax2.set_zlim(-r-0.3,r+0.3)
+    ax2.set_xlim(-M, M); ax2.set_ylim(-M, M); ax2.set_zlim(-r-0.3, r+0.3)
     ax2.set_box_aspect((1,1,0.6))
     ax2.axis('off')
 
@@ -161,6 +194,5 @@ def main():
                         wspace=0.35)
     plt.show()
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
