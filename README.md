@@ -1,8 +1,11 @@
-# ECC-Thesis
-Elliptic Curve Cryptography Computer Engineering Bachelor's Final Thesis for the University of Granada
+<h1 align="center">ECC-Thesis</h1>
+
+<p align="center">
+   <img src="img/torus.png" alt="Cypher Logo" width="100%">
+</p>
 
 # Project Description
-This TFG proposal focuses on the study of elliptic curves applied to cryptography, addressing both its theoretical foundations and its practical application in security systems. The mathematical basis of ECC, its implementations in comparison with traditional methods such as RSA and the discrete logarithm problem will be analyzed. In addition, the impact of quantum computing on the security of these systems will be explored and coding and visualization tools will be developed to illustrate its operation. The work aims to provide a comprehensive and up-to-date view on the potential of elliptic curves in modern cryptography.
+This Computer Engineering Bachelor's Final Thesis for the University of Granada proposal focuses on the study of elliptic curves applied to cryptography, addressing both its theoretical foundations and its practical application in security systems. The mathematical basis of ECC, its implementations in comparison with traditional methods such as RSA and the discrete logarithm problem will be analyzed. In addition, the impact of quantum computing on the security of these systems will be explored and coding and visualization tools will be developed to illustrate its operation. The work aims to provide a comprehensive and up-to-date view on the potential of elliptic curves in modern cryptography.
 
 # Project Structure
 ```bash
