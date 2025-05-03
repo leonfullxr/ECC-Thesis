@@ -5,8 +5,7 @@ import numpy as np
 import networkx as nx
 import plotly.graph_objects as go
 
-# Elliptic-curve arithmetic over F_p
-
+# Elliptic curve arithmetic over F_p
 def inv_mod(x, p):
     return pow(x, p-2, p)
 
@@ -15,8 +14,10 @@ def point_add(P, Q, a, p):
     if Q == 'O': return P
     x1, y1 = P
     x2, y2 = Q
+    # P + (-P) = O
     if x1 == x2 and (y1 + y2) % p == 0:
         return 'O'
+    # slope
     if P != Q:
         m = ((y2 - y1) * inv_mod(x2 - x1, p)) % p
     else:
@@ -25,8 +26,7 @@ def point_add(P, Q, a, p):
     y3 = (m*(x1 - x3) - y1) % p
     return (x3, y3)
 
-# Collect all points on the curve
-
+# Generate all points on the curve y^2 = x^3 + a*x + b over F_p
 def all_points(a, b, p):
     pts = ['O']
     for x in range(p):
@@ -36,23 +36,11 @@ def all_points(a, b, p):
                 pts.append((x, y))
     return pts
 
-# Map point (x,y) to torus coordinates
-
-def torus_embed(P, p, R=3.0, r=1.0):
-    if P == 'O':
-        return np.array([0.0, 0.0, R + r])
-    x, y = P
-    theta = 2*np.pi * x / p
-    phi = 2*np.pi * y / p
-    X = (R + r * np.cos(theta)) * np.cos(phi)
-    Y = (R + r * np.cos(theta)) * np.sin(phi)
-    Z = r * np.sin(theta)
-    return np.array([X, Y, Z])
-
+# Build and display interactive 3D Cayley diagram with Plotly
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Interactive 3D Torus Cayley Diagram with zoom & pan"
+        description='Interactive 3D Cayley diagram of E(F_p) with labels'
     )
     parser.add_argument('mod', type=int, nargs='?', default=97,
                         help='Field prime p')
@@ -68,50 +56,56 @@ def main():
     pts = all_points(a, b, p)
     G = pts[args.gen]
 
-    # Build graph
+    # Build Cayley graph wrt addition by G
     C = nx.DiGraph()
     C.add_nodes_from(pts)
     for P in pts:
         Q = point_add(P, G, a, p)
         C.add_edge(P, Q)
 
-    # Embed on torus
-    pos = {P: torus_embed(P, p) for P in pts}
+    # 3D spring layout positions
+    pos_3d = nx.spring_layout(C, dim=3, seed=42)
 
-    # Node trace
-    node_xyz = np.array([pos[P] for P in pts])
-    node_trace = go.Scatter3d(
-        x=node_xyz[:,0], y=node_xyz[:,1], z=node_xyz[:,2],
-        mode='markers', marker=dict(size=4, color='skyblue', line=dict(width=0.5, color='darkblue')),
-        hovertext=[str(P) for P in pts]
-    )
+    # Extract node coordinates
+    node_xyz = np.array([pos_3d[P] for P in pts])
 
-    # Edge traces
+    # Build edge traces
     edge_x, edge_y, edge_z = [], [], []
     for u, v in C.edges():
-        x0, y0, z0 = pos[u]
-        x1, y1, z1 = pos[v]
+        x0, y0, z0 = pos_3d[u]
+        x1, y1, z1 = pos_3d[v]
         edge_x += [x0, x1, None]
         edge_y += [y0, y1, None]
         edge_z += [z0, z1, None]
     edge_trace = go.Scatter3d(
         x=edge_x, y=edge_y, z=edge_z,
-        mode='lines', line=dict(width=1, color='gray'), hoverinfo='none'
+        mode='lines', line=dict(width=2, color='gray'), hoverinfo='none'
     )
 
-    # Build figure
+    # Build node trace with permanent labels
+    node_trace = go.Scatter3d(
+        x=node_xyz[:,0], y=node_xyz[:,1], z=node_xyz[:,2],
+        mode='markers+text',
+        marker=dict(size=6, color='skyblue', line=dict(width=0.5, color='darkblue')),
+        text=[str(P) for P in pts],
+        textposition='top center',
+        textfont=dict(size=10, color='black'),
+        hoverinfo='none'
+    )
+
+    # Create figure
     fig = go.Figure(data=[edge_trace, node_trace])
     fig.update_layout(
-        title=f"Torus Cayley Diagram: y² = x³ + {a}x + {b} over F_{p}, G={G}",
+        title=f"3D Cayley Diagram of E: y²=x³+{a}x+{b} over F_{p}, G={G}",
         scene=dict(
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
             zaxis=dict(visible=False)
         ),
-        margin=dict(l=0, r=0, t=50, b=0)
+        margin=dict(l=0, r=0, t=40, b=0)
     )
 
-    # Show interactive plot
+    # Show interactive plot with zoom & pan
     fig.show()
 
 if __name__ == '__main__':
