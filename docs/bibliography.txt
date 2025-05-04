@@ -1,0 +1,14 @@
+* https://trustica.cz/en/blog/2018/04/26/elliptic-curves-prime-order-curves/
+* Elliptic curve 3D visuals: https://www.s3dlib.org/examples/lines/elliptic_curve.html
+* SEC 2: Recommended Elliptic Curve Domain Parameters: https://www.secg.org/sec2-v2.pdf
+* Elliptic Curve Lecture 1 MIT: https://math.mit.edu/classes/18.783/2017/Lecture1.pdf
+* Introduccion a la criptografia: https://www.ibm.com/mx-es/topics/cryptography
+* Introduccion a la criptografia: https://aws.amazon.com/es/what-is/cryptography/
+* Introduccion a la criptografia: https://informatica.uv.es/estguia/ATD/apuntes/teoria/documentos/Criptografia.pdf
+* Introduccion a la criptografia: https://lathack.com/introduccion-a-la-criptografia/
+* Criptografia: http://repobib.ubiobio.cl/jspui/bitstream/123456789/1800/1/Rioseco_San_Martin_Constanza.pdf
+* Criptografia: https://www.revista.unam.mx/vol.7/num7/art55/jul_art55.pdf
+* Ataques criptografia: https://ciberseguridad.com/servicios/algoritmos-cifrado/#En_flujos
+* RSA Introduccion: https://www.geeksforgeeks.org/rsa-algorithm-cryptography/
+* Algoritmo de SHOR: https://informatecdigital.com/el-algoritmo-de-shor/
+
