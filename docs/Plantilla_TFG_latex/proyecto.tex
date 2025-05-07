@@ -4,9 +4,10 @@
 \usepackage[utf8]{inputenc}
 \usepackage[spanish]{babel}
 \usepackage{xspace}
-\usepackage{hyperref}
 \usepackage{url}          % para que \url{} funcione bien en los campos howpublished
-\usepackage{natbib}
+\usepackage[numbers]{natbib}
+\usepackage[hidelinks]{hyperref}
+\usepackage{listings}
 % \usepackage[style=list, number=none]{glossary} %
 %\usepackage{titlesec}
 %\usepackage{pailatino}
@@ -15,6 +16,7 @@
 \usepackage{amsfonts}
 \usepackage{xcolor}
 
+% Configuración de decimales y tablas
 \decimalpoint
 \usepackage{dcolumn}
 \newcolumntype{.}{D{.}{\esperiod}{-1}}
@@ -23,14 +25,17 @@
 \makeatother
 
 
+% Encabezados y pie de página
 %\usepackage[chapter]{algorithm}
 \RequirePackage{verbatim}
 %\RequirePackage[Glenn]{fncychap}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
 \usepackage{afterpage}
-
+\usepackage{colortbl}
 \usepackage{longtable}
+\usepackage[stable]{footmisc}
+\usepackage{pdfpages}
 %referencia
 
 % ********************************************************************
@@ -52,7 +57,6 @@ Telecomunicación\xspace}
 \newcommand{\myTime}{\today\xspace}
 \newcommand{\myVersion}{Version 0.1\xspace}
 
-\usepackage{hyperref}
 \hypersetup{
     pdfauthor = {\myName (leonfuller@correo.ugr.es)},
     pdftitle = {\myTitle},
@@ -60,11 +64,6 @@ Telecomunicación\xspace}
     pdfkeywords = {palabra_clave1, palabra_clave2, palabra_clave3, ...},
     pdfcreator = {LaTeX con el paquete ....},
     pdfproducer = {pdflatex},
-    colorlinks=false,
-    pdfborder={0 0 1},        % recuadro visible
-    linkbordercolor={0 1 0},  % color verde para el recuadro (RGB)
-    urlbordercolor={0 1 0},
-    citebordercolor={0 1 0}
 }
 
 %\hyphenation{}
@@ -182,6 +181,7 @@ Telecomunicación\xspace}
 \makeatother
 
 \usepackage{pdfpages}
+\bibliographystyle{unsrtnat}
 \begin{document}
 \input{portada/portada}
 \input{prefacios/prefacio}
