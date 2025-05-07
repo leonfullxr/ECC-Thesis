@@ -3,10 +3,17 @@
 \usepackage{listings}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish]{babel}
-
+\usepackage{xspace}
+\usepackage{hyperref}
+\usepackage{url}          % para que \url{} funcione bien en los campos howpublished
+\usepackage{natbib}
 % \usepackage[style=list, number=none]{glossary} %
 %\usepackage{titlesec}
 %\usepackage{pailatino}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{xcolor}
 
 \decimalpoint
 \usepackage{dcolumn}
@@ -24,36 +31,40 @@
 \usepackage{afterpage}
 
 \usepackage{longtable}
-
-\usepackage[pdfborder={000}]{hyperref} %referencia
+%referencia
 
 % ********************************************************************
 % Re-usable information
 % ********************************************************************
-\newcommand{\myTitle}{Título del proyecto\xspace}
-\newcommand{\myDegree}{Grado en ...\xspace}
-\newcommand{\myName}{Nombre Apllido1 Apellido2 (alumno)\xspace}
-\newcommand{\myProf}{Nombre Apllido1 Apellido2 (tutor1)\xspace}
+\newcommand{\myTitle}{Fundamentos teóricos de las curvas elípticas y su aplicación en criptografía\xspace}
+\newcommand{\myDegree}{Grado en Ingeniería Informática\xspace}
+\newcommand{\myName}{Leon Elliott Fuller\xspace}
+\newcommand{\myProf}{Jesús García Miranda\xspace}
 \newcommand{\myOtherProf}{Nombre Apllido1 Apellido2 (tutor2)\xspace}
 %\newcommand{\mySupervisor}{Put name here\xspace}
 \newcommand{\myFaculty}{Escuela Técnica Superior de Ingenierías Informática y de
 Telecomunicación\xspace}
 \newcommand{\myFacultyShort}{E.T.S. de Ingenierías Informática y de
 Telecomunicación\xspace}
-\newcommand{\myDepartment}{Departamento de ...\xspace}
+\newcommand{\myDepartment}{Departamento de Computación y Sistemas Inteligentes\xspace}
 \newcommand{\myUni}{\protect{Universidad de Granada}\xspace}
 \newcommand{\myLocation}{Granada\xspace}
 \newcommand{\myTime}{\today\xspace}
 \newcommand{\myVersion}{Version 0.1\xspace}
 
-
+\usepackage{hyperref}
 \hypersetup{
-pdfauthor = {\myName (email (en) ugr (punto) es)},
-pdftitle = {\myTitle},
-pdfsubject = {},
-pdfkeywords = {palabra_clave1, palabra_clave2, palabra_clave3, ...},
-pdfcreator = {LaTeX con el paquete ....},
-pdfproducer = {pdflatex}
+    pdfauthor = {\myName (leonfuller@correo.ugr.es)},
+    pdftitle = {\myTitle},
+    pdfsubject = {},
+    pdfkeywords = {palabra_clave1, palabra_clave2, palabra_clave3, ...},
+    pdfcreator = {LaTeX con el paquete ....},
+    pdfproducer = {pdflatex},
+    colorlinks=false,
+    pdfborder={0 0 1},        % recuadro visible
+    linkbordercolor={0 1 0},  % color verde para el recuadro (RGB)
+    urlbordercolor={0 1 0},
+    citebordercolor={0 1 0}
 }
 
 %\hyphenation{}
@@ -174,17 +185,16 @@ pdfproducer = {pdflatex}
 \begin{document}
 \input{portada/portada}
 \input{prefacios/prefacio}
-%\frontmatter
-%\tableofcontents
-%\listoffigures
-%\listoftables
-%
-%\mainmatter
+\frontmatter
+\tableofcontents
+\listoffigures
+\listoftables
+\mainmatter
 %\setlength{\parskip}{5pt}
 
-%\input{capitulos/01_Introduccion}
+\input{capitulos/01_Introduccion}
 %
-%\input{capitulos/02_EspecificacionRequisitos}
+\input{capitulos/02_Criptografia}
 %
 %\input{capitulos/03_Planificacion}
 %
@@ -205,7 +215,18 @@ pdfproducer = {pdflatex}
 %\bibliography{bibliografia/bibliografia}\addcontentsline{toc}{chapter}{Bibliografía}
 %\bibliographystyle{miunsrturl}
 %
-%\appendix
+% ----------------------------------------------------------------------------------
+% Bibliografía
+% ----------------------------------------------------------------------------------
+\bibliographystyle{plainnat}
+\bibliography{bibliografia/bibliografia}
+
+% Añadir marcador manual a la entrada deseada
+\phantomsection
+\label{vernam-ref}
+
+
+\appendix
 %\input{apendices/manual_usuario/manual_usuario}
 %%\input{apendices/paper/paper}
 %\input{glosario/entradas_glosario}
