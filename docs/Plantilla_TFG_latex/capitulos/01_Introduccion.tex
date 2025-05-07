@@ -1,0 +1,30 @@
+\chapter{Introducción}
+
+\section{Contexto histórico y motivación}
+La comunicación confidencial entre sujetos ha sido una necesidad constante a lo largo de la historia. Cuando los mensajes debían transmitirse de forma no presencial o transportarse físicamente, surgía el reto de asegurar que ninguna entidad externa pudiera leerlos o alterarlos sin ser detectada.
+
+Ya en la Antigüedad, civilizaciones como la espartana emplearon la “Escítala” en el siglo V a. C., un dispositivo de transposición que cifraba mensajes al enrollarlos en un cilindro. Más tarde, los griegos documentaron con Polibio un sistema de sustitución basado en el orden de las letras, y Roma adoptó el famoso Cifrado César, que desplazaba el alfabeto para ocultar información militar y diplomática.
+
+Durante el Renacimiento, el cifrado avanzó hacia métodos más sofisticados, como el de Leon Battista Alberti que introdujo en 1465 la idea del cifrado polialfabético mediante discos concéntricos, lo que supuso un gran avance en esa época. Blaise de Vigenère perfeccionó esta técnica en el siglo XVI con una tabla que combinaba alfabetos de forma periódica, y en Europa se publicaron tratados (como el \emph{Cryptomenytices et Cryptographiae} de Selenus) que difundieron estos métodos entre cortes y ejércitos.
+
+El siglo XX presenció el mayor salto tecnológico, donde se partió de los cifrados manuales de la Primera Guerra Mundial hasta la aparición de máquinas electromecánicas como la Enigma alemana en la Segunda Guerra Mundial, una máquina de rotores que automatizaba los cálculos que era necesario realizar para las operaciones de cifrado y descifrado de mensajes. El descifrado de Enigma por los criptógrafos aliados no solo cambió el curso del conflicto, sino que marcó el inicio de la era del cálculo automatizado al servicio de la criptografía. Tras la guerra, Claude Shannon sentó las bases teóricas de la información y la seguridad, y en los años 70 el NIST publicó el Estándar de Cifrado de Datos (DES), consolidando el cifrado simétrico en la informática moderna.
+
+Sin embargo, todos los criptosistemas anteriores tenían un inconveniente, y es que todos se basaban en el hecho de que tanto la parte que descifraba como la que codificaba debían conocer el método de cifrado y la clave para descifrarlo. ¿Pero cómo se transmite la clave de forma segura? Por supuesto, con cifrado. Pero entonces, ¿cómo se puede enviar el cifrado, para que la entidad que descifra el mensaje pueda conocer dicho cifrado? Como se puede apreciar, dicho problema de la criptografía es un bucle infinito entre el cifrado y la distribución de claves que no se puede resolver con seguridad garantizada para todos los lectores deseados.
+
+Hoy día, RSA y sistemas análogos sustentan protocolos críticos—HTTPS, correo firmado, servicios bancarios y más—pero presentan dos limitaciones crecientes:  
+\begin{itemize}  
+  \item \textbf{Tamaño de clave versus seguridad.} Para alcanzar un nivel de protección comparable al de cifrados simétricos de 128 bits, RSA requiere claves de varios miles de bits, lo que penaliza el rendimiento en cómputo y ancho de banda.  
+  \item \textbf{Vulnerabilidad cuántica.} 
+  Los algoritmos cuánticos plantean un desafío fundamental para la criptografía moderna. En particular, **Shor** demostró en 1994 que un ordenador cuántico suficientemente grande podría factorizar enteros y resolver problemas de logaritmo discreto en tiempo polinómico, lo que rompería sistemas como RSA, Diffie–Hellman e incluso ECC \cite{turn2search1}\cite{turn2search2}. Esta perspectiva ha impulsado la búsqueda de algoritmos resistentes a estos ataques cuánticos, así como la adopción de curvas elípticas de mayor seguridad y longitudes de clave incrementadas.  
+\end{itemize}  
+
+Estas limitaciones han impulsado la adopción de la \emph{Criptografía de Curvas Elípticas (ECC)}. Gracias a la dificultad del problema del logaritmo discreto en curvas elípticas, ECC ofrece un nivel de seguridad equivalente con claves drásticamente más pequeñas (por ejemplo, 256 bits en ECC frente a 3072 bits en RSA), mejorando así el rendimiento y la eficiencia. Además, la resistencia actual de ECC frente a los ataques cuánticos es mayor que la de RSA bajo el mismo modelo cuántico, lo que la posiciona como la opción de próxima generación para sistemas criptográficos modernos.
+
+\section{Objetivos}
+% Aquí, más adelante...
+
+\section{Planificación}
+% Aquí, más adelante...
+
+\section{Estructura}
+% Aquí, más adelante...
