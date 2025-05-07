@@ -1,0 +1,405 @@
+\chapter{Introducción a la criptografía}
+La criptografía es el arte de encubrir los mensajes con signos
+convencionales, que sólo pueden cobrar algún sentido a través de una clave
+secreta que nace en conjunto con la escritura.
+
+En su clasificación dentro de las ciencias, la criptografía proviene de una rama de las matemáticas, que fue
+iniciada por el matemático Claude Elwood Shannon en 1948, denominada: "Teoría de la Información".
+Esta rama de las ciencias se divide en: "Teoría de Códigos" y en "Criptología". Y a su vez la Criptología se divide en Criptoanálisis y Criptografía, como se muestra en la siguiente figura~\ref{fig:esquema_criptografia}:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.6\textwidth]{imagenes/Esquema_criptografía.png}
+    \caption{Esquema de clasificación dentro de la Teoría de la Información}
+    \label{fig:esquema_criptografia}
+\end{figure}
+
+En un sentido más amplio, la Criptografía es la ciencia encargada de diseñar funciones o dispositivos, capaces
+de transformar mensajes legibles o en claro a mensajes cifrados de tal manera que esta transformación (cifrar) y su transformación inversa (descifrar) sólo pueden ser factibles con el conocimiento de una o más llaves.
+En contraparte, el criptoanálisis es la ciencia que estudia los métodos que se utilizan para, a partir de uno o varios mensajes cifrados, recuperar los mensajes en claro en ausencia de la(s) llave(s) y/o encontrar la llave o llaves con las que fueron cifrados dichos mensajes.
+
+La criptografía se puede clasificar históricamente en dos:
+\begin{itemize}
+    \item Criptografía Clásica: es aquella que se utilizó desde antes de la época actual hasta la mitad del siglo XX. También puede entenderse como la criptografía no computarizada o mejor dicho no digitalizada. Los métodos utilizados eran variados, algunos muy simples y otros muy complicados de criptoanalizar para su época. 
+    \begin{itemize}
+        \item \textbf{Sustitución:} Se reemplazan elementos del mensaje original por otros.
+        \item \textbf{Transposición:} Se reordenan los caracteres del mensaje siguiendo un patrón definido.
+    \end{itemize}
+    
+    \item Criptografía Moderna: se divide actualmente en cifrado sin clave (funciones hash), cifrado de clave privada (cifrado simétrico) y cifrado de clave pública (cifrado asimétrico). En el cifrado de clave privada las claves de cifrado y descifrado son la misma (o bien se deriva de forma directa una de la otra), debiendo mantenerse en secreto dicha clave para evitar el descifrado de un mensaje. Por el contrario, en el cifrado de clave pública las claves de cifrado y descifrado son independientes, no derivándose una de la otra, por lo cual puede hacerse pública la clave de cifrado siempre que se mantenga en secreto la clave de descifrado. Veremos algunos algoritmos de cifrado modernos
+\end{itemize}
+
+Tanto la criptografía clásica como la moderna se clasifican de acuerdo a las técnicas o métodos que se utilizan para cifrar los mensajes. Esta clasificación la podemos ver en la siguiente figura~\ref{fig:clasificacion_criptografia}:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes/Clasificación_criptografía.png}
+    \caption{Clasificación de la criptografía en función del método de cifrado}
+    \label{fig:clasificacion_criptografia}
+\end{figure}
+
+\section{Estructura de un criptosistema}
+
+Un criptosistema se define formalmente como la tupla
+\[
+  \bigl(\mathcal M,\;\mathcal C,\;\mathcal K,\;\mathcal E,\;\mathcal D\bigr),
+\]
+donde
+\begin{itemize}
+  \item \(\mathcal M\) es el espacio de texto plano.
+  \item \(\mathcal C\) es el espacio de texto cifrado.
+  \item \(\mathcal K\) es el espacio de claves.
+  \item \(\mathcal E=\{E_k: k\in\mathcal K\}\) es el conjunto de funciones de cifrado \(E_k:\mathcal M\to\mathcal C\).
+  \item \(\mathcal D=\{D_k: k\in\mathcal K\}\) es el conjunto de funciones de descifrado \(D_k:\mathcal C\to\mathcal M\).
+\end{itemize}
+Deben cumplirse las condiciones de corrección:
+\[
+  D_{k'}\bigl(E_k(M)\bigr)\;=\;M
+  \quad\forall\,M\in\mathcal M,
+\]
+siendo \(k'\) la clave de descifrado asociada a la clave de cifrado \(k\).
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes/Esquema_criptosistema_cifrado_descifrado.png}
+    \caption{Esquema de un criptosistema formal}
+    \label{fig:esquema_criptosistema_cifrado_descifrado}
+\end{figure}
+
+\section{Criptografía sin clave o Funciones hash}
+Son funciones unidireccionales de cálculo sencillo, utilizadas para garantizar la integridad de los datos.
+
+\begin{itemize}
+    \item Se aplica una función hash $H$ sobre un mensaje $M$, de forma que: 
+    \[
+    M \rightarrow H(M)
+    \]
+    \item El resultado $H(M)$ tiene longitud fija, típicamente de 256 o 512 bits.
+    \item Es computacionalmente inviable obtener $M$ a partir de $H(M)$.
+\end{itemize}
+
+\subsection{MD5}
+
+Una vez procesado el mensaje de entrada en bloques sucesivos de 512 bits, el resumen obtenido tiene una longitud fija de 128 bits.
+
+\subsection{SHA-1}
+El SHA (Secure Hash Algorithm), fue desarrollado por la NSA y procesa los
+datos de entrada en bloques de 512 bits, pero a diferencia del MD5 genera un
+compendio de mensaje de 160 bits. Su algoritmo es el siguiente:
+\begin{enumerate}
+    \item Se toma el mensaje original y se rellena hasta alcanzar una longitud de $448 \mod 512$ bits. Es decir, al dividir la longitud total entre 512, el resto debe ser 448.
+    \item Se añade un campo de 64 bits que indica la longitud del mensaje original (incluyendo el propio relleno). Así, la longitud total del mensaje resultante, denotado $P'$, será un múltiplo de 512 bits.
+    \item $P'$ se divide en bloques de longitud fija de 512 bits, denotados como $Y_1, Y_2, \ldots, Y_L$.
+    \item Se inicia el cálculo del resumen. Cada bloque de 512 bits se mezcla con un búfer de 160 bits mediante 80 rondas. Cada 20 rondas se modifican las funciones de mezcla utilizadas. Este proceso continúa hasta procesar todos los bloques de entrada.
+\end{enumerate}
+
+Una vez terminado el cálculo, el buffer de 160 bits contiene el valor del compendio de mensaje. El SHA es $2^{32}$ veces más seguro que el MD5, pero su cálculo es más lento.
+
+Hasta la fecha, tanto el MD5 como el SHA se han mostrado inviolables, pues aún con ataques sofisticados ideados, se tardarían más de 500 años en calcular los compendios de dos cartas con 64 variantes cada una, e incluso entonces no se garantiza una equivalencia.
+
+\section{Criptografía de clave privada o simétrica}
+Un cifrado simétrico utiliza una clave $k$ elegida de un espacio (conjunto) de claves posibles $K$ para cifrar un mensaje $m$ perteneciente al conjunto de mensajes posibles $M$, generando un texto cifrado $c \in C$.
+
+El cifrado puede verse como una función:
+\[
+e : K \times m \rightarrow C
+\]
+cuyo dominio es el conjunto de pares $(k, m)$ y cuyo codominio es el espacio de textos cifrados $C$.
+
+El descifrado se representa como una función:
+\[
+d : K \times C \rightarrow m
+\]
+
+Queremos que el descifrado revierta el cifrado:
+\[
+d(k, e(k, m)) = m \quad \forall k \in K, \forall m \in M
+\]
+
+Usando notación de subíndice para la clave, podemos escribir:
+\[
+e_k : m \rightarrow C \quad \text{y} \quad d_k : C \rightarrow m
+\]
+cumpliendo:
+\[
+d_k(e_k(m)) = m \quad \forall m \in M
+\]
+
+Esto implica que $e_k$ es una función inyectiva. Es decir, si $e_k(m) = e_k(m')$, entonces:
+\[
+m = d_k(e_k(m)) = d_k(e_k(m')) = m' \quad \forall k \in K, \forall m \in M
+\]
+
+\subsection*{Propiedades deseables de un cifrado simétrico}
+
+Sea $(K, m, C, e, d)$ un sistema de cifrado. Este debe cumplir las siguientes propiedades:
+
+\begin{enumerate}
+    \item Para todo $k \in K$ y $m \in M$, debe ser fácil computar $e_k(m)$.
+    \item Para todo $k \in K$ y $c \in C$, debe ser fácil computar $d_k(c)$.
+    \item Dados uno o más textos cifrados $c_1, \ldots, c_n$ producidos con una misma clave $k$, debe ser computacionalmente difícil recuperar $d_k(c_1), \ldots, d_k(c_n)$ sin conocer $k$.
+\end{enumerate}
+
+Con este tipo de criptografía podemos garantizar la confidencialidad porque únicamente quien posea la llave secreta será capaz de ver el mensaje.
+El problema con la criptografía simétrica es que si yo quisiera compartir secretos con n personas, para cada persona tendría que generar una nueva llave secreta.
+Otro problema asociado con este tipo de criptografía es cómo comparto con otra persona de una forma confidencial e integra la llave secreta.
+Estos problemas se resuelven de cierta manera con criptografía asimétrica.
+
+\subsection{Cifrado de bloque}
+Los cifrados de bloque cifran mensajes dividiéndolos en grupos de símbolos del mismo tamaño (bloques) y aplicando sobre cada uno de ellos un mismo algoritmo de cifra.
+
+Llamamos \(B\) el tamaño de bloque del cifrado. Un mensaje de texto claro general consiste entonces en una lista de bloques de mensaje escogidos de \(M\), y la función de cifrado transforma estos bloques en una lista de bloques de texto cifrado en \(C\), donde cada bloque es una secuencia de \(B\) bits. Si el texto claro termina con un bloque de menos de \(B\) bits, rellenamos el final del bloque con ceros.
+
+El cifrado y el descifrado se realizan bloque a bloque, por lo que basta estudiar el proceso para un único bloque de texto claro, es decir, para un solo \(m\in M\). Esto, por supuesto, explica la conveniencia de dividir un mensaje en bloques: un mensaje puede ser de longitud arbitraria, y resulta útil centrar el proceso criptográfico en una pieza de longitud fija. El bloque de texto claro \(m\) es una cadena de \(B\) bits, que para mayor concreción identificamos con el número correspondiente en forma binaria. En otras palabras, identificamos \(M\) con el conjunto de enteros \(m\) que satisfacen \(0 \le m < 2^B\) mediante
+\[
+\underbrace{m_{B-1}\,m_{B-2}\,\cdots\,m_2\,m_1\,m_0}_{\text{lista de \(B\) bits de \(m\)}}
+\]
+
+\[
+\longleftrightarrow
+\]
+
+\[
+\underbrace{m_{B-1}\cdot2^{B-1} + m_{B-2}\cdot2^{B-2} + \cdots + m_1\cdot2 + m_0}_{\text{entero entre 0 y \(2^B-1\)}}
+\]
+
+Aquí \(m_0,m_1,\dots,m_{B-1}\) son cada uno 0 o 1.
+
+De manera similar, identificamos el espacio de claves \(K\) y el espacio de textos cifrados \(C\) con conjuntos de enteros correspondientes a cadenas de bits de un determinado tamaño de bloque. Para mayor simplicidad notacional, denotamos los tamaños de bloque para claves, textos claros y textos cifrados por \(B_k\), \(B_m\) y \(B_c\), respectivamente. No tienen por qué coincidir. Así, hemos identificado
+\[
+K = \{\,k \in \mathbb{Z} : 0 \le k < 2^{B_k}\}
+\]
+
+\[
+M = \{\,m \in \mathbb{Z} : 0 \le m < 2^{B_m}\}
+\]
+
+\[
+C = \{\,c \in \mathbb{Z} : 0 \le c < 2^{B_c}\}
+\]
+
+
+Surge de inmediato una pregunta importante: ¿qué tan grande debe ser el conjunto \(K\) que se debe de escoger, equivalentemente, qué tamaño de bloque de clave \(B_k\) se debería de elegir? Si \(B_k\) es demasiado pequeño, se puede probar cada número entre \(0\) y \(2^{B_k}-1\) hasta dar con la clave generada. Más precisamente, dado que se asume que se conoce el algoritmo de descifrado \(d\) (principio de Kerckhoffs), toma cada \(k\in K\) y calcula \(d_k(c)\). Suponiendo que se es capaz de distinguir entre textos claros válidos e inválidos, se acabará recuperando el mensaje.
+
+Este ataque se conoce como ataque de búsqueda exhaustiva (o ataque de fuerza bruta), puesto que se explora exhaustivamente el espacio de claves. Con la tecnología actual, una búsqueda exhaustiva se considera inviable si el espacio tiene al menos \(2^{80}\) elementos. Por tanto, se debería de  escoger \(B_k \ge 80\).
+
+Para muchos criptosistemas, existen refinamientos al ataque de búsqueda exhaustiva que sustituyen efectivamente el tamaño del espacio por su raíz cuadrada. Estos métodos se basan en el principio de que es más fácil encontrar objetos coincidentes (colisiones) en un conjunto que localizar un objeto en particular. Describimos algunos de estos ataques de "man-in-the-middle" o de colisiones en la sección 2.6. Si están disponibles ataques de este tipo, se deberá de escoger \(B_k \ge 160\).
+
+
+Existen distintos modos de funcionamiento para los cifrados de bloques. El \emph{Electronic CodeBook} (ECB) y el \emph{Cipher-Block Chanining} (CBC) son dos de los modos más antiguos. Entre los sistemas de cifrado por bloques más conocidos están el Data Encryption Standard, Triple DES (3DES)\cite{tdes-techtarget}, Advanced Encryption Standard (AES)\cite{aes-nist} y Twofish\cite{twofish-schneier}.
+
+
+\subsubsection{ECB}
+El \emph{Electronic CodeBook} (ECB) es el modo de funcionamiento más sencillo del cifrado por bloques. Es más fácil porque se cifra directamente cada bloque de texto plano de entrada y la salida es en forma de bloques de texto cifrado. Generalmente, si un mensaje tiene un tamaño superior a $b$ bits, se puede dividir en un montón de bloques y repetir el procedimiento. En la figura se muestra un ejemplo de funcionamiento del mismo~\ref{fig:ECB_block_cypher}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes/ECB_block_cypher.png}
+    \caption{Ejemplo de cifrado y descifrado de bloque ECB}
+    \label{fig:ECB_block_cypher}
+\end{figure}
+
+\subsubsection{CBC}
+El modo \emph{Cipher Block Chaining} (CBC) mejora la seguridad del modo ECB al encadenar cada bloque cifrado con el siguiente. 
+Antes de entrar en su explicación, en este modo se introduce un nuevo concepto:
+Un IV es esencialmente otro input (además del texto plano $M$ y la llave $K$) usado para cifrar el texto. Es un bloque de datos, usado por varios modos de cifrado de bloques para introducir aleatoriedad en el proceso de cifrado para poder generar como resultado distintos textos cifrados incluso con el mismo texto plano cifrado varias veces.
+
+No es necesario que sea secreto, pero si es necesario que no se vuelva a usar. Es recomendable que sea aleatorio, impredicible y de un único uso.
+De forma simplificada:
+\begin{itemize}
+  \item Para cada bloque $M_i$ de texto claro:
+    \[
+      C_i = E\bigl(M_i \;\oplus\; C_{i-1},\,K\bigr)
+    \]
+    donde $C_{i-1}$ es el bloque cifrado anterior.
+  \item Para el primer bloque, no existe $C_0$, por lo que se usa un vector de inicialización (IV) aleatorio:
+    \[
+      C_1 = E\bigl(M_1 \;\oplus\; \mathrm{IV},\,K\bigr).
+    \]
+  \item De este modo, incluso si $M_i = M_j$, normalmente $C_i \neq C_j$ porque $C_{i-1}\neq C_{j-1}$.
+\end{itemize}
+
+\subsection*{Pasos de cifrado}
+\begin{enumerate}
+  \item Calcular $X_1 = M_1 \oplus \mathrm{IV}$ y luego $C_1 = E(X_1, K)$.
+  \item Para $i > 1$, calcular $X_i = M_i \oplus C_{i-1}$ y luego $C_i = E(X_i, K)$.
+  \item Repetir hasta procesar todos los bloques de texto claro.
+\end{enumerate}
+
+\subsection*{Pasos de descifrado}
+\begin{enumerate}
+  \item Descifrar $D_1 = D(C_1, K)$ y obtener $M_1 = D_1 \oplus \mathrm{IV}$.
+  \item Para $i > 1$, descifrar $D_i = D(C_i, K)$ y obtener $M_i = D_i \oplus C_{i-1}$.
+  \item Repetir hasta recuperar todos los bloques de texto original.
+\end{enumerate}
+
+En la figura se muestra un ejemplo de funcionamiento del mismo~\ref{fig:CBC_block_cypher}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes/CBC_block_cypher.png}
+    \caption{Ejemplo de cifrado y descifrado de bloque CBC}
+    \label{fig:CBC_block_cypher}
+\end{figure}
+
+Una desventaja del mismo es que si se reutiliza el mismo IV para dos mensajes idénticos, se obtendrán los mismos bloques $C_1$, lo que compromete seguridad\cite{Block_Cipher}.
+
+\subsection{Cifrado de flujo}
+Los cifrados de flujo son ciertamente cifrados de bloque con una longitud de bloque igual a uno. Lo que los hace útiles es que la transformación de cifrado puede cambiar para cada símbolo del texto plano que se cifra.También pueden usarse cuando los datos deben procesarse símbolo por símbolo (por ejemplo, si el equipo no dispone de memoria o el almacenamiento intermedio es limitado).
+
+Sea $K$ el espacio de claves. Una secuencia de símbolos $e_1e_2e_3\ldots \in K$ se denomina \textbf{flujo de claves} o \textit{keystream}.
+
+Sea $A$ un alfabeto de $q$ símbolos, y sea $E_e$ un cifrado por sustitución simple con longitud de bloque 1, donde $e \in K$. Dado un texto claro $m_1m_2m_3\ldots$ y un flujo de claves $e_1e_2e_3\ldots$, un cifrado de flujo produce un texto cifrado $c_1c_2c_3\ldots$ tal que:
+
+\[
+c_i = E_{e_i}(m_i)
+\]
+
+Si $d_i$ denota la función inversa de $e_i$, entonces:
+
+\[
+D_{d_i}(c_i) = m_i
+\]
+
+Este tipo de criptografía se basa en hacer un cifrado bit a bit, esto se logra usando la operación XOR. Se utiliza un algoritmo determinístico que genera una secuencia pseudoaletoria de bits que junto con los bits del mensaje se van cifrando utilizando a operación XOR.
+
+Un ejemplo de ello es el cifrado de \hyperlink{vernam-ref}{\textcolor{black}{\fcolorbox{green}{white}{Vernam}}}~\citep{vernam}, definido sobre $A = \{0, 1\}$. Dado un mensaje binario $m_1m_2\ldots m_t$ y una clave binaria $k_1k_2\ldots k_t$ de la misma longitud, el texto cifrado es:
+
+\[
+c_i = m_i \oplus k_i, \quad 1 \leq i \leq t
+\]
+
+Si la clave es aleatoria y no se reutiliza, se denomina \textbf{one-time pad}.
+
+\textbf{Observación:} Hay dos cifrados por sustitución posibles sobre $A$:
+\begin{itemize}
+    \item $E_0$: $0 \mapsto 0$, $1 \mapsto 1$
+    \item $E_1$: $0 \mapsto 1$, $1 \mapsto 0$
+\end{itemize}
+
+El flujo de claves determina cuál se aplica a cada símbolo.
+
+Algunos ejemplos de cifrado de flujo son RC4 (usado en redes inalámbricas)\cite{rc4-ietf,rc4-gfg} y A5 (usado en
+telefonía celular)\cite{a5-nop,a5-ucsb}.
+
+\section{Criptografía de clave pública o asimétrica}
+Si Alice y Bob quieren intercambiar mensajes usando un cifrado simétrico, deben primero acordar mutuamente una clave secreta \(k\). Esto es factible si tienen la oportunidad de reunirse en secreto o si pueden comunicarse una vez por un canal seguro. Pero ¿qué ocurre si no disponen de esa oportunidad y cada comunicación entre ellos es vigilada por su adversaria Eva? ¿Es posible que Alice y Bob intercambien una clave secreta en estas condiciones?
+
+La primera reacción de la mayoría es que no es posible, ya que el intruso ve cada fragmento de información que intercambian. Fue la brillante intuición de Diffie y Hellman que, bajo ciertas hipótesis, sí lo es. La búsqueda de soluciones eficientes (y demostrables) a este problema, denominado criptografía de clave pública (o asimétrica), constituye una de las partes más interesantes de la criptografía matemática.
+
+Definimos espacios de claves \(K\), de textos claros \(M\) y de textos cifrados \(C\). Sin embargo, un elemento \(k\) del espacio de claves es en realidad un par de claves,
+\[
+k = \bigl(k_{\text{priv}},\,k_{\text{pub}}\bigr),
+\]
+denominadas clave privada y clave pública, respectivamente. Para cada clave pública \(k_{\text{pub}}\) existe una función de cifrado correspondiente
+\[
+e_{k_{\text{pub}}}: M \longrightarrow C,
+\]
+y para cada clave privada \(k_{\text{priv}}\) existe una función de descifrado correspondiente
+\[
+d_{k_{\text{priv}}}: C \longrightarrow M.
+\]
+Estas funciones cumplen que si el par \(\bigl(k_{\text{priv}},\,k_{\text{pub}}\bigr)\) pertenece al espacio de claves \(K\), entonces
+\[
+d_{k_{\text{priv}}}\bigl(e_{k_{\text{pub}}}(m)\bigr) = m
+\quad\forall\,m \in M.
+\]
+
+Para que un cifrado asimétrico sea seguro, debe resultar difícil para el intruso calcular la función de descifrado \(d_{k_{\text{priv}}}(c)\), incluso si conoce la clave pública \(k_{\text{pub}}\). Bajo esta suposición, Alice puede enviar \(k_{\text{pub}}\) a Bob mediante un canal inseguro, y Bob puede devolver el texto cifrado \(e_{k_{\text{pub}}}(m)\) sin temor a que el intruso lo descifre. Para poder descifrar, es necesario conocer la clave privada \(k_{\text{priv}}\), y, presumiblemente, solo Alice dispone de ella. A esta clave privada a veces se le llama información de \emph{trapdoor} de Alice, porque proporciona una vía directa para calcular la función inversa de \(e_{k_{\text{pub}}}\). El hecho de que las claves de cifrado y descifrado (\(k_{\text{pub}}\) y \(k_{\text{priv}}\)) sean diferentes confiere al cifrado su carácter asimétrico, de ahí su nombre.
+
+Resulta fascinante que Diffie y Hellman concibieran este concepto sin contar con un par concreto de funciones; no obstante, sí propusieron un método análogo por el cual Alice y Bob pueden intercambiar de forma segura un dato aleatorio cuyo valor no conocen inicialmente. Describimos el método de intercambio de claves de Diffie y Hellman en la Sección~2.3 y, a continuación, analizamos varios cifrados asimétricos, como ElGamal (Sección~2.4.3), RSA (Sección~3.2) y ECC (Sección~3.4), cuya seguridad se fundamenta en la dificultad presunta de distintos problemas matemáticos.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes/Cifrado_asimetrico.png}
+    \caption{Ejemplo de cifrado asimétrico}
+    \label{fig:cifrado_asimetrico}
+\end{figure}
+
+\subsection{Intercambio de claves Diffie–Hellman}
+Permite establecer una clave secreta entre dos entidades a traves de un canal no
+seguro mediante el establecimiento dinamico de la clave de sesion.
+Elimina la necesidad de tener que compartir varias claves origen-destino. Dada
+la no necesidad de disponer de claves pre-definidas entre el emisor y el receptor,
+al tiempo que se permite el uso de cifrado simetrico para la transmision de
+informacion posteriro, el algoritmo de Diffie-Hellman es de uso frecuente en
+internet para el establecimiento de claves de sesion (y posterior uso de cifrado
+simetrico). El proceso seguido para ello entre un origen A y un destino B es el
+siguiente: 1. A, origen de la comunicacion, selecciona dos numeros primos grandes
+n y g con ciertas caracteristicas, por ejemplo que (n-1)/2 sea tambien primo.
+
+Ambos numeros son publicos, por lo que A puede comunicarselos abiertamente a
+B. 2. Ademas de n y g, A escoge un numero grande x, que mantendra en secreto.
+La informacion al respecto enviada a B es el numero gˆx mod n. 3. Recibidos
+estos numeros en B, este elegira un numero grande y hara (gˆx mod n)ˆy =
+gˆxy mod n. Ademas, enviara hacia A el numero gˆy mod n. 4. Analogamente
+a como procedio B, A opera el numero recibido en la forma (gˆy mod n)ˆx =
+gˆxy mod n. 5. Al final, A y B compartiran la clave de sesion Kab = Kba =
+gˆxy mod n.
+\subsection{Firma digital}
+Una firma digital es un documento que permite garantizar la integridad de un documento y se puede
+relacionar de manera única al firmante con su firma, ya que realiza ésta con la llave privada y únicamente
+el firmante posee esa llave, ésto se traduce en que se verifica la autenticidad del firmante.
+Antes de entrar más en detalle de cómo se realizan las firmas digitales, es importante hablar de una
+función denominada “Hash” o resumen del documento. Esta función lo que hace es que a partir de un
+documento de tamaño N bits entrega una cadena de M bits. No hay límite para el tamaño de N, pero M
+siempre es de tamaño constante de acuerdo con el algoritmo usado, normalmente es de 128 o 256 bits.
+Una de las características de este tipo de funciones es que son unidireccionales, es decir, que debe de
+ser imposible a partir del resumen del documento encontrar el mensaje original. También deben cumplir
+la propiedad de dispersión, lo que significa que si se cambia al menos un bit del documento, su resumen
+debe de cambiar la mitad de sus bits aproximadamente.
+La firma de un documento d se realiza tomando un documento digital, se extrae el resumen del
+documento H(d) y este resumen se cifra asimétricamente con la llave privada del firmante Ck1(H(d)), esto
+es lo que vendría siendo la firma digital, ahora hay que ponérsela al documento, para eso se concatenan
+el documento y su resumen cifrado.
+
+Ahora hay que verificar la firma, para eso se separan el documento d del resumen cirado. Se descifra
+asimétricamente con la llave pública k2 del firmante el resumen cifrado Dk2(Ck1(H(d))) obteniéndose el
+resumen del documento original H(d). Se obtiene el resumen del documento enviado H(d)’ se comparan
+las dos digestiones H(d)= H(d)’ y si estos son iguales, se dice que la firma es válida, de lo contrario es
+inválida. Si la firma es inválida puede deberse a dos causas: una es que se está usando una llave pública
+que no corresponde con la privada del firmante (problema de autenticación) o la otra es que el documento
+que se envió fue alterado (problema de integridad). La siguiente figura ilustra el proceso descrito de firmar
+y validar la firma digital.
+\subsection{ElGamal}
+
+\section{Principios de diseño criptográfico}
+
+En 1883, Auguste Kerckhoffs formuló seis principios esenciales para el diseño de sistemas criptográficos:
+
+\begin{enumerate}
+  \item Debe ser, cuanto menos, impracticable de romper en la práctica.
+  \item La seguridad no debe depender del secreto del algoritmo, sino únicamente de la clave.
+  \item La clave debe poder memorizarse sin necesidad de apuntes.
+  \item El texto cifrado debe poder transmitirse sin errores por medios estándar.
+  \item El sistema debe ser portátil y operable por una sola persona.
+  \item El sistema debe ser fácil de usar, sin requerir un esfuerzo mental excesivo.
+\end{enumerate}
+\section{Seguridad y modelos de ataque}
+
+La seguridad de un sistema criptográfico se evalúa frente a distintos modelos de ataque, que describen el acceso y las capacidades del adversario \cite{turn1search3}. A grandes rasgos, estos modelos se agrupan en:
+
+\subsection{Ataques pasivos y activos}
+
+\begin{description}
+  \item[Ataques pasivos:] El atacante únicamente observa el tráfico cifrado (o el sistema) sin modificarlo. Incluyen la **intercepción de mensajes** y el **análisis de tráfico**, en los que se extrae información de patrones de comunicación \cite{turn1search7}\cite{turn1search8}.
+  \item[Ataques activos:] El atacante altera, inyecta o interfiere el flujo de datos. Ejemplos típicos son el **man-in-the-middle** (interposición entre emisor y receptor) y la **modificación de mensajes** en tránsito \cite{turn1search4}.
+\end{description}
+
+\subsection{Modelos clásicos de criptoanálisis}
+
+\begin{itemize}
+  \item \textbf{Ataque por texto cifrado únicamente (COA):} El adversario dispone solo del texto cifrado. Es el escenario más realista pero también el más limitado \cite{turn1search3}.
+  \item \textbf{Fuerza bruta (exhaustiva):} Se prueban sistemáticamente todas las claves posibles hasta dar con la correcta. Su dificultad depende únicamente del tamaño de la clave \cite{turn1search0}\cite{turn1search1}.
+  \item \textbf{Ataque con texto plano conocido (KPA):} Se accede a uno o varios pares (texto plano, texto cifrado), lo que permite reducir el espacio de búsqueda \cite{turn1search3}.
+  \item \textbf{Ataque por texto plano elegido (CPA):} El atacante elige ciertos textos para cifrar y obtiene sus correspondientes cifrados. Es fundamental en la seguridad de sistemas de clave pública \cite{turn1search3}.
+  \item \textbf{Ataque adaptativo por texto plano elegido (CPA2):} Variante de CPA donde el atacante decide nuevos textos a cifrar tras ver resultados anteriores \cite{turn1search3}.
+  \item \textbf{Ataque por texto cifrado elegido (CCA):} El atacante puede descifrar libremente ciertos cifrados de su elección, obteniendo los planos resultantes \cite{turn1search3}.
+  \item \textbf{Ataque adaptativo por texto cifrado elegido (CCA2):} Versión más poderosa de CCA, donde cada descifrado elegido se basa en análisis previos \cite{turn1search3}.
+\end{itemize}
+
+\subsection{Ataques avanzados}
+
+\begin{itemize}
+  \item \textbf{Canal lateral (side-channel):} Se explota información derivada de la implementación (tiempos, consumo eléctrico, emisiones electromagnéticas) para inferir claves \cite{turn1search2}.
+  \item \textbf{Ataque de clave relacionada (related-key):} El atacante conoce cifrados de textos planos bajo claves que guardan alguna relación matemática con la clave objetivo \cite{turn1search3}.
+  \item \textbf{Sesgo estadístico (bias attacks):} Se buscan patrones no aleatorios en la generación de claves o estados intermedios para acotar posibles valores \cite{turn1search6}.
+  \item \textbf{Ataque \'"Evil Maid"\':} Consiste en acceso físico al dispositivo para instalar malware o keyloggers y robar claves cuando el usuario no está presente \cite{turn1search3}.
+\end{itemize}
