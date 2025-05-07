@@ -185,7 +185,7 @@ Este ataque se conoce como ataque de búsqueda exhaustiva (o ataque de fuerza br
 Para muchos criptosistemas, existen refinamientos al ataque de búsqueda exhaustiva que sustituyen efectivamente el tamaño del espacio por su raíz cuadrada. Estos métodos se basan en el principio de que es más fácil encontrar objetos coincidentes (colisiones) en un conjunto que localizar un objeto en particular. Describimos algunos de estos ataques de "man-in-the-middle" o de colisiones en la sección 2.6. Si están disponibles ataques de este tipo, se deberá de escoger \(B_k \ge 160\).
 
 
-Existen distintos modos de funcionamiento para los cifrados de bloques. El \emph{Electronic CodeBook} (ECB) y el \emph{Cipher-Block Chanining} (CBC) son dos de los modos más antiguos. Entre los sistemas de cifrado por bloques más conocidos están el Data Encryption Standard, Triple DES (3DES)\cite{tdes-techtarget}, Advanced Encryption Standard (AES)\cite{aes-nist} y Twofish\cite{twofish-schneier}.
+Existen distintos modos de funcionamiento para los cifrados de bloques. El \emph{Electronic CodeBook} (ECB) y el \emph{Cipher-Block Chanining} (CBC) son dos de los modos más antiguos. Entre los sistemas de cifrado por bloques más conocidos están el Data Encryption Standard, Triple DES (3DES)\citep{tdes-techtarget}, Advanced Encryption Standard (AES)\citep{aes-nist} y Twofish\citep{Block_Cipher}\citep{twofish-schneier}.
 
 
 \subsubsection{ECB}
@@ -258,9 +258,9 @@ Si $d_i$ denota la función inversa de $e_i$, entonces:
 D_{d_i}(c_i) = m_i
 \]
 
-Este tipo de criptografía se basa en hacer un cifrado bit a bit, esto se logra usando la operación XOR. Se utiliza un algoritmo determinístico que genera una secuencia pseudoaletoria de bits que junto con los bits del mensaje se van cifrando utilizando a operación XOR.
+Este tipo de criptografía se basa en hacer un cifrado bit a bit, esto se logra usando la operación XOR. Se utiliza un algoritmo determinístico que genera una secuencia pseudoaletoria de bits que junto con los bits del mensaje se van cifrando utilizando la operación XOR.
 
-Un ejemplo de ello es el cifrado de \hyperlink{vernam-ref}{\textcolor{black}{\fcolorbox{green}{white}{Vernam}}}~\citep{vernam}, definido sobre $A = \{0, 1\}$. Dado un mensaje binario $m_1m_2\ldots m_t$ y una clave binaria $k_1k_2\ldots k_t$ de la misma longitud, el texto cifrado es:
+Un ejemplo de ello es el cifrado de vernam~\citep{vernam}, definido sobre $A = \{0, 1\}$. Dado un mensaje binario $m_1m_2\ldots m_t$ y una clave binaria $k_1k_2\ldots k_t$ de la misma longitud, el texto cifrado es:
 
 \[
 c_i = m_i \oplus k_i, \quad 1 \leq i \leq t
@@ -304,7 +304,7 @@ d_{k_{\text{priv}}}\bigl(e_{k_{\text{pub}}}(m)\bigr) = m
 
 Para que un cifrado asimétrico sea seguro, debe resultar difícil para el intruso calcular la función de descifrado \(d_{k_{\text{priv}}}(c)\), incluso si conoce la clave pública \(k_{\text{pub}}\). Bajo esta suposición, Alice puede enviar \(k_{\text{pub}}\) a Bob mediante un canal inseguro, y Bob puede devolver el texto cifrado \(e_{k_{\text{pub}}}(m)\) sin temor a que el intruso lo descifre. Para poder descifrar, es necesario conocer la clave privada \(k_{\text{priv}}\), y, presumiblemente, solo Alice dispone de ella. A esta clave privada a veces se le llama información de \emph{trapdoor} de Alice, porque proporciona una vía directa para calcular la función inversa de \(e_{k_{\text{pub}}}\). El hecho de que las claves de cifrado y descifrado (\(k_{\text{pub}}\) y \(k_{\text{priv}}\)) sean diferentes confiere al cifrado su carácter asimétrico, de ahí su nombre.
 
-Resulta fascinante que Diffie y Hellman concibieran este concepto sin contar con un par concreto de funciones; no obstante, sí propusieron un método análogo por el cual Alice y Bob pueden intercambiar de forma segura un dato aleatorio cuyo valor no conocen inicialmente. Describimos el método de intercambio de claves de Diffie y Hellman en la Sección~2.3 y, a continuación, analizamos varios cifrados asimétricos, como ElGamal (Sección~2.4.3), RSA (Sección~3.2) y ECC (Sección~3.4), cuya seguridad se fundamenta en la dificultad presunta de distintos problemas matemáticos.
+Resulta fascinante que Diffie y Hellman concibieran este concepto sin contar con un par concreto de funciones; no obstante, sí propusieron un método análogo por el cual Alice y Bob pueden intercambiar de forma segura un dato aleatorio cuyo valor no conocen inicialmente. Describimos el método de intercambio de claves de Diffie y Hellman en la Sección ~\ref{sec:diffie_hellman} y, a continuación, analizamos varios cifrados asimétricos, como ElGamal (Sección ~\ref{sec:elgamal}), RSA (Sección~) y ECC (Sección~), cuya seguridad se fundamenta en la dificultad presunta de distintos problemas matemáticos.
 
 \begin{figure}[H]
     \centering
@@ -313,7 +313,7 @@ Resulta fascinante que Diffie y Hellman concibieran este concepto sin contar con
     \label{fig:cifrado_asimetrico}
 \end{figure}
 
-\subsection{Intercambio de claves Diffie–Hellman}
+\subsection{Intercambio de claves Diffie–Hellman}\label{sec:diffie_hellman}
 Permite establecer una clave secreta entre dos entidades a traves de un canal no
 seguro mediante el establecimiento dinamico de la clave de sesion.
 Elimina la necesidad de tener que compartir varias claves origen-destino. Dada
@@ -358,7 +358,7 @@ inválida. Si la firma es inválida puede deberse a dos causas: una es que se es
 que no corresponde con la privada del firmante (problema de autenticación) o la otra es que el documento
 que se envió fue alterado (problema de integridad). La siguiente figura ilustra el proceso descrito de firmar
 y validar la firma digital.
-\subsection{ElGamal}
+\subsection{ElGamal}\label{sec:elgamal}
 
 \section{Principios de diseño criptográfico}
 
