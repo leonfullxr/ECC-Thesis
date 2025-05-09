@@ -1,0 +1,126 @@
+\chapter{Campos finitos}
+La aritmética en campos finitos es fundamental para numerosos algoritmos de clave pública, incluidos los basados en el problema del logaritmo discreto en campos finitos, los esquemas de curvas elípticas y las aplicaciones emergentes de curvas hiperelípticas. El rendimiento de estos protocolos depende en gran medida de nuestra capacidad para realizar rápidamente operaciones básicas en el campo subyacente.  
+
+Los campos finitos se denotan como \(\mathrm{GF}(p^m)\), donde \(p\) es un número primo y \(m\) un entero positivo. Para que los sistemas de curvas elípticas sean eficientes, es imprescindible implementar de manera óptima la suma, la resta, la multiplicación y la inversión en dicho campo. Existen tres familias de campos que resultan especialmente adecuadas para ECC (Criptografia de Curvas Elípticas):  
+\begin{itemize}
+  \item \textbf{Campos primos} (\(\mathbb{F}_p\)),  
+  \item \textbf{Campos binarios} (\(\mathbb{F}_{2^m}\)),  
+  \item \textbf{Campos de extensión óptima} (OEF).  
+\end{itemize}
+En las secciones siguientes se presenta una introducción informal a la teoría de campos finitos y se describen en detalle los algoritmos eficientes para cada tipo de campo.  
+
+Dado que en muchas aplicaciones los tamaños de \(p^m\) son muy grandes, entender la complejidad computacional de estas operaciones es clave para evaluar el rendimiento global de los esquemas criptográficos basados en curvas elípticas.  
+
+\section{Introducción a campos finitos}
+Los campos son abstracciones de sistemas numéricos familiares (como los racionales \(\mathbb{Q}\), los reales \(\mathbb{R}\) o los complejos \(\mathbb{C}\)) que reúnen ciertas propiedades esenciales. Un campo \(\mathbb{F}\) consta de un conjunto \(\mathbb{F}\) junto con dos operaciones, suma (\(+\)) y producto (\(\cdot\)), que satisfacen:
+
+\begin{enumerate}
+  \item $(\mathbb{F},+)$ es un grupo abeliano con identidad suma denotada por $0$.
+  \item $(\mathbb{F}\setminus\{0\},\cdot)$ es un grupo abeliano con identidad multiplicativa denotada por $1$.
+  \item La multiplicación distribuye sobre la suma:
+    \[
+      (a + b)\cdot c = a\cdot c + b\cdot c
+      \quad\text{para todo }a,b,c\in\mathbb{F}.
+    \]
+\end{enumerate}
+
+Si el conjunto \(\mathbb{F}\) es finito, se dice que el campo es finito.  
+
+En un campo, la resta se define mediante la suma de inversos aditivos: para \(a,b\in\mathbb{F}\),  
+\[
+  a - b \;=\; a + (-b),
+\]
+donde \(-b\) es el elemento único que satisface \(b + (-b) = 0\).  
+
+La división se define usando el inverso multiplicativo: para \(a,b\in\mathbb{F}\) con \(b\neq0\),
+\[
+  \frac{a}{b} \;=\; a \cdot b^{-1},
+\]
+siendo \(b^{-1}\) el único elemento que cumple \(b\cdot b^{-1}=1\).  
+
+El \emph{orden} de un campo finito es el número de sus elementos. Existe un campo finito de orden \(q\) si y solo si \(q\) es una potencia prima, es decir, \(q = p^m\) con \(p\) primo (característica del campo) y \(m\) entero positivo.  
+
+\begin{itemize}
+  \item Si \(m=1\), el campo se llama \emph{campo primo} y se denota \(\mathbb{F}_p\).  
+  \item Si \(m\ge2\), se llama \emph{campo de extensión} y se denota \(\mathbb{F}_{p^m}\).  
+\end{itemize}
+
+Para cada potencia prima \(q\), existe esencialmente un único campo finito de orden \(q\): todos ellos son isomorfos (idénticos en estructura, aunque difiera la representación de sus elementos). Por ello se usa la notación general \(\mathbb{F}_q\).  
+
+
+
+\section{Aritmética en \texorpdfstring{$\mathbb{F}_p$}{Fp}}
+Sea $p$ un número primo. El conjunto
+$$
+  \mathbb{F}_p = \{0,1,2,\dots,p-1\},
+$$
+con las operaciones de suma y multiplicación módulo $p$, constituye un campo finito de orden $p$. Denotaremos este campo por $\mathbb{F}_p$ y llamaremos a $p$ el \emph{módulo} de $\mathbb{F}_p$. Para cualquier entero $a$, $a \bmod p$ denota el único residuo $r$, $0\le r\le p-1$, obtenido al dividir $a$ por $p$; esta operación se llama \emph{reducción módulo $p$}.
+
+\paragraph{Ejemplo 2.1 (campo primo $\mathbb{F}_{31}$)}  
+Los elementos de $\mathbb{F}_{31}$ son $\{0,1,2,\dots,30\}$. A continuación se muestran algunas operaciones en $\mathbb{F}_{31}$:
+
+\begin{enumerate}
+  \item \textbf{Suma:} $9 + 25 = 34 \equiv 3 \pmod{31}.$
+  \item \textbf{Resta:} $9 - 25 = -16 \equiv 15 \pmod{31}.$
+  \item \textbf{Multiplicación:} $9 \cdot 25 = 225 \equiv 8 \pmod{31}.$
+  \item \textbf{Inverso multiplicativo:} $9^{-1} = 7$ ya que $9 \cdot 7 = 63 \equiv 1 \pmod{31}.$
+\end{enumerate}
+
+\section{Aritmética en \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}
+Los campos finitos de orden $2^m$, también llamados \emph{campos binarios}, se construyen como extensiones de polinomios:
+\[
+  \mathbb{F}_{2^m}\cong\mathbb{F}_2[x]/(f(x)),
+\]
+donde $f(x)$ es un polinomio irreducible de grado $m$ sobre $\mathbb{F}_2$.
+
+\subsection{Representación polinomial}
+Cada elemento se escribe como
+\[
+  a(x)=a_{m-1}x^{m-1}+\cdots+a_1x+a_0,\quad a_i\in\{0,1\}.
+\]
+La suma es bit a bit (XOR) de coeficientes, y la multiplicación se reduce módulo $f(x)$:
+\[
+  a(x)\cdot b(x)\bmod f(x).
+\]
+La reducción $p(x)\bmod f(x)$ es el residuo de grado < $m$ tras la división larga.
+
+\paragraph{Ejemplo 2.2 (campo $\mathbb{F}_{2^3}$)}
+Sea $f(x)=x^3+x+1$. Entonces
+\[
+  \mathbb{F}_{2^3}=\{0,1,x,x+1,x^2,x^2+1,x^2+x,x^2+x+1\}.
+\]
+\begin{enumerate}
+  \item Suma: $(x^2+x+1)+(x+1)=x^2$.
+  \item Multiplicación: $(x^2+x+1)(x+1)=x^3+x+1\equiv x+1\pmod{f(x)}$.
+  \item Inverso: $(x^2+x+1)^{-1}=x^2$, pues $(x^2+x+1)x^2=x^4+x^3+x^2\equiv1\pmod{f(x)}$.
+\end{enumerate}
+
+\paragraph{Ejemplo 2.3 (isomorfismo de campos)}
+Para $m=3$ hay dos irreducibles: $f_1(x)=x^3+x+1$ y $f_2(x)=x^3+x^2+1$. Los campos $\mathbb{F}_2[x]/(f_1)$ y $\mathbb{F}_2[x]/(f_2)$ tienen idénticos elementos y son isomorfos, pues existe un mapeo que envía la clase de $x$ en uno a una raíz de $f_1$ en el otro.
+
+\section{Campos de extensión}
+La representación por base polinomial para campos binarios se generaliza a todos los campos de extensión de la siguiente manera. Sea $p$ un primo y $m\ge2$. Denotamos por $\mathbb{F}_p[z]$ el anillo de polinomios en la variable $z$ con coeficientes en $\mathbb{F}_p$. Sea $f(z)\in\mathbb{F}_p[z]$ un polinomio irreducible de grado $m$—existen para cualquier par $(p,m)$ y pueden hallarse eficientemente (ver Apéndice A). La irreducibilidad significa que $f(z)$ no se factoriza como producto de polinomios en $\mathbb{F}_p[z]$ de grado menor que $m$. Entonces:
+\[
+  \mathbb{F}_{p^m}=\{a_{m-1}z^{m-1}+\cdots+a_1z+a_0:\,a_i\in\mathbb{F}_p\}
+\]
+con suma habitual de polinomios y producto reducido módulo $f(z)$.
+
+\paragraph{Ejemplo 2.4 (campo $\mathbb{F}_{251^5}$)}
+Sea $p=251$, $m=5$ y $f(z)=z^5+z^4+12z^3+9z^2+7$, irreducible en $\mathbb{F}_{251}[z]$. Entonces $\mathbb{F}_{251^5}$ consta de polinomios de grado \(<5\) con coeficientes en $\{0,1,\dots,250\}$. Por ejemplo, sean:
+\[
+  a=123z^4+76z^2+7z+4,\quad b=196z^4+12z^3+225z^2+76.
+\]
+\begin{enumerate}
+  \item Suma: $a+b=68z^4+12z^3+50z^2+7z+80.$
+  \item Resta: $a-b=178z^4+239z^3+102z^2+7z+179.$
+  \item Multiplicación: $a\cdot b=117z^4+151z^3+117z^2+182z+217.$
+  \item Inverso: $a^{-1}=109z^4+111z^3+250z^2+98z+85,$
+\end{enumerate}
+obeylines
+
+\section{Grupos multiplicativos y orden de un elemento}
+En todo campo finito $\mathbb{F}_q$, el conjunto $\mathbb{F}_q^*=\mathbb{F}_q\setminus\{0\}$ es un grupo cíclico de orden $q-1$. Un generador $g$ (elemento primitivo) cumple:
+\[
+  \langle g\rangle=\mathbb{F}_q^*,\quad g^k\neq1\text{ para }0<k<q-1.
+\]
+El \emph{orden} de $a\in\mathbb{F}_q^*$ es el menor $d>0$ tal que $a^d=1$. Determinarlo es clave al definir curvas elípticas seguras.
