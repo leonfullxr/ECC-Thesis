@@ -20,4 +20,4 @@ jobs:
             -v "${{ github.workspace }}":/workspace \
             -w /workspace \
             leonfullxr/ecc-benchmarks:latest \
-            ecc_demo
+            ./bin/ecc_demo
