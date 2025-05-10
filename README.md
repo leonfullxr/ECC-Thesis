@@ -4,11 +4,30 @@
    <img src="docs/Plantilla_TFG_latex/imagenes/torus.png" alt="Cypher Logo" width="100%">
 </p>
 
-# Project Description
+---
+
+## Table of Contents
+
+- [ECC-Thesis](#ecc-thesis)
+  - [1. 🎓 Project Description](#1--project-description)
+  - [2. 📁 Project Structure](#2--project-structure)
+  - [3. 👷🏻 CI / GitHub Workflows](#3-ci-/-github-workflows)
+  - [4. 🐳 Docker Image](#4--docker-image)
+    - [Files](#files)
+    - [Usage](#usage)
+      - [1. Build the image](#1-build-the-image)
+      - [2. Start a shell](#2-start-a-shell)
+      - [3. Compile into `bin/`](#3-compile-into-bin)
+      - [4. Run your binary](#4-run-your-binary)
+  - [Local-override vs General](#local-override-vs-general)
+  
+---
+
+## 1. 🎓 Project Description
 
 This Computer Engineering Bachelor's Final Thesis for the University of Granada proposal focuses on the study of elliptic curves applied to cryptography, addressing both its theoretical foundations and its practical application in security systems. The mathematical basis of ECC, its implementations in comparison with traditional methods such as RSA and the discrete logarithm problem will be analyzed. In addition, the impact of quantum computing on the security of these systems will be explored and coding and visualization tools will be developed to illustrate its operation. The work aims to provide a comprehensive and up-to-date view on the potential of elliptic curves in modern cryptography.
 
-# Project Structure
+## 2. 📁 Project Structure
 
 ```bash
 mi_proyecto_crypto/
@@ -37,9 +56,30 @@ mi_proyecto_crypto/
 ├── Dockerfile             # Define el contenedor con GMP & NTL
 ├── docker-compose.yml     # Compose (general-purpose) creando servicio `crypto`
 └── docker-compose.local.yml # (opcional) Compose apuntando a tu ruta USB
-````
+```
 
-# Docker Image
+## 3. 👷🏻 CI / GitHub Workflows
+
+The repository includes a `docker-publish.yml` file and a `test.yml` for GitHub Actions to automatically rebuild and publish our Docker image on every push to `main` or when a new tag is created.
+
+### Workflow file
+
+- **`.github/workflows/docker-publish.yml`**: is an automation that, when a push is made to GitHub and changes are detected in the dependencies of any of the languages or the Dockerfile, it automatically rebuilds the image and uploads it to DockerHub under `leonfullxr/ecc-benchmarks:latest`.
+- **`.github/workflows/test.yml`**: On every push or PR to `main`:
+  1. Checks out your code  
+  2. Pulls the latest image from Docker Hub  
+  3. Runs a quick non-interactive command inside the container (e.g. `bin/bench --help`) to verify it launches correctly
+
+### Secrets
+
+In your fork (or upstream) you must configure two repository secrets under **Settings → Secrets and variables → Actions**:
+
+```yaml
+DOCKERHUB_USERNAME: your-dockerhub-username   # e.g. "leonfullxr"
+DOCKERHUB_TOKEN:    your-dockerhub-access-token
+```
+
+## 4. 🐳 Docker Image
 
 We provide a containerized environment with **GMP 6.3.0** and **NTL 11.5.1** pre-installed. The `/workspace/bin` directory is automatically added to `PATH`, so any executable you compile there can be run by name.
 
