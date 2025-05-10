@@ -1,0 +1,10 @@
+services:
+  crypto:
+    build: .
+    # bind the current directory (the cloned repo)—
+    # works no matter where someone puts it
+    volumes:
+      - .:/workspace:delegated
+    working_dir: /workspace
+    tty: true
+    command: bash
