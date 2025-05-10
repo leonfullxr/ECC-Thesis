@@ -56,6 +56,22 @@ We provide a containerized environment with **GMP 6.3.0** and **NTL 11.5.1** pre
 
 ## Usage
 
+You can download the image from Docker Hub and run it:
+
+```bash
+# pull the image
+docker pull leonfullxr/ecc-benchmarks:latest
+
+# run an interactive shell
+docker run --rm -it \
+  -v "$(pwd)":/workspace \
+  -w /workspace \
+  leonfullxr/ecc-benchmarks:latest \
+  bash
+```
+
+Or you can build it locally.
+
 ### 1. Build the image
 
 From your project root:
