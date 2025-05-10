@@ -24,8 +24,8 @@ BIN_DIR   := bin
 SRC    := $(wildcard $(SRC_DIR)/*.cpp)
 OBJ    := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRC))
 
-BENCH_SRC := bench/bench_main.cpp
-BENCH_OBJ := $(BUILD_DIR)/bench_main.o
+BENCH_SRC := src/my_ecc.cpp
+BENCH_OBJ := $(BUILD_DIR)/my_ecc.o
 
 # ─────────────────────────────────────────────────────────────────────────────
 .PHONY: all bench clean
