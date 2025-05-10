@@ -1,0 +1,10 @@
+services:
+  crypto:
+    build: .
+    # bind your USB‐mounted repo into /workspace so
+    # Docker can see your bin/, src/, include/, etc.
+    volumes:
+      - "/media/leon/Leon's File/Nextcloud/ETSIIT/ETSHIT/Github/ECC-Thesis:/workspace:delegated"
+    working_dir: /workspace
+    tty: true
+    command: bash
