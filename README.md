@@ -96,7 +96,7 @@ All your `.cpp` files live in `src/`, headers in `include/`, and you’ll place 
 ```bash
 g++ -std=c++17 \
     -I/usr/local/include \
-    src/ecc.cpp \
+    src/my_ecc.cpp \
     -L/usr/local/lib -lntl -lgmp -pthread \
     -o bin/ecc_demo
 ```
@@ -127,6 +127,6 @@ Since `bin/` is on `PATH`, you can just type the executable name.
   If you need to mount a weird host path (like me) from your USB drive, use:
 
 ```bash
-  docker-compose -f docker-compose.local.yml up --build
+  docker-compose -f docker-compose.local.yml up -d --build
   docker-compose -f docker-compose.local.yml run crypto
 ```
