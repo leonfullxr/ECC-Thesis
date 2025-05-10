@@ -1,27 +1,52 @@
-CXX := g++
-CXXFLAGS := -std=c++17 -O2 -march=native -Iinclude
-LDFLAGS := -lntl -lgmp            # enlazar NTL/GMP
+# ─────────────────────────────────────────────────────────────────────────────
+# Compiler / linker
+CXX      := g++
+# allow overriding (e.g. for non-default installs)
+PREFIX   ?= /usr/local
 
-SRC := $(wildcard src/*.cpp)
-OBJ := $(SRC:src/%.cpp=build/%.o)
+# project headers in ./include, plus NTL/GMP in $(PREFIX)
+CXXFLAGS := -std=c++17 -O2 -march=native \
+            -Iinclude \
+            -I$(PREFIX)/include
+
+# link against NTL & GMP in $(PREFIX)/lib, embed rpath, plus pthread
+LDFLAGS  := -L$(PREFIX)/lib \
+            -Wl,-rpath=$(PREFIX)/lib \
+            -lntl -lgmp -pthread
+
+# ─────────────────────────────────────────────────────────────────────────────
+# directory layout
+SRC_DIR   := src
+BUILD_DIR := build
+BIN_DIR   := bin
+
+# sources & objects
+SRC    := $(wildcard $(SRC_DIR)/*.cpp)
+OBJ    := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRC))
+
 BENCH_SRC := bench/bench_main.cpp
-BENCH_OBJ := build/bench_main.o
+BENCH_OBJ := $(BUILD_DIR)/bench_main.o
 
+# ─────────────────────────────────────────────────────────────────────────────
 .PHONY: all bench clean
 
 all: bench
 
-build/%.o: src/%.cpp | build
+# compile every src/%.cpp → build/%.o
+$(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR) $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-build/bench_main.o: $(BENCH_SRC) | build
+# compile bench/bench_main.cpp
+$(BENCH_OBJ): $(BENCH_SRC) | $(BUILD_DIR) $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# link bench binary
 bench: $(OBJ) $(BENCH_OBJ)
-	$(CXX) $^ $(LDFLAGS) -o bin/bench
+	$(CXX) $^ $(LDFLAGS) -o $(BIN_DIR)/bench
 
-build:
-	mkdir -p build bin results
+# ensure build/ and bin/ exist
+$(BUILD_DIR) $(BIN_DIR):
+	mkdir -p $@
 
 clean:
-	rm -rf build bin results/*.csv
+	rm -rf $(BUILD_DIR) $(BIN_DIR)/*
