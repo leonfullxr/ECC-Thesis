@@ -1,10 +1,12 @@
 services:
   crypto:
-    build: .
-    # bind the current directory (the cloned repo)—
-    # works no matter where someone puts it
+    # Instead of building locally, pull from Docker Hub:
+    image: leonfullxr/ecc-thesis-crypto:latest
+    # build:
     volumes:
       - .:/workspace:delegated
+
     working_dir: /workspace
+    stdin_open: true
     tty: true
     command: bash
