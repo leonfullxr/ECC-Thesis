@@ -27,6 +27,8 @@
 
 This Computer Engineering Bachelor's Final Thesis for the University of Granada proposal focuses on the study of elliptic curves applied to cryptography, addressing both its theoretical foundations and its practical application in security systems. The mathematical basis of ECC, its implementations in comparison with traditional methods such as RSA and the discrete logarithm problem will be analyzed. In addition, the impact of quantum computing on the security of these systems will be explored and coding and visualization tools will be developed to illustrate its operation. The work aims to provide a comprehensive and up-to-date view on the potential of elliptic curves in modern cryptography.
 
+The project also includes a Docker-based environment for compiling and running the code, which is designed to be easily portable and reproducible. The Docker image includes the necessary libraries and tools for working with elliptic curves, such as GMP and NTL.
+
 ## 2. 📁 Project Structure
 
 ```bash
@@ -68,7 +70,7 @@ The repository includes a `docker-publish.yml` file and a `test.yml` for GitHub 
 - **`.github/workflows/test.yml`**: On every push or PR to `main`:
   1. Checks out your code  
   2. Pulls the latest image from Docker Hub  
-  3. Runs a quick non-interactive command inside the container (e.g. `bin/bench --help`) to verify it launches correctly
+  3. Runs a quick non-interactive command inside the container (e.g. `make`) to verify it launches correctly
 
 ### Secrets
 
