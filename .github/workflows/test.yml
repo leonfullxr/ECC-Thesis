@@ -17,8 +17,8 @@ jobs:
 
     - name: Run Docker container
       run: |
-          docker run --rm \
-            -v "${{ github.workspace }}":/workspace \
-            -w /workspace \
-            leonfullxr/ecc-benchmarks:latest \
-            make
+        docker run --rm \
+          -v "${{ github.workspace }}":/workspace \
+          -w /workspace \
+          leonfullxr/ecc-benchmarks:latest \
+          sh -c "mkdir -p bin && make"
