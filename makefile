@@ -67,6 +67,10 @@ show-info:
 $(BUILD_DIR) $(BIN_DIR):
 	@mkdir -p $@
 
+bin/bench: $(OBJS)
+	mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -o $@ $^
+
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	@echo -e "$(LGFG)Compiling $<…$(EC)"
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
