@@ -1,7 +1,5 @@
-* https://trustica.cz/en/blog/2018/04/26/elliptic-curves-prime-order-curves/
-* Elliptic curve 3D visuals: https://www.s3dlib.org/examples/lines/elliptic_curve.html
-* SEC 2: Recommended Elliptic Curve Domain Parameters: https://www.secg.org/sec2-v2.pdf
-* Elliptic Curve Lecture 1 MIT: https://math.mit.edu/classes/18.783/2017/Lecture1.pdf
+
+
 * Introduccion a la criptografia: https://www.ibm.com/mx-es/topics/cryptography
 * Introduccion a la criptografia: https://aws.amazon.com/es/what-is/cryptography/
 * Introduccion a la criptografia: https://informatica.uv.es/estguia/ATD/apuntes/teoria/documentos/Criptografia.pdf
@@ -12,3 +10,35 @@
 * RSA Introduccion: https://www.geeksforgeeks.org/rsa-algorithm-cryptography/
 * Algoritmo de SHOR: https://informatecdigital.com/el-algoritmo-de-shor/
 
+# Last notes
+ https://binaryterms.com/block-cipher.html
+ https://www.freecodecamp.org/news/what-is-a-block-cipher/
+ https://www.geeksforgeeks.org/block-cipher-modes-of-operation/
+ https://www.revista.unam.mx/vol.7/num7/art55/jul_art55.pdf
+ https://cacr.uwaterloo.ca/hac/about/chap1.pdf
+ https://ia803208.us.archive.org/1/items/DSStore_20161129/Library/ComputerScience/AnIntroductionToMathematicalCryptography.pdf
+https://ciberseguridad.com/servicios/algoritmos-cifrado/#En_flujos
+
+# Quantum computing
+* https://quantum.country/qcvc#part-I
+* https://ia803208.us.archive.org/1/items/DSStore_20161129/Library/ComputerScience/AnIntroductionToMathematicalCryptography.pdf
+* https://www.youtube.com/watch?v=tsbCSkvHhMo
+* 
+
+# ECC 
+# https://medium.com/blockchain-bites-es/how-two-strangers-can-share-a-secret-in-public-4a21651d9881
+* SEC 2: Recommended Elliptic Curve Domain Parameters: https://www.secg.org/sec2-v2.pdf
+* Elliptic Curve Lecture 1 MIT: https://math.mit.edu/classes/18.783/2017/Lecture1.pdf
+* https://trustica.cz/en/blog/2018/04/26/elliptic-curves-prime-order-curves/
+* Elliptic curve 3D visuals: https://www.s3dlib.org/examples/lines/elliptic_curve.html
+
+* https://math.mit.edu/classes/18.783/2023/lectures.html
+
+3.8 Notes and further references
+§3.1
+A brief introduction to elliptic curves can be found in Chapter 6 of Koblitz’s book [254].
+Intermediate-level textbooks that provide proofs of many of the basic results used in
+elliptic curve cryptography include Charlap and Robbins [92, 93], Enge [132], Silver-
+man and Tate [433], and Washington [474]. The standard advanced-level reference on
+the theory of elliptic curves are the two books by Silverman [429, 430].
+Theorem 3.8 is due to Waterhouse [475]. Example 3.17 is from Wittmann [484].

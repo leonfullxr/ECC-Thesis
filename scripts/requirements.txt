@@ -3,3 +3,9 @@ matplotlib
 numpy
 plotly
 mpmath
+
+# GPM
+https://libntl.org/doc/tour-gmp.html
+
+# NTL
+https://libntl.org/doc/tour-unix.html
