@@ -1,7 +1,7 @@
 \chapter{Campos finitos}
 La aritmética en campos finitos es fundamental para numerosos algoritmos de clave pública, incluidos los basados en el problema del logaritmo discreto en campos finitos, los esquemas de curvas elípticas y las aplicaciones emergentes de curvas hiperelípticas. El rendimiento de estos protocolos depende en gran medida de nuestra capacidad para realizar rápidamente operaciones básicas en el campo subyacente.  
 
-Los campos finitos se denotan como \(\mathrm{GF}(p^m)\), donde \(p\) es un número primo y \(m\) un entero positivo. Para que los sistemas de curvas elípticas sean eficientes, es imprescindible implementar de manera óptima la suma, la resta, la multiplicación y la inversión en dicho campo. Existen tres familias de campos que resultan especialmente adecuadas para ECC (Criptografia de Curvas Elípticas):  
+Los campos finitos (también llamados cuerpo finito o cuerpo de Galois) se denotan como \(\mathrm{GF}(p^m)\), donde \(p\) es un número primo y \(m\) un entero positivo. Para que los sistemas de curvas elípticas sean eficientes, es imprescindible implementar de manera óptima la suma, la resta, la multiplicación y la inversión en dicho campo. Existen tres familias de campos que resultan especialmente adecuadas para ECC (Criptografía de Curvas Elípticas):  
 \begin{itemize}
   \item \textbf{Campos primos} (\(\mathbb{F}_p\)),  
   \item \textbf{Campos binarios} (\(\mathbb{F}_{2^m}\)),  
@@ -10,6 +10,8 @@ Los campos finitos se denotan como \(\mathrm{GF}(p^m)\), donde \(p\) es un núme
 En las secciones siguientes se presenta una introducción informal a la teoría de campos finitos y se describen en detalle los algoritmos eficientes para cada tipo de campo.  
 
 Dado que en muchas aplicaciones los tamaños de \(p^m\) son muy grandes, entender la complejidad computacional de estas operaciones es clave para evaluar el rendimiento global de los esquemas criptográficos basados en curvas elípticas.  
+
+Nota: $GF(p^m)$ == \(\mathbb{F}_{p^m}\).
 
 \section{Introducción a campos finitos}
 Los campos son abstracciones de sistemas numéricos familiares (como los racionales \(\mathbb{Q}\), los reales \(\mathbb{R}\) o los complejos \(\mathbb{C}\)) que reúnen ciertas propiedades esenciales. Un campo \(\mathbb{F}\) consta de un conjunto \(\mathbb{F}\) junto con dos operaciones, suma (\(+\)) y producto (\(\cdot\)), que satisfacen:
@@ -54,7 +56,9 @@ Sea $p$ un número primo. El conjunto
 $$
   \mathbb{F}_p = \{0,1,2,\dots,p-1\},
 $$
-con las operaciones de suma y multiplicación módulo $p$, constituye un campo finito de orden $p$. Denotaremos este campo por $\mathbb{F}_p$ y llamaremos a $p$ el \emph{módulo} de $\mathbb{F}_p$. Para cualquier entero $a$, $a \bmod p$ denota el único residuo $r$, $0\le r\le p-1$, obtenido al dividir $a$ por $p$; esta operación se llama \emph{reducción módulo $p$}.
+con las operaciones de suma y multiplicación módulo $p$, $\mathbb{Z}/p\mathbb{Z}$, constituye un campo finito de orden $p$. Denotaremos este campo por $\mathbb{F}_p$ y llamaremos a $p$ el \emph{módulo} de $\mathbb{F}_p$. Para cualquier entero $a$, $a \bmod p$ denota el único residuo $r$, $0\le r\le p-1$, obtenido al dividir $a$ por $p$; esta operación se llama \emph{reducción módulo $p$}.
+
+Todos los elementos no nulos de $\mathbb{F}_p$ tienen inverso multiplicativo, y forman un grupo cíclico de orden $p-1$ (esto es una consecuencia del pequeño Teorema de Fermat).
 
 \paragraph{Ejemplo 2.1 (campo primo $\mathbb{F}_{31}$)}  
 Los elementos de $\mathbb{F}_{31}$ son $\{0,1,2,\dots,30\}$. A continuación se muestran algunas operaciones en $\mathbb{F}_{31}$:
@@ -72,13 +76,14 @@ Los campos finitos de orden $2^m$, también llamados \emph{campos binarios}, se 
   \mathbb{F}_{2^m}\cong\mathbb{F}_2[x]/(f(x)),
 \]
 donde $f(x)$ es un polinomio irreducible de grado $m$ sobre $\mathbb{F}_2$.
+En tal campo, cada elemento puede representarse como un polinomio de grado < $m$ con coeficientes en ${0,1}$ (equivalentemente, como un vector binario de $m$ bits).
 
 \subsection{Representación polinomial}
 Cada elemento se escribe como
 \[
   a(x)=a_{m-1}x^{m-1}+\cdots+a_1x+a_0,\quad a_i\in\{0,1\}.
 \]
-La suma es bit a bit (XOR) de coeficientes, y la multiplicación se reduce módulo $f(x)$:
+La suma de elementos se realiza como la suma de polinomios coeficiente a coeficiente (operación equivalente a XOR bit a bit, sin acarreo), y la multiplicación se reduce módulo $f(x)$:
 \[
   a(x)\cdot b(x)\bmod f(x).
 \]
