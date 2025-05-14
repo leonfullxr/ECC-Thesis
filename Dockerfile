@@ -1,5 +1,7 @@
 # Dockerfile
 FROM ubuntu:22.04
+
+ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV DEBIAN_FRONTEND=noninteractive
 
 # 1) build deps + CA certs
@@ -12,11 +14,19 @@ RUN apt-get update \
 
 # 2) build & install GMP 6.3.0
 WORKDIR /tmp
-RUN wget https://gmplib.org/download/gmp/gmp-6.3.0.tar.xz \
- && tar xf gmp-6.3.0.tar.xz \
- && cd gmp-6.3.0 \
- && ./configure --prefix=/usr/local \
- && make -j"$(nproc)" && make install
+ARG GMP_VERSION=6.3.0
+RUN wget \
+      --tries=5 \
+      --timeout=30 \
+      --waitretry=10 \
+      https://ftp.gnu.org/gnu/gmp/gmp-${GMP_VERSION}.tar.xz \
+  && tar xf gmp-${GMP_VERSION}.tar.xz \
+  && cd gmp-${GMP_VERSION} \
+  && ./configure --prefix=/usr/local \
+  && make -j"$(nproc)" \
+  && make install \
+  && cd /tmp \
+  && rm -rf gmp-${GMP_VERSION} gmp-${GMP_VERSION}.tar.xz
 
 # 3) build & install NTL 11.5.1 (force loader to use /usr/local/lib)
 WORKDIR /tmp
@@ -30,7 +40,6 @@ RUN wget https://libntl.org/ntl-11.5.1.tar.gz \
  && make -j"$(nproc)" && make install
 
 # 4) final cleanup
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 WORKDIR /workspace
 # add your repo's bin/ so that any executable you place there is on PATH
 ENV PATH=/workspace/bin:$PATH
