@@ -49,6 +49,48 @@ El \emph{orden} de un campo finito es el número de sus elementos. Existe un cam
 
 Para cada potencia prima \(q\), existe esencialmente un único campo finito de orden \(q\): todos ellos son isomorfos (idénticos en estructura, aunque difiera la representación de sus elementos). Por ello se usa la notación general \(\mathbb{F}_q\).  
 
+\subsection{Representación binaria y suma de enteros}
+Antes de entrar en los campos primos y binarios e
+Todo entero no negativo \(a\) tiene una representación binaria única
+\[
+  a \;=\;\sum_{i=0}^{n-1} a_i 2^i,
+  \quad a_i\in\{0,1\},\quad a_{n-1}\neq0.
+\]
+Los dígitos binarios \(a_i\) se llaman \emph{bits}, y decimos que \(a\) es un entero de \(n\) bits. Para representar enteros negativos se añade un bit de signo.
+
+Para sumar dos enteros en binario aplicamos el método enseñado en primaria, sumando uno a uno(bit a bit) y llevando el 'dígito de más' hacia la siguiente suma cuando sea necesario. Por ejemplo, para calcular \(43+37=80\) en binario:
+
+\[
+\begin{array}{r@{}c@{}c@{}c@{}c@{}c@{}c}
+ & {\color{red}1} & {\color{red}0} & {\color{red}1} & {\color{red}1} & {\color{red}1} & {\color{red}1}\\
+ & 1&0&1&0&1&1\\
++& 1&0&0&1&0&1\\\hline
+ & 1&0&1&0&0&0\\
+\end{array}
+\]
+Los 'dígitos de más' aparecen en rojo.
+
+La implementación en hardware suele usar un \emph{sumador de 1 bit} que toma dos bits \(a_i,b_i\) y una llevada de entrada \(c_i\), y calcula una suma \(s_i\) y una llevada de salida \(c_{i+1}\) como:
+\[
+\begin{aligned}
+c_{i+1} &= (a_i\land b_i)\;\lor\;(c_i\land a_i)\;\lor\;(c_i\land b_i),\\
+s_i     &= a_i\oplus b_i\oplus c_i,
+\end{aligned}
+\]
+donde \(\land\), \(\lor\) y \(\oplus\) son las funciones booleanas AND, OR y XOR, respectivamente.  
+
+Encadenando \(n+1\) de estos sumadores de 1 bit podemos sumar dos números de \(n\) bits usando \(7n+7 = O(n)\) operaciones booleanas sobre bits individuales.  
+
+\begin{remark}
+El encadenamiento de sumadores, o \emph{ripple addition}, impone un cómputo secuencial y ya casi no se utiliza en hardware real. En su lugar se emplean esquemas de \emph{carry-lookahead} que permiten paralelizar la generación de las llevadas. Gracias a esto, los procesadores modernos pueden sumar en un solo ciclo de reloj enteros de 64 o incluso 128 bits, y con instrucciones SIMD (Single Instruction Multiple Data) realizar varias sumas de 64 bits en paralelo por ciclo.  
+
+Otra opción es agrupar los bits en palabras de 64 bits:  
+\[
+  a = \sum_{i=0}^{k-1} a_i\,2^{64i},
+  \quad k = \bigl\lceil \tfrac{n}{64}\bigr\rceil.
+\]
+Con ello, sumamos dos números de \(n\) bits en \(O(k)=O(n)\) operaciones de palabra de 64 bits. Cada operación de palabra se ejecuta internamente con circuitos de bits de coste constante, de modo que el coste total sigue siendo \(O(n)\) en términos de operaciones a nivel de bit.
+\end{remark}
 
 
 \section{Aritmética en \texorpdfstring{$\mathbb{F}_p$}{Fp}}
@@ -70,6 +112,59 @@ Los elementos de $\mathbb{F}_{31}$ son $\{0,1,2,\dots,30\}$. A continuación se 
   \item \textbf{Inverso multiplicativo:} $9^{-1} = 7$ ya que $9 \cdot 7 = 63 \equiv 1 \pmod{31}.$
 \end{enumerate}
 
+\subsection{Suma en $\mathbb{F}_p$}
+Para sumar dos elementos de \(\mathbb{F}_p\cong\mathbb{Z}/p\mathbb{Z}\), representados como enteros únicos en \([0,p-1]\), basta sumar los enteros y comprobar si el resultado es \(\ge p\); en tal caso restamos \(p\) para obtener un valor en \([0,p-1]\). De forma análoga, tras restar dos enteros, sumamos \(p\) si el resultado es negativo. El coste total sigue siendo \(O(n)\) operaciones a nivel de bit, donde \(n=\lg p\) es el número de bits necesarios para representar un elemento del campo.
+
+Para sumar o restar dos elementos de \(\mathbb{F}_q\cong(\mathbb{Z}/p\mathbb{Z})[x]/(f)\), simplemente sumamos o restamos los coeficientes correspondientes de los polinomios, con un coste total de \(O(d\lg p)\) operaciones de bit, donde \(d=\deg f\). Nuevamente, si definimos \(n=\lg q=d\lg p\), el coste es \(O(n)\) operaciones de bit.
+
+\subsection{Multiplicación de enteros}
+A diferencia de la suma, este problema se cree ampliamente que \(O(n\log n)\) es lo óptimo y bajo ciertas conjeturas incluso se ha demostrado condicionalmente, pero no se conoce de forma incondicional. Sólo muy recientemente se estableció esa cota superior. Dado que no conocemos la complejidad exacta, es habitual usar la notación \(M(n)\) para denotar el tiempo de multiplicar dos enteros de \(n\) bits. Esto permite expresar límites para algoritmos que dependen de la complejidad de la multiplicación de enteros sin atarse al estado actual del arte. En las últimas dos décadas, las cotas superiores de \(M(n)\) han mejorado al menos cuatro veces.
+
+Calculemos \(37\times43=1591\) con el método “de la escuela” en binario:
+
+\[
+\begin{array}{r}
+   101011\\
+\times\;100101\\\hline
+   101011\\
+   101011\;\;\\
+ + 101011\;\;\\\hline
+ 11000110111
+\end{array}
+\]
+
+Multiplicar bits individuales es sencillo (una compuerta AND), pero requiere \(n^2\) multiplicaciones de bit, seguidas de \(n\) sumas de números de \(n\) bits (desplazados adecuadamente). La complejidad de este algoritmo es \(\Theta(n^2)\), lo que da la cota superior \(M(n)=O(n^2)\). La única cota inferior conocida es la trivial \(M(n)=\Omega(n)\), por lo que podríamos esperar mejorar \(O(n^2)\), y de hecho se han desarrollado algoritmos más rápidos.  
+
+\subsection{Algoritmo de Karatsuba}
+
+El algoritmo de Karatsuba se basa en un enfoque "divide y vencerás". En lugar de representar los enteros de \(n\) bits con \(n\) dígitos en base 2, podemos escribirlos en base \(2^{n/2}\) y calcular su producto del modo siguiente:
+\[
+  a = a_0 + 2^{n/2}a_1,\qquad
+  b = b_0 + 2^{n/2}b_1,
+\]
+\[
+  ab = a_0b_0 \;+\; 2^{n/2}\,(a_1b_0 + a_0b_1)\;+\;2^n\,a_1b_1.
+\]
+Esto reduce la multiplicación de \(n\) bits a cuatro multiplicaciones de \(\tfrac n2\) bits y tres sumas de enteros de \(O(n)\) bits (desplazar por potencias de 2 es gratuito, basta con “mover” el resultado binario). Sin embargo, Karatsuba observó que mediante la identidad
+\[
+  a_1b_0 + a_0b_1
+  = (a_0 + a_1)(b_0 + b_1) \;-\; a_0b_0 \;-\; a_1b_1
+\]
+podemos obtener \(a_1b_0 + a_0b_1\) usando solo una multiplicación adicional (más las dos ya necesarias para \(a_0b_0\) y \(a_1b_1\)), junto con sumas y restas. Así, reutilizando \(a_0b_0\) y \(a_1b_1\), el producto \(ab\) se calcula con tres multiplicaciones y seis sumas/restas de enteros de tamaño \(O(n)\). 
+
+Aplicando recursivamente esta misma idea a cada subproducto, la complejidad de tiempo \(T(n)\) satisface
+\[
+  T(n) \;=\; 3\,T\bigl(\tfrac n2\bigr) \;+\; O(n)
+  \;=\; O\bigl(n^{\log_2 3}\bigr),
+\]
+luego
+\[
+  M(n)\;=\;O\bigl(n^{\log_2 3}\bigr),
+  \quad\text{donde }\log_2 3\approx1.59.
+\]
+
+La eficiencia de la multiplicación en campos finitos es crucial en esquemas de curvas elípticas, ya que, las limitaciones de los multiplicadores enteros y el coste del acarreo pueden convertirse en cuellos de botella en implementaciones directas.
+
 \section{Aritmética en \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}
 Los campos finitos de orden $2^m$, también llamados \emph{campos binarios}, se construyen como extensiones de polinomios:
 \[
@@ -79,6 +174,43 @@ donde $f(x)$ es un polinomio irreducible de grado $m$ sobre $\mathbb{F}_2$.
 En tal campo, cada elemento puede representarse como un polinomio de grado < $m$ con coeficientes en ${0,1}$ (equivalentemente, como un vector binario de $m$ bits).
 
 \subsection{Representación polinomial}
+Sea \(f(z)\) un polinomio binario irreducible de grado \(m\), y escríbalo como
+\[
+  f(z) = z^m + r(z).
+\]
+Los elementos de \(\mathbb{F}_{2^m}\) son los polinomios binarios de grado a lo sumo \(m-1\). La suma de elementos es la suma habitual de polinomios sobre \(\mathbb{F}_2\), y la multiplicación se realiza \(\bmod\,f(z)\).
+
+A un elemento
+\[
+  a(z) = a_{m-1}z^{m-1} + \cdots + a_1 z + a_0
+\]
+se le asocia el vector binario
+\(\displaystyle a = (a_{m-1},\dots,a_1,a_0)\) de longitud \(m\). Definamos
+\[
+  t = \bigl\lceil\tfrac{m}{W}\bigr\rceil,
+  \quad
+  s = Wt - m.
+\]
+En software, \(a\) puede almacenarse en un arreglo de \(t\) palabras de \(W\) bits:
+\[
+  A = \bigl(A[t-1],\,\dots,\,A[1],\,A[0]\bigr),
+\]
+donde el bit menos significativo de \(A[0]\) es \(a_0\), y los \(s\) bits más significativos de \(A[t-1]\) quedan sin usar (siempre a cero).
+
+\begin{figure}[H]
+\[
+\underbrace{A[t-1]\;\;A[t-2]\;\;\cdots\;\;A[1]\;\;A[0]}_{\text{\(t\) palabras de \(W\) bits}}
+\]
+\[
+\underbrace{a_{m-1}\;\cdots\;a_{tW}\;}_{s\text{ bits sin usar}}\;\;
+a_{tW-1}\;\cdots\;a_{2W}\;\;
+a_{2W-1}\;\cdots\;a_{W}\;\;
+a_{W-1}\;\cdots\;a_{0}
+\]
+\caption{Representación de \(a\in\mathbb{F}_{2^m}\) como un arreglo \(A\) de palabras de \(W\) bits. Los \(s = Wt - m\) bits de orden más alto de \(A[t-1]\) permanecen sin usar.}
+\label{fig:word_representation}
+\end{figure}
+
 Cada elemento se escribe como
 \[
   a(x)=a_{m-1}x^{m-1}+\cdots+a_1x+a_0,\quad a_i\in\{0,1\}.
@@ -103,6 +235,85 @@ Sea $f(x)=x^3+x+1$. Entonces
 \paragraph{Ejemplo 2.3 (isomorfismo de campos)}
 Para $m=3$ hay dos irreducibles: $f_1(x)=x^3+x+1$ y $f_2(x)=x^3+x^2+1$. Los campos $\mathbb{F}_2[x]/(f_1)$ y $\mathbb{F}_2[x]/(f_2)$ tienen idénticos elementos y son isomorfos, pues existe un mapeo que envía la clase de $x$ en uno a una raíz de $f_1$ en el otro.
 
+\subsection{Suma en \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}
+La suma de elementos de \(\mathbb{F}_{2^m}\) se realiza bit a bit (XOR) en cada palabra, por lo que únicamente requiere \(t\) operaciones de palabra.
+
+\begin{algorithm}
+\caption{Suma en \(\mathbb{F}_{2^m}\)}
+\label{alg:add_f2m}
+\begin{algorithmic}[1]
+\REQUIRE Arreglos \(A[0..t-1]\) y \(B[0..t-1]\) que representan los coeficientes de \(a(z)\) y \(b(z)\).
+\ENSURE Arreglo \(C[0..t-1]\) que representa \(c(z)=a(z)+b(z)\).
+\FOR{\(i = 0\) \TO \(t-1\)}
+  \STATE \(C[i] \leftarrow A[i]\;\oplus\;B[i]\)
+\ENDFOR
+\RETURN \(C\)
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Multiplicación en \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}
+La técnica "shift-and-add" para la multiplicación en campos finitos se basa en la observación:
+\[
+  a(z)\cdot b(z)
+  =\sum_{i=0}^{m-1} a_i\,z^i\,b(z).
+\]
+En la iteración \(i\), se calcula 
+\[
+  b \;\leftarrow\; b\cdot z \bmod f(z)
+\]
+(mediante un desplazamiento y, si el bit de más alto orden de \(b\) era 1, una reducción por \(r(z)\)) y, si \(a_i=1\), se acumula 
+\[
+  c \;\leftarrow\; c + b.
+\]
+
+\begin{algorithm}
+\caption{Multiplicación "shift-and-add" en \(\mathbb{F}_{2^m}\)}
+\label{alg:mul_f2m}
+\begin{algorithmic}[1]
+\REQUIRE Polinomios binarios \(A[0..t-1]\) y \(B[0..t-1]\) que representan \(a(z)\) y \(b(z)\).
+\ENSURE Polinomio \(C[0..t-1]\) que representa \(c(z)=a(z)\,\cdot\,b(z)\bmod f(z)\).
+\STATE \(C \gets 0\)
+\IF{\(a_0 = 1\)} \STATE \(C \gets B\) \ENDIF
+\FOR{\(i = 1\) \TO \(m-1\)}
+  \STATE Desplazar \(B\) un bit a la izquierda
+  \IF{el bit desplazado era \(1\)} \STATE \(B \gets B \oplus R\) \ENDIF
+  \IF{\(a_i = 1\)} \STATE \(C \gets C \oplus B\) \ENDIF
+\ENDFOR
+\RETURN \(C\)
+\end{algorithmic}
+\end{algorithm}
+
+\subsection*{Ejemplo de "shift-and-add"}
+
+Trabajemos en \(\mathbb{F}_{2^4}\) con polinomio de reducción \(f(x)=x^4 + x + 1\).  
+Sean
+\[
+  a(x) = x^3 + x,\quad b(x) = x^2 + 1.
+\]
+Los representamos como vectores de 4 bits: 
+\[
+  a = [\,1,0,1,0\,],\quad b = [\,0,1,0,1\,].
+\]
+\begin{enumerate}
+  \item Inicializar \(C\gets0\). Como \(a_0=0\), \(C\) sigue siendo 0.
+  \item \(i=1\): Desplazamos \(b\to x\,b = x^3 + x\). Como \(a_1=1\), 
+    \[
+      C \gets C \oplus b = x^3 + x.
+    \]
+  \item \(i=2\): Desplazamos \(b\to x^4 + x^2 \equiv (x+1) + x^2\) (reducción de \(x^4\)). 
+    Ahora \(b = x^2 + x + 1\). Como \(a_2=0\), \(C\) no cambia.
+  \item \(i=3\): Desplazamos \(b\to x^3 + x^2 + x\). Como \(a_3=1\), 
+    \[
+      C \gets (x^3 + x)\oplus(x^3 + x^2 + x) = x^2.
+    \]
+\end{enumerate}
+El resultado final es 
+\[
+  c(x) = x^2.
+\]
+
+
+
 \section{Campos de extensión}
 La representación por base polinomial para campos binarios se generaliza a todos los campos de extensión de la siguiente manera. Sea $p$ un primo y $m\ge2$. Denotamos por $\mathbb{F}_p[z]$ el anillo de polinomios en la variable $z$ con coeficientes en $\mathbb{F}_p$. Sea $f(z)\in\mathbb{F}_p[z]$ un polinomio irreducible de grado $m$—existen para cualquier par $(p,m)$ y pueden hallarse eficientemente (ver Apéndice A). La irreducibilidad significa que $f(z)$ no se factoriza como producto de polinomios en $\mathbb{F}_p[z]$ de grado menor que $m$. Entonces:
 \[
@@ -121,11 +332,3 @@ Sea $p=251$, $m=5$ y $f(z)=z^5+z^4+12z^3+9z^2+7$, irreducible en $\mathbb{F}_{25
   \item Multiplicación: $a\cdot b=117z^4+151z^3+117z^2+182z+217.$
   \item Inverso: $a^{-1}=109z^4+111z^3+250z^2+98z+85,$
 \end{enumerate}
-obeylines
-
-\section{Grupos multiplicativos y orden de un elemento}
-En todo campo finito $\mathbb{F}_q$, el conjunto $\mathbb{F}_q^*=\mathbb{F}_q\setminus\{0\}$ es un grupo cíclico de orden $q-1$. Un generador $g$ (elemento primitivo) cumple:
-\[
-  \langle g\rangle=\mathbb{F}_q^*,\quad g^k\neq1\text{ para }0<k<q-1.
-\]
-El \emph{orden} de $a\in\mathbb{F}_q^*$ es el menor $d>0$ tal que $a^d=1$. Determinarlo es clave al definir curvas elípticas seguras.
