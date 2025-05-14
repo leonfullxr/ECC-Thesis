@@ -19,10 +19,15 @@ LDFLAGS  := -L$(PREFIX)/lib \
             -Wl,-rpath=$(PREFIX)/lib \
             -lntl -lgmp -pthread
 
+######################### Python benchmark
+PYTHON        := python3
+PYTHON_SCRIPT := rsa_benchmark.py
+
 ######################### Directories
 SRC_DIR   := src
 BUILD_DIR := build
 BIN_DIR   := bin
+PYTHON_DIR := scripts
 
 ######################### Parameters override
 KEY_SIZE ?= 2048 # RSA key size for test-rsa target
@@ -60,6 +65,7 @@ show-info:
 	@echo "$(IFG) -  make test-rsa$(EC)    Run RSA benchmark ($(KEY_SIZE)-bit, $(ITERS) iteration)"
 	@echo "$(IFG) -  make test-rsa-2k$(EC) Run RSA benchmark (2048-bit, $(ITERS) iteration)"
 	@echo "$(IFG) -  make test-ecc$(EC)    Run ECC benchmark ($(ITERS) iteration)"
+	@echo "$(IFG) -  make test-rsa-py$(EC) Run RSA Python benchmark ($(KEY_SIZE)-bit, $(ITERS) iteration)"
 	@echo "$(IFG) -  make all$(EC)         Alias for build"
 	@echo "$(IFG) -  make clean$(EC)       Clean build artifacts$(EC)"
 	@echo ""
@@ -79,6 +85,7 @@ $(BIN_DIR)/bench: $(BUILD_DIR)/rsa.o $(BUILD_DIR)/ecc.o $(BUILD_DIR)/main.o
 	@echo -e "$(LGFG)Linking bench…$(EC)"
 	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
+# Basic C++ test targets
 # Basic test targets with output
 
 test-rsa: $(BIN_DIR)/bench
@@ -92,6 +99,13 @@ test-rsa-2k: $(BIN_DIR)/bench
 test-ecc: $(BIN_DIR)/bench
 	@echo -e "$(LGFG)Executing ECC ($(ITERS) iteration(s))...$(EC)"
 	@$(BIN_DIR)/bench -a ECC -i $(ITERS) -s fixed
+
+# Python benchmark target
+
+.PHONY: test-rsa-py
+test-rsa-py:
+	@echo -e "$(LGFG)Executing RSA Python benchmark ($(KEY_SIZE)-bit, $(ITERS) iteration(s), seed=$(SEED))...$(EC)"
+	@$(PYTHON) $(PYTHON_DIR)/$(PYTHON_SCRIPT) -k $(KEY_SIZE) -i $(ITERS) -s $(SEED)
 
 clean:
 	@echo -e "$(LRFG)Cleaning build artifacts...$(EC)"
