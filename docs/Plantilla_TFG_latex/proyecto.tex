@@ -17,6 +17,9 @@
 \usepackage{amsfonts}
 \usepackage{xcolor}
 \usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsthm}
 
 % Configuración de decimales y tablas
 \decimalpoint
@@ -58,6 +61,7 @@ Telecomunicación\xspace}
 \newcommand{\myLocation}{Granada\xspace}
 \newcommand{\myTime}{\today\xspace}
 \newcommand{\myVersion}{Version 0.1\xspace}
+\newcommand{\myNIE}{...\xspace}
 
 \hypersetup{
     pdfauthor = {\myName (leonfuller@correo.ugr.es)},
@@ -102,6 +106,7 @@ Telecomunicación\xspace}
 \newtheorem{teorema}{Teorema}[chapter]
 \newtheorem{ejemplo}{Ejemplo}[chapter]
 \newtheorem{definicion}{Definición}[chapter]
+\newtheorem{remark}{Observación}[chapter]
 
 \definecolor{gray97}{gray}{.97}
 \definecolor{gray75}{gray}{.75}
@@ -198,11 +203,12 @@ Telecomunicación\xspace}
 %
 \input{capitulos/02_Criptografia}
 %
-\input{capitulos/03_Cuantica}
+%\input{capitulos/03_Cuantica}
+\input{capitulos/03_Campos_Finitos}
 %
-%\input{capitulos/04_Analisis}
+\input{capitulos/04_Curvas_Elipticas}
 %
-%\input{capitulos/05_Diseno}
+\input{capitulos/05_Criptografia_Curvas_Elipticas}
 %
 %\input{capitulos/06_Implementacion}
 %
