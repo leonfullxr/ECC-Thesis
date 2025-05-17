@@ -1,8 +1,25 @@
 \chapter{Teoría de las curvas elípticas}
 
 \section{Introducción y motivación}
+Los investigadores llevaban años buscando funciones más seguras para criptografía y en 1985 se propuso por primera vez el uso de curvas elípticas como base del problema del logaritmo discreto en un grupo~\cite{Koblitz1987,Miller1986}. Se cree que las curvas elípticas ofrecen un nivel de seguridad equivalente al de RSA pero con tamaños de clave mucho menores. Para ilustrar la diferencia en términos intuitivos, comparemos la energía necesaria para romper los diferentes sistemas con la cantidad de agua que esa energía podría hervir~\cite{Rickard2016,Lenstra2000}:
+\begin{itemize}
+  \item Romper una clave RSA de 228 bits requiere menos energía que la necesaria para hervir una cucharadita de agua.  
+  \item Romper una clave ECC de 228 bits equivaldría a la energía necesaria para hervir toda el agua de la Tierra.  
+  \item Para obtener el mismo nivel de seguridad con RSA haría falta una clave de unos 2 380 bits, lo cual es muy ineficiente en entornos con recursos limitados.  
+\end{itemize}
+
+Como hemos mencionado anteriormente en el capítulo~\ref{chap:Campos_finitos}, la eficiencia de los esquemas basados en curvas elípticas depende directamente de la velocidad de los algoritmos de aritmética de curva, que a su vez recaen en las operaciones sobre el campo (suma, multiplicación, inversión)...
+
 \subsection{Historia y aplicaciones}
-\subsection{Ventajas frente a otros grupos}
+En 1997 Certicom lanzó el \emph{ECC Challenge} para evaluar la dificultad práctica del problema del logaritmo discreto en curvas elípticas, proponiendo instancias que hoy en día siguen siendo un referente en seguridad~\cite{gaudry2007breaking}. Pocos años después, en 1998, el comité ANSI X9 publicó la norma X9.62 definiendo el algoritmo de firma ECDSA, marcando el primer estándar formal para firmas basadas en curvas elípticas~\cite{ansi_x962_1998}. 
+En el año 2000, el NIST incorporó curvas elípticas en el FIPS 186–2 (Digital Signature Standard), consolidando su uso en aplicaciones gubernamentales y financieras~\cite{nist_fips186_2}.
+
+En 2005 la NSA anunció la Suite B de algoritmos criptográficos, recomendando las curvas P-256, P-384 y P-521 para uso en comunicaciones seguras de nivel gubernamental~\cite{rfc5430}. Con la adopción de TLS 1.2 y la publicación del RFC 8422 en 2018, las curvas secp256r1 (también conocida como prime256v1) y X25519 se convirtieron en cimientos de la seguridad de Internet, al ofrecer un excelente equilibrio entre rendimiento y seguridad~\cite{rfc8422}.
+
+Los esquemas de intercambio de clave ECDH y de firma ECDSA aprovechan la elevada seguridad por bit de las curvas, permitiendo, por ejemplo, igualar la fuerza de una clave RSA de 3072 bits con una curva de solo 256 bits~\cite{hankerson2004guide}.
+Protocolos tan extendidos como TLS (RFC 4492) o SSH (RFC 5656) incluyen suites para ECC, acelerando el establecimiento de sesiones seguras~\cite{rfc4492,rfc5656}. En sistemas distribuidos, Bitcoin emplea la curva secp256k1 para generar direcciones y validar transacciones, gracias a su código optimizado y su fortaleza criptográfica~\cite{wuille2017secp256k1}.
+
+En entornos con recursos limitados, como dispositivos IoT o tarjetas inteligentes, ECC ha demostrado reducir consumo energético y acelerar operaciones criptográficas frente a RSA, al requerir menos ciclos de CPU y menos memoria~\cite{hodges2001implementing}. Además, las propiedades algebraicas de las curvas han sido la base para esquemas avanzados como sistemas de emparejamientos (pairing-based cryptography), identidades basadas en curva (IBE) y firmas Schnorr y EdDSA, ampliando enormemente el catálogo de construcciones criptográficas eficientes~\cite{boneh2001identity}.
 
 \section{Definición de una curva elíptica}
 \subsection{Forma de Weierstrass general}
@@ -20,7 +37,7 @@
 \section{Coordenadas y representación}
 \subsection{Coordenadas afines}
 \subsection{Coordenadas proyectivas y Jacobianas}
-\subsection{Coordenadas "mixed" y optimizaciones}
+\subsection{Coordenadas 'mixed' y optimizaciones}
 
 \section{Selección de parámetros}
 \subsection{Tamaños de curva y seguridad}
