@@ -17,6 +17,10 @@
 \usepackage{amsfonts}
 \usepackage{xcolor}
 \usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsthm}
+\usepackage{graphicx}
 
 % Configuración de decimales y tablas
 \decimalpoint
@@ -58,6 +62,7 @@ Telecomunicación\xspace}
 \newcommand{\myLocation}{Granada\xspace}
 \newcommand{\myTime}{\today\xspace}
 \newcommand{\myVersion}{Version 0.1\xspace}
+\newcommand{\myNIE}{...\xspace}
 
 \hypersetup{
     pdfauthor = {\myName (leonfuller@correo.ugr.es)},
@@ -102,6 +107,8 @@ Telecomunicación\xspace}
 \newtheorem{teorema}{Teorema}[chapter]
 \newtheorem{ejemplo}{Ejemplo}[chapter]
 \newtheorem{definicion}{Definición}[chapter]
+\newtheorem{remark}{Observación}[chapter]
+\newtheorem{corollary}{Corolario}[chapter]
 
 \definecolor{gray97}{gray}{.97}
 \definecolor{gray75}{gray}{.75}
@@ -194,20 +201,23 @@ Telecomunicación\xspace}
 \mainmatter
 %\setlength{\parskip}{5pt}
 
+\part{Introducción}
 \input{capitulos/01_Introduccion}
-%
+
+\part{Conocimientos Básicos}
 \input{capitulos/02_Criptografia}
-%
-\input{capitulos/03_Cuantica}
-%
-%\input{capitulos/04_Analisis}
-%
-%\input{capitulos/05_Diseno}
-%
+%\input{capitulos/03_Cuantica}
+\input{capitulos/03_Campos_Finitos}
+
+
+\part{Marco Teórico}
+\input{capitulos/04_Curvas_Elipticas}
+\input{capitulos/05_Criptografia_Curvas_Elipticas}
+\part{Implementación y Experimentación}
 %\input{capitulos/06_Implementacion}
-%
 %\input{capitulos/07_Pruebas}
-%
+
+\part{Conclusión}
 %\input{capitulos/08_Conclusiones}
 %
 %%\chapter{Conclusiones y Trabajos Futuros}
@@ -220,6 +230,9 @@ Telecomunicación\xspace}
 % ----------------------------------------------------------------------------------
 % Bibliografía
 % ----------------------------------------------------------------------------------
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliografía}
 \bibliographystyle{plainnat}
 \bibliography{bibliografia/bibliografia}
 \section*{Otro material}

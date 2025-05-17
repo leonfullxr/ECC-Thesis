@@ -402,15 +402,15 @@ Para lograr un nivel de seguridad equivalente, las claves privadas en sistemas d
 En 1883, Auguste Kerckhoffs~\cite{Petitcolas2011Kerckhoffs} formuló seis principios esenciales para el diseño de sistemas criptográficos:
 
 \begin{enumerate}
-  \item Debe ser, cuanto menos, imposible de romper en la práctica.
-  \item La seguridad no debe depender del secreto del algoritmo, sino únicamente de la clave.
-  \item La clave debe poder ser almacenada, pudiendo ser reemplazable.
-  \item El texto cifrado debe poder transmitirse sin errores por medios estándar.
-  \item El sistema debe ser portátil y operable por una sola persona.
-  \item El sistema debe ser fácil de usar, sin requerir un esfuerzo mental excesivo.
+  \item \textbf{Indescifrabilidad práctica:} El sistema debe ser, cuanto menos, imposible de romper en la práctica.
+  \item \textbf{Seguridad sólo de la clave:} La seguridad no debe depender del secreto del algoritmo, sino únicamente de la clave.
+  \item \textbf{Clave manejable:} La clave debe poder ser almacenada, pudiendo ser reemplazable.
+  \item \textbf{Transmisión telegráfica:} El texto cifrado debe poder transmitirse sin errores por medios estándar.
+  \item \textbf{Portabilidad:} Los documentos que implementan el sistema deben ser portátiles y operables por una sola persona.
+  \item \textbf{Simplicidad de uso:} El sistema debe ser fácil de usar, sin requerir un esfuerzo mental excesivo.
 \end{enumerate}
-\section{Seguridad y modelos de ataque}
 
+\section{Seguridad y modelos de ataque}
 La seguridad de un sistema criptográfico se evalúa frente a distintos modelos de ataque, que describen el acceso y las capacidades del adversario. A grandes rasgos, estos modelos se agrupan en:
 
 \subsection{Ataques pasivos y activos}
@@ -423,20 +423,20 @@ La seguridad de un sistema criptográfico se evalúa frente a distintos modelos 
 \subsection{Modelos clásicos de criptoanálisis}
 
 \begin{itemize}
-  \item \emph{Ataque por texto cifrado únicamente (COA):} El atacante dispone solo del texto cifrado. Es el escenario más realista pero también el más limitado.
+  \item \emph{Ataque por texto cifrado únicamente (COA):} El atacante dispone solo del texto cifrado. Es el caso más habitual porque en la práctica los atacantes a menudo solo logran capturar mensajes cifrados sin más información.
   \item \emph{Fuerza bruta (exhaustiva):} Se calculan y prueban todas las claves posibles hasta dar con la correcta. Su dificultad depende únicamente del tamaño de la clave \cite{cryptography_attacks_6_types_and_prevention}\cite{types_of_cryptographic_attacks_to_know}.
-  \item \emph{Ataque con texto plano conocido (KPA):} Se accede a uno o varios pares (texto plano, texto cifrado), lo que permite reducir el espacio de búsqueda.
-  \item \emph{Ataque por texto plano elegido (CPA):} El atacante elige ciertos textos para cifrar y obtiene sus correspondientes cifrados. Es fundamental en la seguridad de sistemas de clave pública.
-  \item \emph{Ataque adaptativo por texto plano elegido (CPA2):} Variante de CPA donde el atacante decide nuevos textos a cifrar tras ver resultados anteriores.
-  \item \emph{Ataque por texto cifrado elegido (CCA):} El atacante puede descifrar libremente ciertos cifrados de su elección, obteniendo los planos resultantes.
-  \item \emph{Ataque adaptativo por texto cifrado elegido (CCA2):} Versión más poderosa de CCA, donde cada descifrado elegido se basa en análisis previos.
+  \item \emph{Ataque con texto plano conocido (KPA):} El atacante dispone de algún texto original junto con su versión cifrada. Por ejemplo, sabe que un correo empieza con "Estimado cliente:" y ve esa misma parte cifrada. Con esas parejas (texto claro, texto cifrado) puede acortar la búsqueda de la clave.
+  \item \emph{Ataque por texto plano elegido (CPA):} El atacante elige ciertos textos para cifrar y obtiene sus correspondientes cifrados. Es como pedirle al dueño de la caja fuerte que te abra cosas que tú le entregas. Con los pares que él devuelve, puedes analizar el comportamiento del sistema y encontrar debilidades.
+  \item \emph{Ataque adaptativo por texto plano elegido (CPA2):} Variante de CPA donde el atacante en tiempo real elige un mensaje, ve su cifrado, y luego, basándose en lo que aprendió, decide el siguiente mensaje a cifrar. Y así sucesivamente, mejorando su estrategia con cada consulta.
+  \item \emph{Ataque por texto cifrado elegido (CCA):} El atacante no solo puede cifrar, sino que también puede solicitar descifrar ciertos textos cifrados de su elección (salvo el que realmente le interesa). Con eso obtiene planos válidos que le ayudan a deducir información y, finalmente, descifrar el mensaje objetivo.
+  \item \emph{Ataque adaptativo por texto cifrado elegido (CCA2):} Versión más poderosa de CCA, donde tras cada petición de descifrado, el atacante ajusta sus futuras preguntas para exprimir al máximo el sistema y extraer todos los datos posibles.
 \end{itemize}
 
 \subsection{Ataques avanzados}
 
 \begin{itemize}
-  \item \emph{Canal lateral (side-channel):} Se explota información derivada de la implementación (tiempos, consumo eléctrico, emisiones electromagnéticas) para inferir claves \cite{cryptanalysis_and_types_of_attacks}.
-  \item \emph{Ataque de clave relacionada (related-key):} El atacante conoce cifrados de textos planos bajo claves que guardan alguna relación matemática con la clave objetivo.
-  \item \emph{Sesgo estadístico (bias attacks):} Se buscan patrones no aleatorios en la generación de claves o estados intermedios para acotar posibles valores \cite{modern_cryptographic_attacks_guide_for_perplexed}.
+  \item \emph{Ataques de canal lateral (side-channel):} No atacan el cifrado matemático, sino que, se explota información derivada de la implementación (tiempos, consumo eléctrico, emisiones electromagnéticas) para reconstruir las claves sin romper directamente el algoritmo \cite{cryptanalysis_and_types_of_attacks}.
+  \item \emph{Ataque de clave relacionada (related-key):} El atacante conoce cifrados de textos planos bajo claves que guardan alguna relación matemática con la clave objetivo (por ejemplo, variantes que difieren solo en unos bits). Si conoce cómo varía el cifrado al pasar de una clave a otra, puede deducir la clave original más rápido que con fuerza bruta.
+  \item \emph{Ataque por sesgo estadístico (bias attacks):} Se buscan patrones no aleatorios en la generación de claves o estados intermedios para acotar posibles valores \cite{modern_cryptographic_attacks_guide_for_perplexed}. Si el generador de claves o el proceso intermedio tiende a preferir ciertos valores, se reduce drásticamente el número de opciones a probar.
   \item Ataque \emph{Evil Maid}: Consiste en acceso físico al dispositivo para instalar malware o keyloggers y robar claves cuando el usuario no está presente.
 \end{itemize}

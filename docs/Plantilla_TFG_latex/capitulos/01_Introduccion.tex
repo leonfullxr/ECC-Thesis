@@ -11,11 +11,11 @@ El siglo XX presenció el mayor salto tecnológico, donde se partió de los cifr
 
 Sin embargo, todos los criptosistemas anteriores tenían un inconveniente, y es que todos se basaban en el hecho de que tanto la parte que descifraba como la que codificaba debían conocer el método de cifrado y la clave para descifrarlo. ¿Pero cómo se transmite la clave de forma segura? Por supuesto, con cifrado. Pero entonces, ¿cómo se puede enviar el cifrado, para que la entidad que descifra el mensaje pueda conocer dicho cifrado? Como se puede apreciar, dicho problema de la criptografía es un bucle infinito entre el cifrado y la distribución de claves que no se puede resolver con seguridad garantizada para todos los lectores deseados.
 
-Hoy día, RSA y sistemas análogos sustentan protocolos críticos—HTTPS, correo firmado, servicios bancarios y más—pero presentan dos limitaciones crecientes:  
+Hoy día, RSA y sistemas análogos sustentan protocolos críticos como HTTPS, correo firmado, servicios bancarios,etc. Pero presentan dos limitaciones crecientes:  
 \begin{itemize}  
   \item \textbf{Tamaño de clave versus seguridad.} Para alcanzar un nivel de protección comparable al de cifrados simétricos de 128 bits, RSA requiere claves de varios miles de bits, lo que penaliza el rendimiento en cómputo y ancho de banda.  
   \item \textbf{Vulnerabilidad cuántica.} 
-  Los algoritmos cuánticos plantean un desafío fundamental para la criptografía moderna. En particular, **Shor** demostró en 1994 que un ordenador cuántico suficientemente grande podría factorizar enteros y resolver problemas de logaritmo discreto en tiempo polinómico, lo que rompería sistemas como RSA, Diffie–Hellman e incluso ECC \cite{turn2search1}\cite{turn2search2}. Esta perspectiva ha impulsado la búsqueda de algoritmos resistentes a estos ataques cuánticos, así como la adopción de curvas elípticas de mayor seguridad y longitudes de clave incrementadas.  
+  Los algoritmos cuánticos plantean un desafío fundamental para la criptografía moderna. En particular, Shor demostró en 1994 que un ordenador cuántico suficientemente grande podría factorizar enteros y resolver problemas de logaritmo discreto en tiempo polinómico, lo que rompería sistemas como RSA, Diffie–Hellman e incluso ECC \cite{shors_algorithm_a_quantum_threat_to_modern_cryptography}\cite{the_quantum_computing_threat}. Esta perspectiva ha impulsado la búsqueda de algoritmos resistentes a estos ataques cuánticos, así como la adopción de curvas elípticas de mayor seguridad y longitudes de clave incrementadas.  
 \end{itemize}  
 
 Estas limitaciones han impulsado la adopción de la \emph{Criptografía de Curvas Elípticas (ECC)}. Gracias a la dificultad del problema del logaritmo discreto en curvas elípticas, ECC ofrece un nivel de seguridad equivalente con claves drásticamente más pequeñas (por ejemplo, 256 bits en ECC frente a 3072 bits en RSA), mejorando así el rendimiento y la eficiencia. Además, la resistencia actual de ECC frente a los ataques cuánticos es mayor que la de RSA bajo el mismo modelo cuántico, lo que la posiciona como la opción de próxima generación para sistemas criptográficos modernos.
@@ -27,4 +27,28 @@ Estas limitaciones han impulsado la adopción de la \emph{Criptografía de Curva
 % Aquí, más adelante...
 
 \section{Estructura}
-% Aquí, más adelante...
+Antes de pasar a detalles más técnicos, me gustaría detallar el contenido
+de este proyecto:
+
+\begin{enumerate}
+  \item \textbf{Capítulo 1: Introducción}  
+    Se encuentra una breve introducción a nuestro proyecto, así como un contexto histórico y las motivaciones que nos han llevado a realizarla.
+  \item \textbf{Capítulo 2: Introducción a la criptografía}  
+    Se presentan los conceptos esenciales, donde se definen las bases necesarias para comprender la seguridad de los sistemas actuales.
+  \item \textbf{Capítulo 3: Introducción a la computación cuántica}  
+    Define una base sólida sobre la computación cuántica, para próximamente, detallar los posibles ataques que se podrían realizar sobre las curvas elípticas.
+  \item \textbf{Capítulo 4: Teoría de las curvas elípticas}  
+    Se expone la teoría algebraica de las curvas elípticas sobre cuerpos finitos, la ley de grupo y las propiedades matemáticas clave. Incluye ejemplos de parametrización e implementaciones sencillas en código.
+  \item \textbf{Capítulo 5: Criptografía con curvas elípticas (ECC)}  
+    Describe los esquemas de clave pública basados en ECC: generación de claves, Elliptic Curve Diffie–Hellman (ECDH) y Elliptic Curve Digital Signature Algorithm (ECDSA). Se comparan su rendimiento y tamaño de clave frente a RSA.
+  \item \textbf{Capítulo 6: Ataques clásicos a ECC}  
+    Analiza el problema del logaritmo discreto en curvas elípticas, técnicas de criptoanálisis clásicas (baby-step/giant-step, Pollard’s rho) y su complejidad computacional en la práctica.
+  \item \textbf{Capítulo 7: Ataques cuánticos a ECC}  
+    Aquí se muestra el impacto del algoritmo de Shor y otros métodos cuánticos sobre ECC, estimando los recursos necesarios y las implicaciones para la seguridad futura. Se introduce la criptografía post-cuántica como posible resistencia.
+  \item \textbf{Capítulo 8: Implementación y experimentos}  
+    Detalla las herramientas y librerías empleadas, presenta fragmentos de código para ECC y simulaciones cuánticas, y muestra visualizaciones de curvas y resultados bajo diferentes parámetros.
+  \item \textbf{Capítulo 9: Resultados y pruebas}  
+     Recoge métricas de rendimiento, comparaciones entre RSA y ECC, junto con análisis de tiempos de cómputo.
+  \item \textbf{Capítulo 9: Conclusiones}  
+     Se pueden encontrar las conclusiones finales así como las recomendaciones para futuros trabajos.
+\end{enumerate}
