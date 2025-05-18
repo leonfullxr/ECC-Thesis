@@ -1,7 +1,7 @@
 \chapter{Teoría de las curvas elípticas}
 
 \section{Introducción y motivación}
-Como hemos mencionado anteriormente en el capítulo~\ref{chap:Campos_finitos}, la eficiencia de los esquemas basados en curvas elípticas depende directamente de la velocidad de los algoritmos de aritmética de curva, que a su vez recaen en las operaciones sobre el campo (suma, multiplicación, inversión)...
+Los sistemas criptográficos que usan las curvas elípticas dependen de la aritmética de los puntos de la curva. Como hemos mencionado anteriormente en el capítulo~\ref{chap:Campos_finitos}, la eficiencia de estos esquemas basados en curvas elípticas depende directamente de la velocidad de los algoritmos de aritmética de curva, que a su vez recaen en las operaciones sobre el campo (suma, multiplicación, inversión)...
 
 La figura~\ref{fig:ECDSA_esquema} muestra las bases necesarias para entender e implementar un protocolo como el algoritmo de firma digital de curva elíptica (ECDSA). La aritmética de curvas no solo se construye sobre las operaciones en el campo subyacente, sino que en algunos casos también requiere aritmética de grandes enteros y operaciones modulares. ECDSA emplea una función hash y ciertas operaciones modulares, pero los pasos más costosos desde el punto de vista computacional son las propias operaciones en la curva.
 \begin{figure}[H]
@@ -17,9 +17,90 @@ Los métodos de las secciones~3.4, 3.5 y 3.6 están relacionados en que todos el
 
 
 \subsection{Historia}\label{sec:historia_curvas_elipticas}
-
+Las curvas elípticas nacen del problema de calcular la longitud de arco de una elipse, que John Wallis abordó en 1655, y se articulan primero como integrales elípticas gracias a los pioneros Giulio Fagnano y Leonhard Euler en la primera mitad del siglo XVIII. En 1786, Adrien-Marie Legendre sistematiza estas integrales en tres “tipos” y sienta las bases de las funciones elípticas. A finales de la década de 1820, Niels Abel y Carl Jacobi invierten estas integrales, dando lugar a la teoría clásica de funciones elípticas. A mediados del siglo XIX, Karl Weierstrass y Bernhard Riemann las conectan con la estructura algebraico‐geométrica de curvas de género uno (tóricas complejas). Finalmente, en el siglo XX, Louis Mordell y André Weil desarrollan la teoría aritmética de puntos racionales, abriendo paso a la geometría algebraica moderna.
 
 \section{Definición de una curva elíptica}\label{sec:definicion_curvas_elipticas}
+\begin{definicion}[Curva elíptica sobre un cuerpo]\label{def:definicion_curvas_elipticas}
+Sea $K$ un cuerpo. Una \emph{curva elíptica} $E$ sobre $K$ es un modelo de Weierstrass generalizado de la forma
+\begin{equation}\label{eq:weierstrass_generalizada}
+  E:\quad y^2 + a_1\,x\,y \;+\; a_3\,y \;=\; x^3 + a_2\,x^2 + a_4\,x + a_6,
+\end{equation}
+donde
+\[
+a_1,\;a_2,\;a_3,\;a_4,\;a_6 \;\in\; K,
+\]
+sujeto a la condición de no singularidad que expresaremos a continuación.
+
+\medskip
+
+\noindent\textbf{Invariantes auxiliares.} Definimos los siguientes invariantes:
+\[
+\begin{aligned}
+  d_2 &= a_1^2 + 4a_2, &\quad
+  d_4 &= 2a_4 + a_1 a_3,\\
+  d_6 &= a_3^2 + 4a_6, &\quad
+  d_8 &= a_1^2 a_6 + 4a_2 a_6 - a_1 a_3 a_4 + a_2 a_3^2 - a_4^2.
+\end{aligned}
+\]
+
+\medskip
+
+\noindent\textbf{Discriminante.} El discriminante de la ecuación \eqref{eq:weierstrass_generalizada} se define por
+\[
+  \Delta \;=\;-\,d_2^2\,d_8 \;-\; 8\,d_4^3 \;-\; 27\,d_6^2 \;+\; 9\,d_2\,d_4\,d_6.
+\]
+Con la condición necesaria $\Delta \;\neq\; 0$.
+
+\medskip
+
+\noindent\textbf{Punto en el infinito y conjunto de puntos racionales.}  
+Denotamos por $\infty$ el único punto en el infinito (punto de Weierstrass) que completa la curva para obtener un cuerpo de funciones de género 1. Para cualquier extensión de cuerpos $L/K$, el conjunto de puntos de $E$ con coordenadas en $L$ viene dado por
+\[
+  E(L) \;=\; \bigl\{(x,y)\in L^2 : y^2 + a_1\,x\,y + a_3\,y - x^3 - a_2\,x^2 - a_4\,x - a_6 = 0 \bigr\}
+  \;\cup\;\{\infty\}.
+\]
+\end{definicion}
+
+
+\subsection{Comentarios sobre la definición~\ref{def:definicion_curvas_elipticas}}
+\begin{enumerate}
+  \item La ecuación \eqref{eq:weierstrass_generalizada} se conoce como la \emph{ecuación de Weierstrass}.
+  \item Decimos que \(E\) está \emph{definida sobre} \(K\) porque los coeficientes \(a_i\) pertenecen a \(K\). A menudo escribimos \(E/K\) y diremos que \(K\) es un \emph{cuerpo base}.
+  \item La condición \(\Delta\neq0\) garantiza que la curva es \emph{suave}, es decir, no tiene singularidades (no hay puntos con dos tangentes distintas). Esto esencialmente viene dado por puntos que anulan las derivadas paricales de la siguiente función de una curva elíptica:
+  \[
+    f(x,y) = y^2 +a_1xy + a_3y -x^3 - a_2x^2 - a_4x - a_6
+  \]
+  Se puede encontrar un ejemplo donde \(\Delta\neq0\) en la figura ~\ref{fig:elliptic_curve_singular_example}.
+  \item El punto \(\infty\) es el único punto de la "línea en el infinito" que satisface la forma proyectiva de la ecuación de Weierstrass.
+  \item Los \emph{puntos \(L\)-racionales} de \(E\) son aquellos cuyos pares \((x,y)\) pertenecen al cuerpo \(L\). Siempre incluimos \(\infty\).
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{imagenes/elliptic_curve_singular_example.png}
+    \caption{Ejemplo de una curva elíptica con un punto singular, es decir, \(\Delta\neq0\)}
+    \label{fig:elliptic_curve_singular_example}
+\end{figure}
+
+\begin{ejemplo}
+Consideremos dos curvas elípticas sobre \(\mathbb{R}\):
+\[
+  E_1: \;y^2 = x^3 - 12x - 5,
+  \qquad
+  E_2: \;y^2 = x^3 + 3x + 15.
+\]
+Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\infty\}\) y
+\(E_2(\mathbb{R})\setminus\{\infty\}\) se muestran en la figura~\ref{fig:curvas_reales}.
+\end{ejemplo}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.48\textwidth]{imagenes/elliptic_curve2D_example.png}
+  \hfill
+  \includegraphics[width=0.48\textwidth]{imagenes/elliptic_curve2D_example2.png}
+  \caption{Curvas \(E_1\) y \(E_2\) sobre \(\mathbb{R}\), con sus respectivos puntos (excepto \(\infty\)).}
+  \label{fig:curvas_reales}
+\end{figure}
 
 \subsection{Forma de Weierstrass general}\label{sec:weierstrass_curvas_elipticas}
 \subsection{Transformaciones y cambios de coordenadas}
