@@ -102,7 +102,208 @@ Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\infty\}\) y
   \label{fig:curvas_reales}
 \end{figure}
 
-\subsection{Forma de Weierstrass general}\label{sec:weierstrass_curvas_elipticas}
+\subsection{Ecuaciones simplificadas de Weierstrass}\label{sec:simplificaciones_weierstrass_curvas_elipticas}
+
+\begin{definicion}
+Sean dos curvas elípticas $E_1$ y $E_2$ definidas sobre un cuerpo $K$, dadas por las ecuaciones de Weierstrass
+
+\[
+\begin{aligned}
+E_1:\; & y^2 + a_1 x y + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6,\\
+E_2:\; & y^2 + a_1 x y + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6,
+\end{aligned}
+\]
+
+se dice que $E_1$ y $E_2$ son \emph{isomorfas} sobre $K$ si existen $u,r,s,t\in K$, $u\neq0$, tales que el cambio de variables
+
+\begin{equation}\label{eq:cambio_admisible}
+(x,y)\longmapsto\bigl(u^2x + r,\;u^3y + u^2s,\;x + t\bigr)
+\end{equation}
+
+transforma la ecuación de $E_1$ en la de $E_2$. A dicho cambio se le llama \emph{admisible}.
+\end{definicion}
+
+\subsubsection*{1. Característica $\neq2,3$}
+
+Si $\operatorname{char}(K)\neq2,3$, el cambio de variables admisible
+
+\[
+(x,y)\longmapsto\Bigl(x - \frac{3a_1^2 - 12a_2}{36},\;y - \frac{3a_1x}{216} - \frac{a_1^3 + 4a_1a_2 - 12a_3}{24}\Bigr)
+\]
+
+lleva
+\[
+y^2 + a_1xy + a_3y = x^3 + a_2x^2 + a_4x + a_6
+\]
+a la forma simplificada
+
+\begin{equation}\label{eq:weierstrass_simple}
+y^2 = x^3 + a x + b,
+\end{equation}
+
+donde $a,b\in K$. El discriminante de esta curva es
+
+\[
+\Delta = -16\bigl(4a^3 + 27b^2\bigr)\neq0.
+\]
+
+\paragraph{Razón algebraica de la simplificación}
+Los cambios de variable implementan los pasos de "completar cuadrados" y "completar cubos" para eliminar los \emph{términos cruzados} (aquellos que mezclan $x$ e $y$ o que no son puramente $y^2$ o $x^3$) en la ecuación general:
+
+\begin{itemize}
+  \item Para suprimir $a_1xy + a_3y$, completamos el cuadrado en $y^2 + a_1xy + a_3y$ mediante
+    \[
+      y = y' - \frac{a_1}{2}\,x - \frac{a_3}{2},
+    \]
+    que requiere $\tfrac12\in K$ (por tanto $2\neq0$).
+  \item Para eliminar el término $a_2x^2$ de la parte derecha, completamos el cubo en
+    \[
+      x^3 + a_2x^2 + \cdots
+    \]
+    aplicando
+    \[
+      x = x' + \frac{a_2}{3},
+    \]
+    que exige $\tfrac13\in K$ (por tanto $3\neq0$).
+\end{itemize}
+
+\paragraph{Ejemplo detallado:}
+Sea $K=\mathbb{Q}$ y la curva
+$$
+y^2 + 6xy + 2y = x^3 + 9x^2 + 5x + 1.
+$$
+
+\textbf{Paso 1: Eliminación de $xy$, con}
+$$
+y = y' - 3x - 1.
+$$
+Sustituyendo en el lado izquierdo obtenemos:
+$$
+\begin{aligned}
+\text{LHS} &= (y' - 3x - 1)^2 + 6x(y' - 3x - 1) + 2(y' - 3x - 1)\\
+&= y'^2 -6xy' -2y' +9x^2 +6x +1\\
+&\quad +6xy' -18x^2 -6x +2y' -6x -2\\
+&= y'^2 -9x^2 -6x -1.
+\end{aligned}
+$$
+Por tanto, la ecuación se convierte en
+$$
+y'^2 -9x^2 -6x -1 = x^3 +9x^2 +5x +1.
+$$
+Reordenamos:
+$$
+y'^2 = x^3 + (9+9)x^2 + (5+6)x + (1+1) = x^3 + 18x^2 +11x +2.
+$$
+Aquí $a_2' = 18$.
+
+\textbf{Paso 2: Eliminación de $x^2$, con}
+$$
+x = x' + \frac{a_2'}{3} = x' + 6.
+$$
+Sustituyendo en el lado derecho y expandiendo:
+$$
+\begin{aligned}
+x^3 + 18x^2 + 11x + 2 &= (x'+6)^3 + 18(x'+6)^2 + 11(x'+6) + 2\\
+&= x'^3 + 18x'^2 + 108x' +216 \\ 
+&\quad +18(x'^2+12x'+36) +11x' +66 +2\\
+&= x'^3 + (18+18)x'^2 + (108+216+11)x' + (216+648+68)\\
+&= x'^3 + 36x'^2 + 335x' + 932.
+\end{aligned}
+$$
+Finalmente, tras restar el término $36x'^2$, obtenemos
+$$
+y'^2 = x'^3 + 335x' + 932,
+$$
+que ya está libre de $x'^2$.
+
+\subsubsection*{2. Característica $2$}
+
+En $\operatorname{char}(K)=2$ hay dos casos:
+
+\paragraph*{2.1. Caso $\boldsymbol{a_1\neq0}$ (no supersingular)}  
+El cambio
+\[
+(x,y)\longmapsto\Bigl(\tfrac{a_1^2\,x + a_3}{a_1},\;\tfrac{a_3^2\,y + a_1^2a_4 + a_3^2}{a_1^2}\Bigr)
+\]
+simplifica la ecuación general a
+\begin{equation}\label{eq:f2m_nonsupersingular}
+y^2 + xy = x^3 + A x^2 + B,
+\end{equation}
+con $A,B\in K$. Su discriminante es $\Delta = B\neq0$.
+
+\paragraph*{2.2. Caso $\boldsymbol{a_1=0}$ (supersingular)}  
+El cambio
+\[
+(x,y)\longmapsto(x + a_2,\;y)
+\]
+transforma la curva a
+\begin{equation}\label{eq:f2m_supersingular}
+y^2 + C\,y = x^3 + A x + B,
+\end{equation}
+donde $A,B,C\in K$. Su discriminante es $\Delta = C^4\neq0$.
+
+\subsubsection*{3. Característica $3$}
+
+En $\operatorname{char}(K)=3$ también hay dos casos:
+
+\paragraph*{3.1. Caso $\boldsymbol{a_1^2 \neq -a_2}$ (no supersingular)}  
+Definimos
+\[
+d_2 = a_1^2 + a_2,\qquad d_4 = a_4 - a_1a_3,
+\]
+y aplicamos el cambio
+\[
+(x,y)\longmapsto\Bigl(x + \tfrac{d_4}{d_2},\;y + a_1x + \tfrac{a_1\,d_4}{d_2} + a_3\Bigr).
+\]
+La ecuación resultante es
+\begin{equation}\label{eq:f3_nonsupersingular}
+y^2 = x^3 + A x^2 + B,
+\end{equation}
+con $A,B\in K$, y discriminante $\Delta = -A^3B\neq0$.
+
+\paragraph*{3.2. Caso $\boldsymbol{a_1^2 = -a_2}$ (supersingular)}  
+El sencillo cambio
+\[
+(x,y)\longmapsto(x,\;y + a_1x + a_3)
+\]
+conduce a la forma
+\begin{equation}\label{eq:f3_supersingular}
+y^2 = x^3 + A x + B,
+\end{equation}
+con $A,B\in K$ y discriminante $\Delta = -A^3\neq0$.
+
+\subsubsection*{Interpretación y uso de las formas simplificadas}
+
+La razón de distinguir tres familias de ecuaciones simplificadas responde a la imposibilidad de dividir por \(2\) o \(3\) cuando \(\mathrm{char}(K)\) es \(2\) o \(3\), lo que impide completar cuadrados y cubos para despejar los términos cruzados. Cada forma reducida se adapta a:
+\begin{itemize}
+  \item \textbf{Característica \(\neq2,3\) (ecuación corta de Weierstrass)}  
+    \[
+      y^2 = x^3 + ax + b.
+    \]
+    Es la forma \emph{short} más habitual en criptografía de curva elíptica sobre primos grandes, ya que minimiza el número de parámetros y simplifica las fórmulas de suma y duplicación~\cite{SilvermanAEC}. Todas las curvas estándar de NIST y SECG usan este modelo~\cite{NIST-SP-800-186}.
+  \item \textbf{Característica \(2\) (campos binarios)}  
+    \begin{align*}
+      y^2 + x y &= x^3 + A x^2 + B
+      &&\text{(no supersingular)},\\
+      y^2 + C y &= x^3 + A x + B
+      &&\text{(supersingular)}.
+    \end{align*}
+    En hardware ligero y tarjetas inteligentes, trabajar en \(\mathbb{F}_{2^m}\) sólo requiere desplazamientos y XOR, sin multiplicaciones completas de enteros~\cite{KoblitzBinary}. Las curvas no supersingulares se eligen para evitar vulnerabilidades a ataques basados en endomorfismos especiales.
+  \item \textbf{Característica \(3\)}  
+    \[
+      y^2 = x^3 + A x^2 + B
+      \quad\text{o}\quad
+      y^2 = x^3 + A x + B,
+    \]
+    con distinción similar entre casos \emph{supersingular} y \emph{ordinarios}~\cite{SilvermanAEC}. Aunque menos comunes en criptografía práctica, estas curvas sirven en estudios teóricos y en construcciones avanzadas de pares bilineales.
+\end{itemize}
+
+\paragraph{Curvas ordinarias vs.\ supersingulares}  
+La condición de \emph{supersingularidad} (discriminante especial, ver cada caso) refleja que el grupo de puntos de la curva tiene un anillo de endomorfismos más grande. Si bien ciertas construcciones pairing‐based usan curvas supersingulares (por sus endomorfismos explícitos), para ECC estándar se prefieren curvas \emph{ordinarias} (no supersingulares) para evitar ataques que explotan ese extra de simetría~\cite{Waterhouse1969}.  
+
+En todos los casos, el discriminante \(\Delta\neq0\) garantiza que la curva es \emph{suave} (no tiene singulares), condición imprescindible para que la ley de grupo esté bien definida sobre todos los puntos~\cite[Ch.\,III]{SilvermanAEC}.
+
+
 \subsection{Transformaciones y cambios de coordenadas}
 
 \section{Estructura de grupo}
