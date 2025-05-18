@@ -10,20 +10,16 @@ def points_on_curve(a, b, p):
     pts = []
     for x in range(p):
         rhs = (x**3 + a*x + b) % p
-        # precompute all possible squares mod p
-        # could also invert the loop order for speed on large p
         for y in range(p):
             if (y*y) % p == rhs:
                 pts.append((x, y))
     return pts
 
 def main():
-    # default parameters for secp256k1 curve https://www.secg.org/sec2-v2.pdf
-    p = 250
-    a = 0
+    p = 251
+    a = 3
     b = 7
 
-    # override p if given on command line
     if len(sys.argv) > 1:
         try:
             p = int(sys.argv[1])
@@ -42,7 +38,13 @@ def main():
 
     plt.figure(figsize=(6,6))
     plt.scatter(xs, ys, s=20, edgecolor='k')
-    plt.title(f"Points on $y^2 = x^3 + {a}x + {b}$ over $\\mathbb{{Z}}/{p}\\mathbb{{Z}}$")
+
+    # --- NEW: draw mid‐axis lines ---
+    mid = p / 2
+    plt.axhline(y=mid, color='red', linestyle='--', linewidth=1)
+    plt.axvline(x=mid, color='red', linestyle='--', linewidth=1)
+
+    plt.title(f"Points on $y^2 = x^3 + {a}x + {b}$ over $\mathbb{{F}}_{{{p}}}$")
     plt.xlabel("x")
     plt.ylabel("y")
     plt.xlim(-1, p)
