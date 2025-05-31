@@ -85,4 +85,26 @@ A continuación se muestra un ejemplo del aspecto visual del informe recibido po
   \label{fig:agent_report}
 \end{figure}
 
-Este enfoque basado en Bash garantiza alta difusión y compatibilidad en múltiples sistemas Linux, evitando la complejidad y las dependencias de un entorno Python, y facilita la obtención de estadísticas diarias sin intervención manual.  
+Este enfoque basado en Bash garantiza alta difusión y compatibilidad en múltiples sistemas Linux, evitando la complejidad y las dependencias de un entorno Python, y facilita la obtención de estadísticas diarias sin intervención manual.
+
+\section{Cuarta Tarea}
+En esta última tarea se abordó el despliegue de un clúster de Wazuh Manager en \emph{Amazon EKS} (Elastic Kubernetes Service), combinando tecnologías de \texttt{AWS} y \texttt{Kubernetes} para garantizar escalabilidad, tolerancia a fallos y comunicaciones seguras\cite{Wazuh:Kubernetes:EKS:2025}.
+
+El primer reto consistió en provisionar volúmenes persistentes \texttt{(PV/PVC)} mediante \texttt{StorageClasses} basadas en \texttt{gp3} de Amazon EBS\cite{AWS:EKS:StorageClass:gp3:2023}\cite{AWS:EBS:CSI:2025}. Inicialmente, los pods de Wazuh Manager no podían montar los volúmenes debido a permisos de acceso y restricciones de \texttt{ReadWriteOnce}\cite{Wazuh:Kubernetes:Storage:2025}. Para solucionarlo, creamos un \texttt{PersistentVolumeClaim} de 100 GiB y configuramos correctamente el \texttt{Provisioner} de EBS con el CSI Driver (\texttt{ebs.csi.eks.amazonaws.com})\cite{AWS:EBS:CSI:2025}. A continuación, se definió un \texttt{Deployment} de Docker que ejecutaba la imagen oficial de Wazuh Manager, montando el PVC en \texttt{/var/lib/elasticsearch} y en \texttt{/var/ossec/data} para garantizar la persistencia de índices y configuraciones\cite{Wazuh:Kubernetes:Storage:2025}.
+
+El segundo desafío fue exponer los servicios mediante un \texttt{Service} de tipo \texttt{LoadBalancer}\cite{AWS:EKS:LoadBalancing:2025}. Al comienzo, el tráfico entrante no alcanzaba los pods por errores en las políticas de \emph{Security Group} de AWS\cite{AWS:EKS:SecurityGroups:2025} y la falta de un \emph{Ingress Controller}\cite{K8s:Ingress:CertManager:2025}. Ajustamos las reglas del \emph{Security Group} para permitir puertos TCP 1514 (comunicación con agentes) y 55000 (API/WebUI), y desplegamos un \texttt{Ingress Controller} de NGINX con \texttt{cert-manager} para gestionar automáticamente certificados TLS vía Let’s Encrypt\cite{K8s:Ingress:CertManager:2025}\cite{Wazuh:Dashboard:TLS:2025}. Así, las peticiones HTTPS al panel de Wazuh redirigían correctamente al servicio interno.
+
+La tercera complejidad implicó habilitar TLS entre agentes y Manager\cite{Wazuh:Agent:TLS:2025}. Generamos una Autoridad de Certificación interna con \texttt{openssl}, creamos certificados de servidor que incluyeran el DNS del \texttt{LoadBalancer} y el nombre del servicio de Kubernetes, y almacenamos estos certificados en un \texttt{Secret} de Kubernetes\cite{K8s:Secret:TLS:2025}. Modificamos el \texttt{ConfigMap} de Wazuh Manager para referenciar el \texttt{Secret}, añadiendo en \texttt{ossec.conf} las rutas a \texttt{server\_ca\_path}, \texttt{agent\_certificate\_path} y \texttt{agent\_key\_path} para asegurar la validación de certificados por parte de los agentes\cite{Wazuh:Agent:Config:2025}.
+
+Esta tarea integró a fondo conocimientos de Kubernetes (volúmenes, servicios, secretos, tolerancia a fallos)\cite{Wazuh:Kubernetes:Manifests:2024}, AWS (EBS, EKS, Security Groups, Load Balancers)\cite{AWS:EKS:SecurityGroups:2025}\cite{AWS:EKS:LoadBalancing:2025}, Docker (construcción de imágenes y contenedores) y seguridad (TLS/autenticación)\cite{Wazuh:Agent:TLS:2025}, evidenciando la complejidad de orquestar un entorno Wazuh distribuido en la nube y garantizando alto nivel de disponibilidad, escalabilidad y protección de datos.
+
+
+\section{Asignaturas Relacionadas}
+Para la ejecución de las tareas anteriores, resultaron fundamentales los conocimientos de las siguientes asignaturas del plan de estudios:
+\begin{itemize}
+  \item \textbf{Sistemas Operativos}: Configuración avanzada de Linux y Windows, administración de servicios, scripting en Bash y PowerShell.  
+  \item \textbf{Ingeniería de Servidores}: Fundamentos de criptografía, detección de intrusiones, gestión de incidentes y aplicación de estándares de seguridad (PCI DSS, HIPAA).  
+  \item \textbf{Fundamentos de Redes}: Protocolos TCP/IP, configuración de firewalls, conceptos de IDS/IPS y análisis de tráfico con Wireshark/Suricata.  
+  \item \textbf{Fundamentos de Bases de Datos}: Ingesta y consulta de grandes volúmenes de datos (alertas) en Elasticsearch/OpenSearch, optimización de índices y consultas.  
+  \item \textbf{Ingeniería de Software}: Diseño de arquitecturas distribuidas, uso de herramientas de control de versiones (Git) y metodologías ágiles en proyectos de DevOps.  
+\end{itemize}
