@@ -430,11 +430,11 @@ las operaciones en coordenadas afines \((x,y)\) sobre \(K\) son:
 
 \subsubsection*{Ley de grupo en campos binarios}
 
-Cuando \(K = \F_{2^m}\) y la curva es no supersingular,
+Cuando \(K = \mathbb{F}_{2^m}\) y la curva es no supersingular,
 \[
   E\colon\;y^2 + x\,y = x^3 + A\,x^2 + B,
 \]
-la ley de grupo en \(\F_{2^m}\) (coordenadas afines) se implementa así:
+la ley de grupo en \(\mathbb{F}_{2^m}\) (coordenadas afines) se implementa así:
 
 \begin{enumerate}
   \item \emph{Negativo:} \(-P = (x,x+y)\).
@@ -454,14 +454,11 @@ la ley de grupo en \(\F_{2^m}\) (coordenadas afines) se implementa así:
     Entonces \(2P = (x_3,y_3)\).
 \end{enumerate}
 
-Para curvas supersingulares en \(\F_{2^m}\) de la forma
+Para curvas supersingulares en \(\mathbb{F}_{2^m}\) de la forma
 \[
   E\colon\;y^2 + C\,y = x^3 + A\,x + B,
 \]
 las fórmulas cambian levemente (con \(-P=(x,y+C)\)), pero siguen el mismo patrón de suma y duplicación mediante \(\lambda\).
-
-\subsection{Punto en el infinito}
-
 
 \section{Curvas sobre cuerpos finitos}\label{sec:curvas_sobre_cuerpos_finitos}
 \begin{figure}[H]
@@ -531,10 +528,104 @@ Una consecuencia inmediata es que, para cada primo \(p\) y cualquier \(t\) con \
 \subsection{Curvas sobre \texorpdfstring{$\mathbb{F}_p$}{Fp}}\label{sec:curvas_sobre_cuerpos_finitos_primos}
 \subsection{Curvas binarias sobre \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}\label{sec:curvas_sobre_cuerpos_finitos_binarios}
 
-\section{Coordenadas y representación}\label{sec:coordenadas_curvas_elipticas}
-\subsection{Coordenadas afines}
-\subsection{Coordenadas proyectivas y Jacobianas}
-\subsection{Coordenadas 'mixed' y optimizaciones}
+\section{Representación de puntos y la ley de grupo}\label{sec:representacion_puntos}
+
+En \S\ref{sec:ley_de_grupo} describimos la ley de grupo en coordenadas afines y vimos que cada suma o duplicación requiere al menos una inversión en el campo subyacente. Cuando la inversión es muy costosa respecto a la multiplicación, resulta preferible adoptar \emph{coordenadas proyectivas}, que sustituyen cada punto afín \((x,y)\) por un triple \((X:Y:Z)\) en \(\PP^2(K)\), evitando divisiones en la mayoría de las operaciones.
+
+\subsection{Coordenadas proyectivas: definición general}
+
+Sea \(K\) un cuerpo, y fijos \(c,d\ge1\). Definimos una relación de equivalencia en
+\[
+  K^3 \setminus \{(0,0,0)\},
+\]
+donde
+\[
+  (X_1,Y_1,Z_1)\sim (X_2,Y_2,Z_2)
+  \quad\Longleftrightarrow\quad
+  \exists\,\lambda\in K^\times:
+    \;X_1=\lambda^cX_2,\;
+    Y_1=\lambda^dY_2,\;
+    Z_1=\lambda\,Z_2.
+\]
+La clase de equivalencia \((X:Y:Z)\) se llama \emph{punto proyectivo}. Si \(Z\neq0\) elegimos el representante único \((X/Z^c,\;Y/Z^d,\;1)\), que corresponde al punto afín \((x,y)=(X/Z^c,Y/Z^d)\). Los puntos con \(Z=0\) forman la \emph{recta en el infinito}, que en las curvas elípticas se identifica con el punto neutro \(\O\).
+
+Para pasar de la ecuación afín \(y^2 = x^3 + ax + b\) a su forma proyectiva estándar (con \(c=d=1\)), reemplazamos
+\[
+  x\;\mapsto\;\frac{X}{Z},\qquad y\;\mapsto\;\frac{Y}{Z},
+\]
+llevando la curva a
+\[
+  Y^2Z = X^3 + a\,X Z^2 + b\,Z^3,
+\]
+que es homogénea de grado 3 en \((X,Y,Z)\).
+
+\subsection{Sistemas de coordenadas más comunes}
+
+\subsubsection*{1. Coordenadas proyectivas estándar \((c=d=1)\)}
+\[
+  (X:Y:Z)\leftrightarrow\bigl(x,y\bigr)=\bigl(X/Z,\;Y/Z\bigr),
+\]
+\- Ecuación: \(Y^2Z = X^3 + a\,XZ^2 + b\,Z^3\).  
+\- Infinito: \(\O=(0:1:0)\).  
+\- Negativo: \(-(X:Y:Z)=(X:-Y:Z)\).
+
+\subsubsection*{2. Coordenadas de Jacobi \((c=2,d=3)\)}
+\[
+  (X:Y:Z)\leftrightarrow\bigl(x,y\bigr)=\bigl(X/Z^2,\;Y/Z^3\bigr).
+\]
+\- Ecuación: \(Y^2 = X^3 + a\,X Z^4 + b\,Z^6\).  
+\- Infinito: \(\O=(1:1:0)\).  
+\- Negativo: \(-(X:Y:Z)=(X:-Y:Z)\).  
+\- \emph{Ventaja}: las fórmulas de suma y duplicación requieren solo multiplicaciones y sumas en \(K\), sin inversiones, logrando un coste aproximado de \(O(1)\) multiplicaciones por operación de grupo~\cite{SilvermanAEC}.
+
+\subsubsection*{3. Coordenadas de Chudnovsky}
+Se almacena \((X:Y:Z:Z^2:Z^3)\) para acelerar ciertas estrategias de multiplicación escalar que mezclan adiciones parciales y duplicaciones.
+
+\subsection{Ley de grupo en coordenadas proyectivas}
+
+A continuación resumimos las fórmulas de suma y duplicación en coordenadas de Jacobi, para la curva
+\[
+  E\colon Y^2 = X^3 + a\,X Z^4 + b\,Z^6.
+\]
+
+\paragraph{Duplicación \(P\mapsto2P\).} Sea \(P=(X_1:Y_1:Z_1)\). Definimos
+\[
+\begin{aligned}
+  A &= 3(X_1 - Z_1^2)\,(X_1 + Z_1^2),\\
+  B &= 2\,Y_1,\\
+  C &= B^2,\quad
+  D = C\,X_1,\\
+  X_3 &= A^2 - 2\,D,\\
+  Z_3 &= B\,Z_1,\\
+  Y_3 &= A\,(D - X_3) - C^2/2.
+\end{aligned}
+\]
+Entonces \(2P=(X_3:Y_3:Z_3)\) sin calcular ninguna inversión en \(K\).
+
+\paragraph{Suma \(P+Q\).} Dado \(P=(X_1:Y_1:Z_1)\), \(Q=(X_2:Y_2:Z_2)\), se definen
+\[
+\begin{aligned}
+  U_1 &= X_1\,Z_2^2,\quad U_2 = X_2\,Z_1^2,\\
+  S_1 &= Y_1\,Z_2^3,\quad S_2 = Y_2\,Z_1^3,\\
+  H   &= U_2 - U_1,\quad R = S_2 - S_1,\\
+  X_3 &= R^2 - H^3 - 2\,U_1\,H^2,\\
+  Y_3 &= R\,(U_1\,H^2 - X_3) - S_1\,H^3,\\
+  Z_3 &= H\,Z_1\,Z_2.
+\end{aligned}
+\]
+De nuevo, no hay inversiones —solo multiplicaciones y sumas en \(K\)\,— y el coste es del orden de decenas de multiplicaciones según la implementación.
+
+\subsection{Ventajas y desventajas}
+
+\begin{itemize}
+  \item \textbf{Sin inversiones:} el principal beneficio de las coordenadas proyectivas es evitar el paso costoso de la inversión en \(K\), cambiándolo por un mayor número de multiplicaciones y cuadrados, mucho más rápidos en hardware y software moderno.
+  \item \textbf{Redundancia:} el almacenamiento adicional (el parámetro \(Z\) y, en Chudnovsky, \(Z^2,Z^3\)) aumenta el uso de memoria y complica la normalización final si necesitamos el resultado en afín.
+  \item \textbf{Flexibilidad:} diferentes elecciones \((c,d)\) adaptan la curva a remates algorítmicos específicos (e.g. a = –3 permite optimizar el término \(\;3X_1^2 + aZ_1^4\)\,).
+\end{itemize}
+
+En la práctica, para curvas de uso criptográfico sobre primos grandes, las coordenadas de Jacobi con \(a=-3\) son el estándar de facto, pues combinan rapidez en duplicación y sencillez de implementación~\cite{IEEE1363}.
+
+% Si se desea, agregar ejemplo numérico ilustrativo aquí.
 
 \section{Selección de parámetros}
 \subsection{Tamaños de curva y seguridad}
