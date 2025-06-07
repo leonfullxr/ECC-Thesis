@@ -301,10 +301,169 @@ La razón de distinguir tres familias de ecuaciones simplificadas responde a la 
 \paragraph{Curvas ordinarias vs.\ supersingulares}  
 La condición de \emph{supersingularidad} (discriminante especial, ver cada caso) refleja que el grupo de puntos de la curva tiene un anillo de endomorfismos más grande. Si bien ciertas construcciones pairing‐based usan curvas supersingulares (por sus endomorfismos explícitos), para ECC estándar se prefieren curvas \emph{ordinarias} (no supersingulares) para evitar ataques que explotan ese extra de simetría~\cite{Waterhouse1969}.  
 
-\section{Estructura de grupo}
+\subsection{Ley de Grupo}\label{sec:ley_de_grupo}
+Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\O\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}, basado en dos construcciones geométricas distintas, según si sumamos dos puntos distintos o duplicamos un mismo punto.
+
+\subsubsection*{1. Suma de puntos distintos (\(P \neq Q\))}
+
+\begin{enumerate}
+  \item {\bf Geometría:} Dado \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) con \(P\neq Q\), trazamos la \emph{cuerda} que los une. Esta recta corta la curva en un tercer punto \(S\). Luego, definimos
+  \[
+    R \;=\; P + Q
+    \;=\; \overline{S}
+  \]
+  como la reflexión de \(S\) respecto al eje \(x\).  
+\end{enumerate}
+
+\subsubsection*{2. Suma de puntos idénticos (\(P = Q\))}
+
+\begin{enumerate}
+  \item {\bf Geometría:} Para duplicar \(P=(x_1,y_1)\), trazamos la \emph{tangente} a la curva en \(P\). Esta recta corta la curva en un segundo punto \(T\). Definimos
+  \[
+    R \;=\; 2P
+    \;=\; \overline{T}
+  \]
+  como la reflexión de \(T\) respecto al eje \(x\).  
+\end{enumerate}
+
+A continuación se explica la ley de grupo, primero de forma geométrica y luego se dan las fórmulas algebraicas en coordenadas afines a modo de ejemplo.
+
+\subsubsection*{Descripción geométrica}
+\begin{itemize}
+  \item \textbf{Identidad.} El punto en el infinito \(\O\) actúa como elemento neutro: 
+    \[
+      P + \O = \O + P = P,\quad\forall P\in E(K).
+    \]
+  \item \textbf{Opuesto.} Dados \(P=(x,y)\in E(K)\), su opuesto es \(-P=(x,-y)\) (la reflexión sobre el eje \(x\)), pues 
+    \((x,y)+(x,-y)=\O\).
+  \item \textbf{Suma de puntos distintos.} Para \(P\neq Q\) trazamos la recta que los une; esta línea corta a la curva en un tercer punto \(R'\). Entonces 
+    \[
+      P + Q = R,
+    \]
+    siendo \(R\) la reflexión de \(R'\) respecto. al eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(a)).
+  \item \textbf{Duplicación.} Para \(P\) trazamos la tangente a la curva en \(P\); esta línea corta de nuevo a la curva en \(R'\). De forma análoga,
+    \[
+      2P = R,
+    \]
+    resultando \(R\) como la reflexión de \(R'\) en el eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(b)).
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \begin{minipage}{0.5\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{imagenes/elliptic_curve2D_addition_example.png}\\
+    (a) Suma \(P+Q\)
+  \end{minipage}\hfill
+  \begin{minipage}{0.5\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{imagenes/elliptic_curve_same_addition_example.png}\\
+    (b) Duplicación \(2P\)
+  \end{minipage}
+  \caption{Geometría de la ley de grupo en curvas elípticas}
+  \label{fig:grupo_elipticas}
+\end{figure}
+
+\subsubsection*{Propiedades del grupo abeliano}
+El conjunto de puntos de la curva, junto con la operación $+$ y el elemento neutro $\O$, forma un \emph{grupo abeliano} que denotamos
+\[
+  \bigl(E(K),\;+\,,\;\O\bigr).
+\]
+Este grupo verifica las siguientes propiedades:
+
+\begin{enumerate}
+  \item \textbf{Clausura.} Para todo $P,Q\in E(K)$, se tiene
+    \[
+      P + Q \;\in\; E(K).
+    \]
+  \item \textbf{Asociatividad.} Para todo $P,Q,R\in E(K)$,
+    \[
+      (P + Q) + R \;=\; P + (Q + R).
+    \]
+  \item \textbf{Elemento neutro.} Existe $\O\in E(K)$ tal que
+    \[
+      P + \O = \O + P = P,
+      \quad \forall\,P\in E(K).
+    \]
+  \item \textbf{Inverso.} Para cada $P\in E(K)$ existe $-P\in E(K)$ (el opuesto de $P$)
+    tal que
+    \[
+      P + (-P) = (-P) + P = \O.
+    \]
+  \item \textbf{Conmutatividad.} Para todo $P,Q\in E(K)$,
+    \[
+      P + Q = Q + P.
+    \]
+\end{enumerate}
+
+\noindent En conjunto, estas cinco cláusulas definen un grupo abeliano (en particular, las cuatro primeras lo definen como grupo, y la quinta asegura que es abeliano).
+
+\subsubsection*{Fórmulas en cuerpos de característica \(\neq2,3\)}
+
+Para la forma corta de Weierstrass
+\[
+  E\colon\;y^2 = x^3 + a\,x + b,
+  \quad a,b\in K,
+  \quad \mathrm{char}(K)\neq2,3,
+\]
+las operaciones en coordenadas afines \((x,y)\) sobre \(K\) son:
+
+\begin{enumerate}
+  \item \emph{Negativo:} \(-P = (x,-y)\).
+  \item \emph{Suma} \(P=(x_1,y_1)\), \(Q=(x_2,y_2)\), \(x_1\neq x_2\). Sea
+    \[
+      \lambda = \frac{y_2 - y_1}{x_2 - x_1}, 
+      \quad
+      x_3 = \lambda^2 - x_1 - x_2,\quad
+      y_3 = \lambda(x_1 - x_3) - y_1.
+    \]
+    Entonces \(P + Q = (x_3,y_3)\).
+  \item \emph{Duplicación} \(P=(x_1,y_1)\), \(y_1\neq0\). Sea
+    \[
+      \lambda = \frac{3x_1^2 + a}{2y_1}, 
+      \quad
+      x_3 = \lambda^2 - 2x_1,\quad
+      y_3 = \lambda(x_1 - x_3) - y_1.
+    \]
+    Entonces \(2P = (x_3,y_3)\).
+\end{enumerate}
+
+\subsubsection*{Ley de grupo en campos binarios}
+
+Cuando \(K = \F_{2^m}\) y la curva es no supersingular,
+\[
+  E\colon\;y^2 + x\,y = x^3 + A\,x^2 + B,
+\]
+la ley de grupo en \(\F_{2^m}\) (coordenadas afines) se implementa así:
+
+\begin{enumerate}
+  \item \emph{Negativo:} \(-P = (x,x+y)\).
+  \item \emph{Suma} \(P=(x_1,y_1)\), \(Q=(x_2,y_2)\), \(x_1\neq x_2\). Sea
+    \[
+      \lambda = \frac{y_1 + y_2}{x_1 + x_2},\quad
+      x_3 = \lambda^2 + \lambda + x_1 + x_2 + A,\quad
+      y_3 = \lambda(x_1 + x_3) + x_3 + y_1.
+    \]
+    Entonces \(P + Q = (x_3,y_3)\).
+  \item \emph{Duplicación} \(P=(x_1,y_1)\), \(x_1\neq0\). Sea
+    \[
+      \lambda = x_1 + \frac{y_1}{x_1},\quad
+      x_3 = \lambda^2 + \lambda + A,\quad
+      y_3 = x_1^2 + \lambda\,x_3 + x_3.
+    \]
+    Entonces \(2P = (x_3,y_3)\).
+\end{enumerate}
+
+Para curvas supersingulares en \(\F_{2^m}\) de la forma
+\[
+  E\colon\;y^2 + C\,y = x^3 + A\,x + B,
+\]
+las fórmulas cambian levemente (con \(-P=(x,y+C)\)), pero siguen el mismo patrón de suma y duplicación mediante \(\lambda\).
+
+
+
 \subsection{Punto en el infinito}
 \subsection{Ley de suma de puntos (geometría proyectiva)}
-\subsection{Propiedades algebraicas}
 
 \section{Curvas sobre cuerpos finitos}\label{sec:curvas_sobre_cuerpos_finitos}
 \begin{figure}[H]
@@ -313,6 +472,14 @@ La condición de \emph{supersingularidad} (discriminante especial, ver cada caso
     \caption{Ejemplo de los puntos de una curva elíptica sobre un cuerpo finito}
     \label{fig:points_finite_field_251}
 \end{figure}
+
+\subsubsection*{Orden del grupo}
+
+El número de puntos \(\#E(\F_q)\) se llama orden de la curva sobre \(\F_q\). Por el teorema de Hasse,
+\[
+  q + 1 - 2\sqrt{q} \;\le\;\#E(\F_q)\;\le\;q + 1 + 2\sqrt{q}.
+\]
+Este intervalo estrecho garantiza que \(\#E(\F_q)\approx q\), base de su resistencia criptográfica.
 \subsection{Curvas sobre \texorpdfstring{$\mathbb{F}_p$}{Fp}}\label{sec:curvas_sobre_cuerpos_finitos_primos}
 \subsection{Curvas binarias sobre \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}\label{sec:curvas_sobre_cuerpos_finitos_binarios}
 
