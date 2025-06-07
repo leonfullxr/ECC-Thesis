@@ -460,10 +460,8 @@ Para curvas supersingulares en \(\F_{2^m}\) de la forma
 \]
 las fórmulas cambian levemente (con \(-P=(x,y+C)\)), pero siguen el mismo patrón de suma y duplicación mediante \(\lambda\).
 
-
-
 \subsection{Punto en el infinito}
-\subsection{Ley de suma de puntos (geometría proyectiva)}
+
 
 \section{Curvas sobre cuerpos finitos}\label{sec:curvas_sobre_cuerpos_finitos}
 \begin{figure}[H]
@@ -474,12 +472,62 @@ las fórmulas cambian levemente (con \(-P=(x,y+C)\)), pero siguen el mismo patr�
 \end{figure}
 
 \subsubsection*{Orden del grupo}
+Sea \(E\) una curva elíptica definida sobre el cuerpo finito \(\mathbb{F}_q\).  
+El número de puntos en \(E(\mathbb{F}_q)\), denotado \(\#E(\mathbb{F}_q)\), se llama \emph{orden} de la curva sobre \(\mathbb{F}_q\).  
 
-El número de puntos \(\#E(\F_q)\) se llama orden de la curva sobre \(\F_q\). Por el teorema de Hasse,
+Como la ecuación de Weierstrass
 \[
-  q + 1 - 2\sqrt{q} \;\le\;\#E(\F_q)\;\le\;q + 1 + 2\sqrt{q}.
+y^2 + a_1 x y + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6
 \]
-Este intervalo estrecho garantiza que \(\#E(\F_q)\approx q\), base de su resistencia criptográfica.
+puede tener a lo sumo dos soluciones en \(y\) para cada \(x\in\mathbb{F}_q\), sabemos trivialmente que
+\[
+1 \;\le\;\#E(\mathbb{F}_q)\;\le\;2q+1.
+\]
+
+El teorema de Hasse ofrece cotas mucho más ajustadas:
+
+\begin{teorema}[Hasse]
+Sea \(E\) una curva elíptica definida sobre \(\mathbb{F}_q\). Entonces
+\[
+  q + 1 - 2\sqrt{q}\;\le\;\#E(\mathbb{F}_q)\;\le\;q + 1 + 2\sqrt{q}.
+\]
+\end{teorema}
+
+El intervalo
+\[
+  \bigl[q+1-2\sqrt{q},\;q+1+2\sqrt{q}\bigr]
+\]
+se conoce como el \emph{intervalo de Hasse}. Una formulación equivalente dice que
+\[
+  \#E(\mathbb{F}_q) \;=\; q + 1 - t,
+  \quad
+  |t|\le2\sqrt{q},
+\]
+donde \(t\) se denomina \emph{traza} de la curva \(E\) sobre \(\mathbb{F}_q\). Dado que \(2\sqrt q\ll q\) para campos grandes, se tiene
+\[
+  \#E(\mathbb{F}_q)\;\approx\;q,
+\]
+lo cual es fundamental para la seguridad criptográfica (pues el tamaño del grupo resulta comparable al del campo base).
+
+\subsubsection*{Órdenes admisibles}
+
+El siguiente resultado caracteriza exactamente qué números pueden ser órdenes de curvas sobre \(\mathbb{F}_q\):
+
+\begin{teorema}[Órdenes admisibles]
+Sea \(q=p^m\) con \(p\) primo. Existe una curva elíptica \(E/\mathbb{F}_q\) con
+\(\#E(\mathbb{F}_q)=q+1-t\) si y solo si se cumple una de las condiciones:
+\begin{enumerate}
+  \item \(t\equiv0\pmod p\) y \(t^2\le4q\).
+  \item \(m\) es impar y, además,  
+    \(\;t=0\);\quad o \quad \(t^2=2q\) si \(p=2\);\quad o \quad \(t^2=3q\) si \(p=3\).
+  \item \(m\) es par y, además,  
+    \(\;t^2=4q\);\quad o \quad \(t^2=q\) con \(p\equiv1\pmod3\);\quad o \quad \(t=0\) con \(p\equiv1\pmod4\).
+\end{enumerate}
+\end{teorema}
+
+Una consecuencia inmediata es que, para cada primo \(p\) y cualquier \(t\) con \(|t|\le2\sqrt p\), existe una curva \(E/\mathbb{F}_p\) de orden \(\#E(\mathbb{F}_p)=p+1-t\).
+
+
 \subsection{Curvas sobre \texorpdfstring{$\mathbb{F}_p$}{Fp}}\label{sec:curvas_sobre_cuerpos_finitos_primos}
 \subsection{Curvas binarias sobre \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}\label{sec:curvas_sobre_cuerpos_finitos_binarios}
 
