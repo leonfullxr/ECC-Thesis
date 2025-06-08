@@ -461,6 +461,22 @@ Para curvas supersingulares en \(\mathbb{F}_{2^m}\) de la forma
 las fórmulas cambian levemente (con \(-P=(x,y+C)\)), pero siguen el mismo patrón de suma y duplicación mediante \(\lambda\).
 
 \section{Curvas sobre cuerpos finitos}\label{sec:curvas_sobre_cuerpos_finitos}
+Cuando trabajamos sobre un cuerpo finito \(\mathbb{F}_q\), la gráfica de una curva elíptica deja de ser una curva continua y pasa a ser simplemente un conjunto discreto de puntos como se puede apreciar en la figura~\ref{fig:points_finite_field_251}. Sin embargo, el conjunto
+\[
+  E(\mathbb{F}_q)
+  \;=\;
+  \bigl\{(x,y)\in\mathbb{F}_q\times\mathbb{F}_q : y^2 + a_1xy + a_3y = x^3 + a_2x^2 + a_4x + a_6\bigr\}\;\cup\;\{\O\}
+\]
+sigue formando un \emph{grupo abeliano finito} bajo la ley de la cuerda y la tangente.
+
+\paragraph{Ventajas de trabajar sobre \(\mathbb{F}_q\).}
+\begin{itemize}
+  \item \textbf{Aritmética exacta:} Todas las sumas y multiplicaciones de coordenadas se hacen \emph{módulo \(q\)}, con lo que no existen errores de redondeo ni acumulación de imprecisión.  
+  \item \textbf{Cierre y existencia de inversos:} En \(\mathbb{F}_q\), todo elemento no nulo tiene inverso multiplicativo, lo que permite definir de forma sencilla la operación de división en las fórmulas de suma y de duplicación de puntos.  
+  \item \textbf{Rendimiento:} Los procesadores suelen integrar instrucciones nativas para operar \emph{módulo} un primo \(p\) (por ejemplo, reducción rápida, multiplicadores de enteros), de modo que las operaciones en \(\mathbb{F}_p\) resultan muy eficientes.  
+  \item \textbf{Seguridad:} El tamaño finito del grupo y su estructura abeliana permiten cuantificar con precisión la resistencia ante ataques de fuerza bruta o algoritmos de Logaritmo Discreto; elegir \(q\) y la curva de modo que \(\#E(\mathbb{F}_q)\)~\ref{subsec:orden_del_grupo} tenga un gran factor primo es esencial para garantizar la dificultad del problema.  
+\end{itemize}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{imagenes/points_finite_field_251.png}
@@ -468,7 +484,9 @@ las fórmulas cambian levemente (con \(-P=(x,y+C)\)), pero siguen el mismo patr�
     \label{fig:points_finite_field_251}
 \end{figure}
 
-\subsubsection*{Orden del grupo}
+\subsubsection*{Orden del grupo}\label{subsec:orden_del_grupo}
+Algo a destacar de las curvas elípticas sobre campos finitos es el número de puntos racionales que forman. El valor del número de puntos es esencial para determinar la dificultad de resolver el problema del logaritmo discreto en \(E(\mathbb{F}_q)\) y garantiza la seguridad del sistema que depende de que ese valor tenga un factor primo grande.
+
 Sea \(E\) una curva elíptica definida sobre el cuerpo finito \(\mathbb{F}_q\).  
 El número de puntos en \(E(\mathbb{F}_q)\), denotado \(\#E(\mathbb{F}_q)\), se llama \emph{orden} de la curva sobre \(\mathbb{F}_q\).  
 
@@ -524,13 +542,21 @@ Sea \(q=p^m\) con \(p\) primo. Existe una curva elíptica \(E/\mathbb{F}_q\) con
 
 Una consecuencia inmediata es que, para cada primo \(p\) y cualquier \(t\) con \(|t|\le2\sqrt p\), existe una curva \(E/\mathbb{F}_p\) de orden \(\#E(\mathbb{F}_p)=p+1-t\).
 
-
-\subsection{Curvas sobre \texorpdfstring{$\mathbb{F}_p$}{Fp}}\label{sec:curvas_sobre_cuerpos_finitos_primos}
-\subsection{Curvas binarias sobre \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}\label{sec:curvas_sobre_cuerpos_finitos_binarios}
+\paragraph{Ejemplo.}
+Consideremos la curva
+\[
+  E\colon\;y^2 = x^3 + a x + b
+  \quad\text{sobre}\quad
+  \mathbb{F}_{p},\quad p>3.
+\]
+Cada punto \((x,y)\) se calcula resolviendo la ecuación en \(\mathbb{F}_p\). Por ejemplo, para
+\[
+  p = 97,\quad a=2,\quad b=3,
+\]
+podemos listar todos los \(x\in\{0,1,\dots,96\}\), calcular \(x^3+2x+3\pmod{97}\) y buscar las raíces cuadradas en \(\mathbb{F}_{97}\). Al final obtendremos \(\#E(\mathbb{F}_{97})\approx97\) puntos (incluido \(\O\)), que forman el grupo \(\bigl(E(\mathbb{F}_{97}),+,\O\bigr)\).
 
 \section{Representación de puntos y la ley de grupo}\label{sec:representacion_puntos}
-
-En \S\ref{sec:ley_de_grupo} describimos la ley de grupo en coordenadas afines y vimos que cada suma o duplicación requiere al menos una inversión en el campo subyacente. Cuando la inversión es muy costosa respecto a la multiplicación, resulta preferible adoptar \emph{coordenadas proyectivas}, que sustituyen cada punto afín \((x,y)\) por un triple \((X:Y:Z)\) en \(\PP^2(K)\), evitando divisiones en la mayoría de las operaciones.
+En \S\ref{sec:ley_de_grupo} presentamos la ley de grupo para puntos en curvas elípticas en coordenadas afines. Sin embargo, las operaciones de suma y duplicación requieren invertir en el cuerpo base, lo cual puede ser costoso si la inversión es mucho más lenta que la multiplicación. Para reducir el número de inversiones es útil emplear \emph{coordenadas proyectivas}, que representan cada punto por un triple \((X:Y:Z)\) en lugar de \((x,y)\). A continuación describimos esta representación de forma general y sus variantes más utilizadas en \(\mathbb{F}_p\) y \(\mathbb{F}_{2^m}\).
 
 \subsection{Coordenadas proyectivas: definición general}
 
@@ -559,8 +585,12 @@ llevando la curva a
 \]
 que es homogénea de grado 3 en \((X,Y,Z)\).
 
-\subsection{Sistemas de coordenadas más comunes}
-
+\subsection{Coordenadas en \(\mathbb{F}_p\)}\label{sec:proj_Fp}
+Para curvas en forma corta de Weierstrass
+\[
+  E\colon y^2 = x^3 + a\,x + b,\quad a,b\in\mathbb{F}_p,\;p>3,
+\]
+las coordenadas proyectivas más comunes son:
 \subsubsection*{1. Coordenadas proyectivas estándar \((c=d=1)\)}
 \[
   (X:Y:Z)\leftrightarrow\bigl(x,y\bigr)=\bigl(X/Z,\;Y/Z\bigr),
@@ -569,7 +599,7 @@ que es homogénea de grado 3 en \((X,Y,Z)\).
 \- Infinito: \(\O=(0:1:0)\).  
 \- Negativo: \(-(X:Y:Z)=(X:-Y:Z)\).
 
-\subsubsection*{2. Coordenadas de Jacobi \((c=2,d=3)\)}
+\subsubsection*{2. Coordenadas Jacobianas \((c=2,d=3)\)}
 \[
   (X:Y:Z)\leftrightarrow\bigl(x,y\bigr)=\bigl(X/Z^2,\;Y/Z^3\bigr).
 \]
@@ -581,39 +611,46 @@ que es homogénea de grado 3 en \((X,Y,Z)\).
 \subsubsection*{3. Coordenadas de Chudnovsky}
 Se almacena \((X:Y:Z:Z^2:Z^3)\) para acelerar ciertas estrategias de multiplicación escalar que mezclan adiciones parciales y duplicaciones.
 
-\subsection{Ley de grupo en coordenadas proyectivas}
 
-A continuación resumimos las fórmulas de suma y duplicación en coordenadas de Jacobi, para la curva
+\subsection{Coordenadas en \(\mathbb{F}_{2^m}\)}\label{sec:proj_F2m}
+Para curvas binarias no supersingulares
 \[
-  E\colon Y^2 = X^3 + a\,X Z^4 + b\,Z^6.
+  E\colon y^2 + x\,y = x^3 + A\,x^2 + B,\quad A,B\in\mathbb{F}_{2^m},
 \]
+se emplean variantes análogas:
 
-\paragraph{Duplicación \(P\mapsto2P\).} Sea \(P=(X_1:Y_1:Z_1)\). Definimos
-\[
-\begin{aligned}
-  A &= 3(X_1 - Z_1^2)\,(X_1 + Z_1^2),\\
-  B &= 2\,Y_1,\\
-  C &= B^2,\quad
-  D = C\,X_1,\\
-  X_3 &= A^2 - 2\,D,\\
-  Z_3 &= B\,Z_1,\\
-  Y_3 &= A\,(D - X_3) - C^2/2.
-\end{aligned}
-\]
-Entonces \(2P=(X_3:Y_3:Z_3)\) sin calcular ninguna inversión en \(K\).
+\begin{description}
+  \item[Proyecto estándar (\(c=d=1\)).]  
+    \[
+      (X:Y:Z)\longleftrightarrow\bigl(X/Z,\;Y/Z\bigr),
+    \]
+    homogénea:
+    \[
+      Y^2Z + X\,Y\,Z = X^3 + A\,X^2\,Z + B\,Z^3,
+    \]
+    ${\infty}$ = \((0:1:0)\).
 
-\paragraph{Suma \(P+Q\).} Dado \(P=(X_1:Y_1:Z_1)\), \(Q=(X_2:Y_2:Z_2)\), se definen
-\[
-\begin{aligned}
-  U_1 &= X_1\,Z_2^2,\quad U_2 = X_2\,Z_1^2,\\
-  S_1 &= Y_1\,Z_2^3,\quad S_2 = Y_2\,Z_1^3,\\
-  H   &= U_2 - U_1,\quad R = S_2 - S_1,\\
-  X_3 &= R^2 - H^3 - 2\,U_1\,H^2,\\
-  Y_3 &= R\,(U_1\,H^2 - X_3) - S_1\,H^3,\\
-  Z_3 &= H\,Z_1\,Z_2.
-\end{aligned}
-\]
-De nuevo, no hay inversiones —solo multiplicaciones y sumas en \(K\)\,— y el coste es del orden de decenas de multiplicaciones según la implementación.
+  \item[Jacobian (\(c=2,d=3\)).]  
+    \[
+      (X:Y:Z)\longleftrightarrow\bigl(X/Z^2,\;Y/Z^3\bigr),
+    \]
+    ecuación:
+    \[
+      Y^2 + X\,Y\,Z = X^3 + A\,X^2\,Z^2 + B\,Z^6,
+    \]
+    ${\infty}$ = \((1:1:0)\).
+
+  \item[López–Dahab (\(c=1,d=2\)).]  
+    \[
+      (X:Y:Z)\longleftrightarrow\bigl(X/Z,\;Y/Z^2\bigr),
+    \]
+    ecuación:
+    \[
+      Y^2 + X\,Y\,Z = X^3\,Z + A\,X^2\,Z^2 + B\,Z^4,
+    \]
+    ${\infty}$ = \((1:0:0)\).  
+    Ofrece un balance favorable entre número de multiplicaciones y cuadrados en \(\mathbb{F}_{2^m}\).
+\end{description}
 
 \subsection{Ventajas y desventajas}
 
@@ -625,7 +662,6 @@ De nuevo, no hay inversiones —solo multiplicaciones y sumas en \(K\)\,— y el
 
 En la práctica, para curvas de uso criptográfico sobre primos grandes, las coordenadas de Jacobi con \(a=-3\) son el estándar de facto, pues combinan rapidez en duplicación y sencillez de implementación~\cite{IEEE1363}.
 
-% Si se desea, agregar ejemplo numérico ilustrativo aquí.
 
 \section{Selección de parámetros}
 \subsection{Tamaños de curva y seguridad}
