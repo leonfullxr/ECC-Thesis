@@ -592,75 +592,109 @@ Para curvas en forma corta de Weierstrass
 \]
 las coordenadas proyectivas más comunes son:
 \subsubsection*{1. Coordenadas proyectivas estándar \((c=d=1)\)}
-\[
-  (X:Y:Z)\leftrightarrow\bigl(x,y\bigr)=\bigl(X/Z,\;Y/Z\bigr),
-\]
-\- Ecuación: \(Y^2Z = X^3 + a\,XZ^2 + b\,Z^3\).  
-\- Infinito: \(\O=(0:1:0)\).  
-\- Negativo: \(-(X:Y:Z)=(X:-Y:Z)\).
+\begin{itemize}
+  \item \emph{Representación:} \((X:Y:Z)\)\quad con \(\;x = X/Z,\;y = Y/Z\).
+  \item \emph{Ecuación:}
+    \[
+      E\colon\;Y^2Z = X^3 + a\,X Z^2 + b\,Z^3.
+    \]
+  \item \emph{Punto en el infinito:} \(\O = (0:1:0)\).
+  \item \emph{Opuesto:} \(- (X:Y:Z) = (X:-Y:Z)\).
+\end{itemize}
 
 \subsubsection*{2. Coordenadas Jacobianas \((c=2,d=3)\)}
-\[
-  (X:Y:Z)\leftrightarrow\bigl(x,y\bigr)=\bigl(X/Z^2,\;Y/Z^3\bigr).
-\]
-\- Ecuación: \(Y^2 = X^3 + a\,X Z^4 + b\,Z^6\).  
-\- Infinito: \(\O=(1:1:0)\).  
-\- Negativo: \(-(X:Y:Z)=(X:-Y:Z)\).  
-\- \emph{Ventaja}: las fórmulas de suma y duplicación requieren solo multiplicaciones y sumas en \(K\), sin inversiones, logrando un coste aproximado de \(O(1)\) multiplicaciones por operación de grupo~\cite{SilvermanAEC}.
+\begin{itemize}
+  \item \emph{Representación:} \((X:Y:Z)\)\quad con \(\;x = X/Z^2,\;y = Y/Z^3\).
+  \item \emph{Ecuación:}
+    \[
+      E\colon\;Y^2 = X^3 + a\,X Z^4 + b\,Z^6.
+    \]
+  \item \emph{Punto en el infinito:} \(\O = (1:1:0)\).
+  \item \emph{Opuesto:} \(- (X:Y:Z) = (X:-Y:Z)\).
+\end{itemize}
 
 \subsubsection*{3. Coordenadas de Chudnovsky}
-Se almacena \((X:Y:Z:Z^2:Z^3)\) para acelerar ciertas estrategias de multiplicación escalar que mezclan adiciones parciales y duplicaciones.
-
+\begin{itemize}
+  \item \emph{Representación extendida:} \(\;(X:Y:Z:Z^2:Z^3)\).  
+  \item \emph{Punto en el infinito:} \(\O=(1:1:0:0:0)\).
+  \item \emph{Opuesto:} \(- (X:Y:Z:Z^2:Z^3) = (X:-Y:Z:Z^2:Z^3)\).
+\end{itemize}
 
 \subsection{Coordenadas en \(\mathbb{F}_{2^m}\)}\label{sec:proj_F2m}
 Para curvas binarias no supersingulares
 \[
   E\colon y^2 + x\,y = x^3 + A\,x^2 + B,\quad A,B\in\mathbb{F}_{2^m},
 \]
-se emplean variantes análogas:
+la inversión en el campo puede ser muy cara en software, por lo que resulta útil trabajar en coordenadas proyectivas. A continuación se presentan las más comunes:
 
-\begin{description}
-  \item[Proyecto estándar (\(c=d=1\)).]  
-    \[
-      (X:Y:Z)\longleftrightarrow\bigl(X/Z,\;Y/Z\bigr),
-    \]
-    homogénea:
-    \[
-      Y^2Z + X\,Y\,Z = X^3 + A\,X^2\,Z + B\,Z^3,
-    \]
-    ${\infty}$ = \((0:1:0)\).
+\subsubsection*{1. Coordenadas proyectivas estándar \((c=1,\,d=1)\)}
 
-  \item[Jacobian (\(c=2,d=3\)).]  
-    \[
-      (X:Y:Z)\longleftrightarrow\bigl(X/Z^2,\;Y/Z^3\bigr),
-    \]
-    ecuación:
-    \[
-      Y^2 + X\,Y\,Z = X^3 + A\,X^2\,Z^2 + B\,Z^6,
-    \]
-    ${\infty}$ = \((1:1:0)\).
+\begin{itemize}
+  \item \emph{Correspondencia con afines:}
+  \[
+    (X:Y:Z)\;\longleftrightarrow\;(x,y)=\bigl(X/Z,\;Y/Z\bigr),\quad Z\neq0.
+  \]
+  \item \emph{Ecuación homogénea:}
+  \[
+    Y^2Z \;+\; X\,Y\,Z \;=\; X^3 \;+\; A\,X^2\,Z \;+\; B\,Z^3.
+  \]
+  \item \emph{Punto en el infinito:} \(\O = (0:1:0)\).  
+  \item \emph{Negativo:} 
+  \[
+    -(X:Y:Z) \;=\; (X:\;X+Y:\;Z),
+  \]
+  que corresponde a reflejar en la "línea" \(y = x\).
+\end{itemize}
 
-  \item[López–Dahab (\(c=1,d=2\)).]  
-    \[
-      (X:Y:Z)\longleftrightarrow\bigl(X/Z,\;Y/Z^2\bigr),
-    \]
-    ecuación:
-    \[
-      Y^2 + X\,Y\,Z = X^3\,Z + A\,X^2\,Z^2 + B\,Z^4,
-    \]
-    ${\infty}$ = \((1:0:0)\).  
-    Ofrece un balance favorable entre número de multiplicaciones y cuadrados en \(\mathbb{F}_{2^m}\).
-\end{description}
+\subsubsection*{2. Coordenadas Jacobianas \((c=2,\,d=3)\)}
+
+\begin{itemize}
+  \item \emph{Correspondencia con afines:}
+  \[
+    (X:Y:Z)\;\longleftrightarrow\;(x,y)=\bigl(X/Z^2,\;Y/Z^3\bigr),\quad Z\neq0.
+  \]
+  \item \emph{Ecuación homogénea:}
+  \[
+    Y^2 \;+\; X\,Y\,Z \;=\; X^3 \;+\; A\,X^2\,Z^2 \;+\; B\,Z^6.
+  \]
+  \item \emph{Punto en el infinito:} \(\O = (1:1:0)\).  
+  \item \emph{Negativo:} 
+  \[
+    -(X:Y:Z) \;=\; (X:\;X+Y:\;Z).
+  \]
+  \item \emph{Ventaja principal:} Todas las fórmulas de suma y duplicación usan únicamente multiplicaciones y sumas en \(\mathbb{F}_{2^m}\), sin inversiones explícitas, lo que reduce drásticamente el coste en implementaciones software sobre hardware general.
+\end{itemize}
+
+\subsubsection*{3. Coordenadas de López–Dahab (LD) \((c=1,\,d=2)\)}
+
+\begin{itemize}
+  \item \emph{Correspondencia con afines:}
+  \[
+    (X:Y:Z)\;\longleftrightarrow\;(x,y)=\bigl(X/Z,\;Y/Z^2\bigr),\quad Z\neq0.
+  \]
+  \item \emph{Ecuación homogénea:}
+  \[
+    Y^2 \;+\; X\,Y\,Z \;=\; X^3\,Z \;+\; A\,X^2\,Z^2 \;+\; B\,Z^4.
+  \]
+  \item \emph{Punto en el infinito:} \(\O = (1:0:0)\).  
+  \item \emph{Negativo:} 
+  \[
+    -(X:Y:Z) \;=\; (X:\;X+Y:\;Z).
+  \]
+  \item \emph{Balance de coste:}  
+    \begin{itemize}
+      \item Las fórmulas de suma y duplicación requieren menos cuadrados que en Jacobianas, a costa de un ligero aumento en multiplicaciones.
+    \end{itemize}
+\end{itemize}
 
 \subsection{Ventajas y desventajas}
-
 \begin{itemize}
   \item \textbf{Sin inversiones:} el principal beneficio de las coordenadas proyectivas es evitar el paso costoso de la inversión en \(K\), cambiándolo por un mayor número de multiplicaciones y cuadrados, mucho más rápidos en hardware y software moderno.
   \item \textbf{Redundancia:} el almacenamiento adicional (el parámetro \(Z\) y, en Chudnovsky, \(Z^2,Z^3\)) aumenta el uso de memoria y complica la normalización final si necesitamos el resultado en afín.
   \item \textbf{Flexibilidad:} diferentes elecciones \((c,d)\) adaptan la curva a remates algorítmicos específicos (e.g. a = –3 permite optimizar el término \(\;3X_1^2 + aZ_1^4\)\,).
 \end{itemize}
 
-En la práctica, para curvas de uso criptográfico sobre primos grandes, las coordenadas de Jacobi con \(a=-3\) son el estándar de facto, pues combinan rapidez en duplicación y sencillez de implementación~\cite{IEEE1363}.
+En la práctica, para curvas de uso criptográfico sobre primos grandes, las coordenadas de Jacobi con \(a=-3\) son el estándar de facto, pues combinan rapidez en duplicación y sencillez de implementación.
 
 
 \section{Selección de parámetros}
