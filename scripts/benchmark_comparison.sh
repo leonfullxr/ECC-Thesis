@@ -6,7 +6,8 @@
 # Configuración
 ITERATIONS=10
 SEED_MODE="fixed"
-OUTPUT_FILE="benchmark_results_$(date +%Y%m%d_%H%M%S).txt"
+OUTPUT_DIR="./results"
+OUTPUT_FILE="$OUTPUT_DIR/benchmark_comparison_$(date +%Y%m%d_%H%M%S).txt"
 
 echo "============================================================================="
 echo "BENCHMARK COMPARATIVO RSA - DIFERENTES TAMAÑOS DE CLAVE"

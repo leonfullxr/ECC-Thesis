@@ -33,5 +33,6 @@
 ./bin/*
 
 # Benchmark results
+./results/*
 benchmark_results_*.txt
 core
