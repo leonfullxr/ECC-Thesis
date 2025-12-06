@@ -1,5 +1,4 @@
-ONESHELL:
-#SHELL := /usr/bin/env bash
+.ONESHELL:
 
 ################################################
 #
@@ -8,7 +7,7 @@ ONESHELL:
 # RSA vs ECC Benchmark Makefile
 # Proyecto: Curvas Elípticas y Criptografía
 # Autor: Leon Elliott Fuller
-# Fecha: 2025-05-11
+# Fecha: 2025-01-06
 ######################### Compilation
 CXX      := g++
 PREFIX   ?= /usr/local
@@ -28,11 +27,15 @@ SRC_DIR   := src
 BUILD_DIR := build
 BIN_DIR   := bin
 PYTHON_DIR := scripts
+INCLUDE_DIR := include
+
+######################### Source and object files
+SOURCES := $(SRC_DIR)/rng.cpp $(SRC_DIR)/rsa.cpp $(SRC_DIR)/ecc.cpp $(SRC_DIR)/main.cpp
+OBJS    := $(BUILD_DIR)/rng.o $(BUILD_DIR)/rsa.o $(BUILD_DIR)/ecc.o $(BUILD_DIR)/main.o
 
 ######################### Parameters override
 KEY_SIZE ?= 2048 # RSA key size for test-rsa target
 ITERS ?= 1 # Iterations for test targets
-
 RANDOM_SEED := $(shell bash -c "awk 'BEGIN{srand();print( int(65536*rand()) )}'")
 RR := ./
 SEED := $(RANDOM_SEED)
@@ -51,7 +54,7 @@ all: preamble show-info $(BIN_DIR)/bench
 preamble:
 	@echo "$(PBG)***********************************************$(EC)"
 	@echo "$(PBG)*$(EC)         Final Thesis Project       $(PBG)*$(EC)"
-	@echo "$(PBG)*$(EC)           Year 2024-2025           $(PBG)*$(EC)"
+	@echo "$(PBG)*$(EC)           Year 2025-2026           $(PBG)*$(EC)"
 	@echo "$(PBG)*---------------------------------------------*$(EC)"
 	@echo "$(PBG)*$(EC)        ECC and RSA Benchmarks      $(PBG)*$(EC)"
 	@echo "$(PBG)*---------------------------------------------*$(EC)"
@@ -70,24 +73,27 @@ show-info:
 	@echo "$(IFG) -  make clean$(EC)       Clean build artifacts$(EC)"
 	@echo ""
 
+# Create directories if they don't exist
 $(BUILD_DIR) $(BIN_DIR):
 	@mkdir -p $@
 
-bin/bench: $(OBJS)
-	mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -o $@ $^
-
+# Pattern rule for object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 	@echo -e "$(LGFG)Compiling $<…$(EC)"
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(BIN_DIR)/bench: $(BUILD_DIR)/rsa.o $(BUILD_DIR)/ecc.o $(BUILD_DIR)/main.o
+# Main executable
+$(BIN_DIR)/bench: $(OBJS) | $(BIN_DIR)
 	@echo -e "$(LGFG)Linking bench…$(EC)"
 	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
-# Basic C++ test targets
-# Basic test targets with output
+# Dependencies (explicit)
+$(BUILD_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/common.hpp $(INCLUDE_DIR)/rng.hpp $(INCLUDE_DIR)/rsa.hpp $(INCLUDE_DIR)/ecc.hpp
+$(BUILD_DIR)/rsa.o: $(SRC_DIR)/rsa.cpp $(INCLUDE_DIR)/rsa.hpp $(INCLUDE_DIR)/common.hpp $(INCLUDE_DIR)/rng.hpp
+$(BUILD_DIR)/ecc.o: $(SRC_DIR)/ecc.cpp $(INCLUDE_DIR)/ecc.hpp $(INCLUDE_DIR)/common.hpp $(INCLUDE_DIR)/rng.hpp
+$(BUILD_DIR)/rng.o: $(SRC_DIR)/rng.cpp $(INCLUDE_DIR)/rng.hpp $(INCLUDE_DIR)/common.hpp
 
+# Test targets
 test-rsa: $(BIN_DIR)/bench
 	@echo -e "$(LGFG)Executing RSA ($(KEY_SIZE)-bit, $(ITERS) iteration(s))...$(EC)"
 	@$(BIN_DIR)/bench -a RSA -b $(KEY_SIZE) -i $(ITERS) -s fixed
@@ -101,7 +107,6 @@ test-ecc: $(BIN_DIR)/bench
 	@$(BIN_DIR)/bench -a ECC -i $(ITERS) -s fixed
 
 # Python benchmark target
-
 .PHONY: test-rsa-py
 test-rsa-py:
 	@echo -e "$(LGFG)Executing RSA Python benchmark ($(KEY_SIZE)-bit, $(ITERS) iteration(s), seed=$(SEED))...$(EC)"
@@ -109,8 +114,8 @@ test-rsa-py:
 
 clean:
 	@echo -e "$(LRFG)Cleaning build artifacts...$(EC)"
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	@rm -rf $(BUILD_DIR) $(BIN_DIR)
 	@echo "All clean!"
 	@echo "--------------------------------------------------------------------------------\n"
 
-.PHONY: all clean
+.PHONY: all clean preamble show-info test-rsa test-rsa-2k test-ecc test-rsa-py

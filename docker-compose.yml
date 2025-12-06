@@ -1,11 +1,9 @@
 services:
   crypto:
-    # Instead of building locally, pull from Docker Hub:
-    image: leonfullxr/ecc-thesis-crypto:latest
-    # build:
+    build: .  # Build from local Dockerfile
+    image: ecc-thesis  # Use the local image you built
     volumes:
       - .:/workspace:delegated
-
     working_dir: /workspace
     stdin_open: true
     tty: true
