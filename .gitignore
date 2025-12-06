@@ -31,3 +31,7 @@
 *.out
 *.app
 ./bin/*
+
+# Benchmark results
+benchmark_results_*.txt
+core
