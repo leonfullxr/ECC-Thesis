@@ -47,14 +47,14 @@ LGFG := \e[1;32m  # Success messages
 LRFG := \e[1;31m  # Error messages
 EC  := \e[0m      # End color
 
-all: preamble show-info $(BIN_DIR)/bench
+all: preamble show-info $(BIN_DIR)/bench ${BIN_DIR}/rng_analysis
 
 .DEFAULT_GOAL := all
 
 preamble:
 	@echo "$(PBG)***********************************************$(EC)"
 	@echo "$(PBG)*$(EC)         Final Thesis Project       $(PBG)*$(EC)"
-	@echo "$(PBG)*$(EC)           Year 2025-2026           $(PBG)*$(EC)"
+	@echo "$(PBG)*$(EC)           Year 2024-2025           $(PBG)*$(EC)"
 	@echo "$(PBG)*---------------------------------------------*$(EC)"
 	@echo "$(PBG)*$(EC)        ECC and RSA Benchmarks      $(PBG)*$(EC)"
 	@echo "$(PBG)*---------------------------------------------*$(EC)"
@@ -87,11 +87,28 @@ $(BIN_DIR)/bench: $(OBJS) | $(BIN_DIR)
 	@echo -e "$(LGFG)Linking bench…$(EC)"
 	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
+# RNG analysis tool
+$(BIN_DIR)/rng_analysis: $(SRC_DIR)/rng_analysis.cpp $(BUILD_DIR)/rng.o | $(BIN_DIR)
+	@echo -e "$(LGFG)Compiling RNG analysis tool…$(EC)"
+	@$(CXX) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
+
 # Dependencies (explicit)
 $(BUILD_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/common.hpp $(INCLUDE_DIR)/rng.hpp $(INCLUDE_DIR)/rsa.hpp $(INCLUDE_DIR)/ecc.hpp
 $(BUILD_DIR)/rsa.o: $(SRC_DIR)/rsa.cpp $(INCLUDE_DIR)/rsa.hpp $(INCLUDE_DIR)/common.hpp $(INCLUDE_DIR)/rng.hpp
 $(BUILD_DIR)/ecc.o: $(SRC_DIR)/ecc.cpp $(INCLUDE_DIR)/ecc.hpp $(INCLUDE_DIR)/common.hpp $(INCLUDE_DIR)/rng.hpp
 $(BUILD_DIR)/rng.o: $(SRC_DIR)/rng.cpp $(INCLUDE_DIR)/rng.hpp $(INCLUDE_DIR)/common.hpp
+
+# Analysis targets
+.PHONY: rng-analysis analyze-rng
+
+rng-analysis: $(BIN_DIR)/rng_analysis
+	@echo -e "$(LGFG)RNG analysis tool ready$(EC)"
+
+analyze-rng: $(BIN_DIR)/rng_analysis
+	@echo -e "$(LGFG)Running RNG analysis...$(EC)"
+	@mkdir -p data plots
+	@$(BIN_DIR)/rng_analysis -n 1000000 -r 1000 -s fixed -o data/rng_data.csv -v
+	@python3 scripts/analyze_randomness.py data/rng_data.csv
 
 # Test targets
 test-rsa: $(BIN_DIR)/bench

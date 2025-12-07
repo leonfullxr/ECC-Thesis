@@ -39,7 +39,10 @@ RUN wget https://libntl.org/ntl-11.5.1.tar.gz \
  && ./configure PREFIX=/usr/local GMP_PREFIX=/usr/local \
  && make -j"$(nproc)" && make install
 
-# 4) final cleanup
+# 4) build python packages
+RUN pip3 install matplotlib pandas seaborn numpy scipy
+
+# 5) final cleanup
 WORKDIR /workspace
 ENV PATH=/workspace/bin:$PATH
 
