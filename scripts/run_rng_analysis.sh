@@ -93,9 +93,9 @@ echo "  [2/4] Generando bits individuales (5M samples)..."
 ./bin/rng_analysis -n 5000000 -m bits -s fixed -o $DATA_DIR/bits.csv -v
 echo ""
 
-# Dataset 3: Números de 32 bits (para entropía)
-echo "  [3/4] Generando números de 32 bits (100K samples)..."
-./bin/rng_analysis -n 100000 -m fixedbits -b 32 -s fixed -o $DATA_DIR/fixedbits32.csv -v
+# Dataset 3: Números de 2046 bits (para entropía)
+echo "  [3/4] Generando números de 2046 bits (100K samples)..."
+./bin/rng_analysis -n 100000 -m fixedbits -b 2046 -s fixed -o $DATA_DIR/fixedbits2046.csv -v
 echo ""
 
 # Dataset 4: Pares consecutivos (para autocorrelación)
@@ -182,7 +182,6 @@ Archivos generados:
 Siguiente paso:
   1. Revisar el reporte: cat $REPORT_FILE
   2. Ver gráficas en: $PLOTS_DIR/
-  3. Incluir resultados en el TFG
 
 EOF
 

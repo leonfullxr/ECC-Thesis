@@ -22,6 +22,7 @@
   - [Local-override vs General](#local-override-vs-general)
   - [5. Testing](#5-testing)
     - [Manual tests](#manual-tests)
+    - [RNG analysis tests](#rng-analysis-tests)
 
 ## 1. Project Description
 
@@ -589,24 +590,16 @@ make test-rsa-2k ITERS=10
 ```
 
 #### RNG analysis tests
-```bash
-# Generar 1 millón de números en [0, 1000)
-./bin/rng_analysis -n 1000000 -r 1000 -s fixed -o data.csv
+This is essential to ensure the quality of our Random Number Generator (RNG) used in key generation and other cryptographic operations.
 
+For a more detailed statistical analysis of the RNG, you can read the [RNG readme](rng.md) file. Here are some example commands to run the RNG analysis with different parameters:
+
+```bash
 # Con semilla aleatoria (timestamp)
 ./bin/rng_analysis -n 1000000 -r 1000 -s random -o data.csv
 
-# Generar bits individuales
-./bin/rng_analysis -n 5000000 -m bits -o bits.csv
-
-# Generar números de 32 bits
-./bin/rng_analysis -n 100000 -m fixedbits -b 32 -o data.csv
-
 # Rango más grande
 ./bin/rng_analysis -n 1000000 -r 100000 -s fixed -o large_range.csv
-
-# Más muestras
-./bin/rng_analysis -n 10000000 -r 1000 -s fixed -o many_samples.csv
 
 # Números de 64 bits
 ./bin/rng_analysis -n 100000 -m fixedbits -b 64 -o 64bit.csv
@@ -615,19 +608,10 @@ make test-rsa-2k ITERS=10
 Then analyze the reports and plots directory:
 
 ```bash
-# Semilla fija 0
-./bin/rng_analysis -n 1000000 -r 1000 -s fixed -S 0 -o seed_0.csv
+# Probar con 2048 bits
+./bin/rng_analysis -n 100000 -m fixedbits -b 2048 -o results/data/rsa2048.csv -v
 
-# Semilla fija 12345
-./bin/rng_analysis -n 1000000 -r 1000 -s fixed -S 12345 -o seed_12345.csv
-
-# Semilla aleatoria (timestamp)
-./bin/rng_analysis -n 1000000 -r 1000 -s random -o seed_random.csv
-
-# Analizar cada uno
-python3 scripts/analyze_randomness.py seed_0.csv
-python3 scripts/analyze_randomness.py seed_12345.csv
-python3 scripts/analyze_randomness.py seed_random.csv
+python3 scripts/analyze_randomness.py results/data/rsa2048.csv results/plots
 # Ver reporte
 cat reports/rng_analysis_*.txt
 
@@ -635,3 +619,240 @@ cat reports/rng_analysis_*.txt
 ls plots/
 # Verás: histogram.png, autocorrelation.png, consecutive_pairs.png, etc.
 ```
+
+#### Running the full RNG analysis script
+You can run the complete RNG analysis script which automates data generation, analysis, and plotting:
+
+<details>
+<summary>Example output from `run_rng_analysis.sh`:</summary>
+
+```bash
+root@18fbc909a7d0:/workspace# bash scripts/run_rng_analysis.sh 
+
+====================================================================
+         ANÁLISIS ESTADÍSTICO COMPLETO DEL RNG                     
+====================================================================
+
+====================================================================
+  PASO 1: Compilando herramienta de análisis
+====================================================================
+
+  rng_analysis ya compilado
+
+====================================================================
+  PASO 2: Verificando dependencias Python
+====================================================================
+
+  Python version: Python 3.10.12
+
+  Verificando paquetes Python...
+  Todos los paquetes instalados
+
+====================================================================
+  PASO 3: Generando datasets de números aleatorios
+====================================================================
+
+  [1/4] Generando números acotados (1M samples)...
+
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/bounded.csv
+  Samples:          1000000
+  Generation mode:  bounded
+  Range:            [0, 1000)
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       YES
+======================================================================
+
+Generating 1000000 normalized numbers [0.0, 1.0]...
+  Original range: [0, 1000)
+  Generated 1000000 / 1000000
+Generated 1000000 normalized numbers
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     267 ms
+  Rate:             3.74532e+06 samples/sec
+  Output file:      results/data/bounded.csv
+  Data range:       [0.0, 1.0] (normalized)
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/bounded.csv results/plots
+
+
+  [2/4] Generando bits individuales (5M samples)...
+
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/bits.csv
+  Samples:          5000000
+  Generation mode:  bits
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       NO
+======================================================================
+
+Generating 5000000 random bits...
+  Generated 5000000 / 5000000
+Generated 5000000 bits
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     452 ms
+  Rate:             1.10619e+07 samples/sec
+  Output file:      results/data/bits.csv
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/bits.csv results/plots
+
+
+  [3/4] Generando números de 2046 bits (100K samples)...
+
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/fixedbits2046.csv
+  Samples:          100000
+  Generation mode:  fixedbits
+  Bits per number:  2046
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       YES
+======================================================================
+
+Generating 100000 numbers of 2046 bits (normalized)...
+  Generated 100000 / 100000
+Generated 100000 normalized numbers
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     61 ms
+  Rate:             1.63934e+06 samples/sec
+  Output file:      results/data/fixedbits2046.csv
+  Data range:       [0.0, 1.0] (normalized)
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/fixedbits2046.csv results/plots
+
+
+  [4/4] Generando pares consecutivos (100K samples)...
+
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/pairs.csv
+  Samples:          100000
+  Generation mode:  pairs
+  Range:            [0, 10000)
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       YES
+======================================================================
+
+Generating 100000 consecutive pairs (normalized)...
+  Generated 100000 / 100000
+Generated 100000 pairs
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     51 ms
+  Rate:             1.96078e+06 samples/sec
+  Output file:      results/data/pairs.csv
+  Data range:       [0.0, 1.0] (normalized)
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/pairs.csv results/plots
+
+
+====================================================================
+  PASO 4: Ejecutando análisis estadístico
+====================================================================
+
+  Analizando dataset principal (números acotados)...
+
+======================================================================
+  ANÁLISIS ESTADÍSTICO DE ALEATORIEDAD
+======================================================================
+  Archivo de entrada: results/data/bounded.csv
+
+  Cargando datos...
+  Cargados 1,000,000 valores
+  Rango: [0.000000, 1.000000] (normalizado)
+
+======================================================================
+  SUITE COMPLETA DE TESTS ESTADÍSTICOS
+======================================================================
+
+======================================================================
+  ANÁLISIS DE MEDIA Y VARIANZA
+======================================================================
+  Media observada:  0.5002
+  Media esperada:   0.5000
+  Var. observada:   0.0834
+  Var. esperada:    0.0833
+  P-value (media):  0.387811
+  Resultado:        PASS
+
+======================================================================
+  TEST DE UNIFORMIDAD (Chi-cuadrado)
+======================================================================
+  Chi-cuadrado:     9.2236
+  Grados libertad:  9
+  P-value:          0.416894
+  Resultado:        PASS (alpha=0.05)
+  -> Los datos SON uniformes (no rechazo H0)
+
+======================================================================
+  TEST DE KOLMOGOROV-SMIRNOV
+======================================================================
+  Estadístico KS:   0.001254
+  P-value:          0.086191
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE RUNS (RACHAS)
+======================================================================
+  Runs observados:  500220
+  Runs esperados:   500000.75
+  Z-score:          0.3101
+  P-value:          0.756507
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE AUTOCORRELACIÓN
+======================================================================
+  Lags analizados:  20
+  Límite confianza: ±0.0020
+  Violaciones:      3 / 20
+  Máximo permitido: 2
+  Resultado:        FAIL
+
+======================================================================
+  ANÁLISIS DE ENTROPÍA
+======================================================================
+  Entropía:         7.9957 bits
+  Entropía máxima:  8.0000 bits
+  Ratio:            99.9459%
+  Resultado:        PASS
+
+======================================================================
+  RESUMEN DE RESULTADOS
+======================================================================
+  Media y Varianza          PASS
+  Uniformidad (Chi²)        PASS
+  Kolmogorov-Smirnov        PASS
+
+```
+
+</details>
