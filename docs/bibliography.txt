@@ -10,6 +10,11 @@
 * RSA Introduccion: https://www.geeksforgeeks.org/rsa-algorithm-cryptography/
 * Algoritmo de SHOR: https://informatecdigital.com/el-algoritmo-de-shor/
 
+# Criptografia
+* Handbook of Applied Cryptography (Menezes et al.)
+* Cryptography: Theory and Practice (Stinson)
+* Understanding Cryptography (Paar & Pelzl)
+
 # Last notes
  https://binaryterms.com/block-cipher.html
  https://www.freecodecamp.org/news/what-is-a-block-cipher/
