@@ -587,3 +587,51 @@ make test-rsa-2k ITERS=10
 ./bin/bench -a RSA -b 2048 -i 10 -s random
 ./bin/bench -a RSA -b 4096 -i 5 -s fixed
 ```
+
+#### RNG analysis tests
+```bash
+# Generar 1 millón de números en [0, 1000)
+./bin/rng_analysis -n 1000000 -r 1000 -s fixed -o data.csv
+
+# Con semilla aleatoria (timestamp)
+./bin/rng_analysis -n 1000000 -r 1000 -s random -o data.csv
+
+# Generar bits individuales
+./bin/rng_analysis -n 5000000 -m bits -o bits.csv
+
+# Generar números de 32 bits
+./bin/rng_analysis -n 100000 -m fixedbits -b 32 -o data.csv
+
+# Rango más grande
+./bin/rng_analysis -n 1000000 -r 100000 -s fixed -o large_range.csv
+
+# Más muestras
+./bin/rng_analysis -n 10000000 -r 1000 -s fixed -o many_samples.csv
+
+# Números de 64 bits
+./bin/rng_analysis -n 100000 -m fixedbits -b 64 -o 64bit.csv
+```
+
+Then analyze the reports and plots directory:
+
+```bash
+# Semilla fija 0
+./bin/rng_analysis -n 1000000 -r 1000 -s fixed -S 0 -o seed_0.csv
+
+# Semilla fija 12345
+./bin/rng_analysis -n 1000000 -r 1000 -s fixed -S 12345 -o seed_12345.csv
+
+# Semilla aleatoria (timestamp)
+./bin/rng_analysis -n 1000000 -r 1000 -s random -o seed_random.csv
+
+# Analizar cada uno
+python3 scripts/analyze_randomness.py seed_0.csv
+python3 scripts/analyze_randomness.py seed_12345.csv
+python3 scripts/analyze_randomness.py seed_random.csv
+# Ver reporte
+cat reports/rng_analysis_*.txt
+
+# Ver gráficas
+ls plots/
+# Verás: histogram.png, autocorrelation.png, consecutive_pairs.png, etc.
+```
