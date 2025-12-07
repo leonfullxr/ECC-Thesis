@@ -79,60 +79,72 @@ Verificar que el generador de números aleatorios (RNG) basado en NTL produce n�
 ### Generar Datos
 
 ```bash
-# Generar 1M números en [0, 1000) con semilla fija
-./bin/rng_analysis -n 1000000 -r 1000 -s fixed -o data/rng_bounded.csv -v
-
-# Generar 10M bits aleatorios
-./bin/rng_analysis -n 10000000 -m bits -s fixed -o data/rng_bits.csv -v
-
-# Generar números de 2048 bits
-./bin/rng_analysis -n 1000000 -m fixedbits -b 2048 -o data/rng_2048bit.csv -v
-
-# Generar pares para correlación
-./bin/rng_analysis -n 100000 -m pairs -r 10000 -o data/rng_pairs.csv -v
+./bin/rng_analysis -n 100000 -m fixedbits -b 1024 -o results/data/rsa1024.csv -v
+python3 scripts/analyze_randomness.py results/data/rsa1024.csv results/plots
+./bin/rng_analysis -n 1000000 -m fixedbits -b 1024 -o results/data/rsa1024.csv -v
+python3 scripts/analyze_randomness.py results/data/rsa1024.csv results/plots
+./bin/rng_analysis -n 100000 -m fixedbits -b 2048 -o results/data/rsa2048.csv -v
+python3 scripts/analyze_randomness.py results/data/rsa2048.csv results/plots
+./bin/rng_analysis -n 1000000 -m fixedbits -b 2048 -o results/data/rsa2048.csv -v
+python3 scripts/analyze_randomness.py results/data/rsa2048.csv results/plots
+./bin/rng_analysis -n 100000 -m fixedbits -b 4096 -o results/data/rsa4096.csv -v
+python3 scripts/analyze_randomness.py results/data/rsa4096.csv results/plots
+./bin/rng_analysis -n 1000000 -m fixedbits -b 4096 -o results/data/rsa4096.csv -v
+python3 scripts/analyze_randomness.py results/data/rsa4096.csv results/plots
 ```
 
-## Ejemplo de Salida
+## Pruebas realizadas
 
-### Tests Estadísticos
+### RSA
 
-```
-root@18fbc909a7d0:/workspace# ./bin/rng_analysis -n 10000 -r 1000 -s fixed -o results/data/test.csv
+#### RSA 1024 bits
+
+##### Prueba de 100k muestras
+
+<details>
+<summary>Mostrar resultados</summary>
+
+```bash
+root@18fbc909a7d0:/workspace# ./bin/rng_analysis -n 100000 -m fixedbits -b 1024 -o results/data/rsa1024.csv -v
 
 ======================================================================
-RNG DATA GENERATOR
+RNG DATA GENERATOR v3.0
 ======================================================================
-  Output file:      results/data/test.csv
-  Samples:          10000
-  Generation mode:  bounded
-  Range:            [0, 1000)
+  Output file:      results/data/rsa1024.csv
+  Samples:          100000
+  Generation mode:  fixedbits
+  Bits per number:  1024
   Seed mode:        fixed
   Seed value:       0
+  Normalized:       YES
 ======================================================================
 
+Generating 100000 numbers of 1024 bits (normalized)...
+  Generated 100000 / 100000
+Generated 100000 normalized numbers
 
 ======================================================================
 COMPLETED
 ======================================================================
-  Time elapsed:     1 ms
-  Rate:             1e+07 samples/sec
-  Output file:      results/data/test.csv
+  Time elapsed:     51 ms
+  Rate:             1.96078e+06 samples/sec
+  Output file:      results/data/rsa1024.csv
+  Data range:       [0.0, 1.0] (normalized)
 ======================================================================
 
 Next step: Analyze with Python:
-  python3 analyze_randomness.py results/data/test.csv
+  python3 scripts/analyze_randomness.py results/data/rsa1024.csv results/plots
 
-root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data/test.csv results/plots
+root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data/rsa1024.csv results/plots
 
 ======================================================================
   ANÁLISIS ESTADÍSTICO DE ALEATORIEDAD
 ======================================================================
-  Archivo de entrada: results/data/test.csv
+  Archivo de entrada: results/data/rsa1024.csv
 
   Cargando datos...
-  Cargados 10,000 valores
-  Rango original: [0, 999]
-  Datos normalizados a: [0.0, 1.0]
+  Cargados 100,000 valores
+  Rango: [0.000011, 0.999991] (normalizado)
 
 ======================================================================
   SUITE COMPLETA DE TESTS ESTADÍSTICOS
@@ -141,52 +153,53 @@ root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data
 ======================================================================
   ANÁLISIS DE MEDIA Y VARIANZA
 ======================================================================
-  Media observada:  0.5019
+  Media observada:  0.5001
   Media esperada:   0.5000
-  Var. observada:   0.0834
+  Var. observada:   0.0830
   Var. esperada:    0.0833
-  P-value (media):  0.507109
+  P-value (media):  0.877271
   Resultado:        PASS
 
 ======================================================================
   TEST DE UNIFORMIDAD (Chi-cuadrado)
 ======================================================================
-  Chi-cuadrado:     5.6460
+  Chi-cuadrado:     4.5966
   Grados libertad:  9
-  P-value:          0.774758
+  P-value:          0.867962
   Resultado:        PASS (alpha=0.05)
   -> Los datos SON uniformes (no rechazo H0)
 
 ======================================================================
   TEST DE KOLMOGOROV-SMIRNOV
 ======================================================================
-  Estadístico KS:   0.007742
-  P-value:          0.583929
+  Estadístico KS:   0.001954
+  P-value:          0.839049
   Resultado:        PASS (alpha=0.05)
 
 ======================================================================
   TEST DE RUNS (RACHAS)
 ======================================================================
-  Runs observados:  5026
-  Runs esperados:   5001.00
-  Z-score:          0.5000
-  P-value:          0.617055
+  Runs observados:  49892
+  Runs esperados:   50001.00
+  Z-score:          -0.4875
+  P-value:          0.625930
   Resultado:        PASS (alpha=0.05)
 
 ======================================================================
   TEST DE AUTOCORRELACIÓN
 ======================================================================
   Lags analizados:  20
-  Límite confianza: ±0.0196
-  Violaciones:      0 / 20
+  Límite confianza: ±0.0062
+  Violaciones:      2 / 20
+  Máximo permitido: 2
   Resultado:        PASS
 
 ======================================================================
   ANÁLISIS DE ENTROPÍA
 ======================================================================
-  Entropía:         7.9791 bits
+  Entropía:         7.9981 bits
   Entropía máxima:  8.0000 bits
-  Ratio:            99.7385%
+  Ratio:            99.9764%
   Resultado:        PASS
 
 ======================================================================
@@ -222,102 +235,729 @@ root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data
   Revisa los resultados y las gráficas generadas.
 ======================================================================
 
-root@18fbc909a7d0:/workspace# ls results/plots/*.png
-results/plots/autocorrelation.png  results/plots/cdf.png  results/plots/consecutive_pairs.png  results/plots/histogram.png  results/plots/runs.png
-
+root@18fbc909a7d0:/workspace# 
 ```
 
-### Gráficas Generadas
+</details>
 
-Ver carpeta `plots/` para visualizaciones.
+#### Prueba de 1M muestras
 
-## Interpretación de Resultados
+<details>
+<summary>Mostrar resultados</summary>
 
-### Escenario Ideal
-- ✅ Todos los tests pasan (p > 0.05)
-- ✅ Entropía > 95%
-- ✅ Autocorrelación negligible
-- ✅ Histograma plano
-- ✅ Scatter de pares uniforme
-
-**Conclusión:** RNG de calidad criptográfica
-
-### Escenario Bueno
-- ✅ 5/6 tests pasan
-- ✅ Entropía > 90%
-- ⚠️ Alguna autocorrelación menor
-
-**Conclusión:** RNG adecuado para uso general
-
-### Escenario Problemático
-- ❌ < 4/6 tests pasan
-- ❌ Entropía < 85%
-- ❌ Autocorrelación significativa
-- ❌ Patrones visibles en gráficas
-
-**Conclusión:** RNG de baja calidad, NO usar para criptografía
-
-## Comparación con Otros RNGs
-
-Para validar aún más, puedes comparar con:
-
-### Generadores Estándar
-```python
-import random
-import numpy as np
-
-# Python random (Mersenne Twister)
-data_mt = [random.randint(0, 999) for _ in range(1000000)]
-
-# NumPy random
-data_np = np.random.randint(0, 1000, size=1000000)
-
-# Guardar y analizar
-```
-
-### /dev/urandom (Linux)
 ```bash
-# Generar bytes aleatorios del sistema
-python3 -c "
-import struct
-data = []
-with open('/dev/urandom', 'rb') as f:
-    for _ in range(1000000):
-        data.append(struct.unpack('H', f.read(2))[0] % 1000)
-with open('urandom_data.csv', 'w') as out:
-    out.write('index,value\n')
-    for i, v in enumerate(data):
-        out.write(f'{i},{v}\n')
-"
+root@18fbc909a7d0:/workspace# ./bin/rng_analysis -n 1000000 -m fixedbits -b 1024 -o results/data/rsa1024.csv -v
 
-# Analizar
-python3 scripts/analyze_randomness.py urandom_data.csv
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/rsa1024.csv
+  Samples:          1000000
+  Generation mode:  fixedbits
+  Bits per number:  1024
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       YES
+======================================================================
+
+Generating 1000000 numbers of 1024 bits (normalized)...
+  Generated 1000000 / 1000000
+Generated 1000000 normalized numbers
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     536 ms
+  Rate:             1.86567e+06 samples/sec
+  Output file:      results/data/rsa1024.csv
+  Data range:       [0.0, 1.0] (normalized)
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/rsa1024.csv results/plots
+
+root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data/rsa1024.csv results/plots
+
+======================================================================
+  ANÁLISIS ESTADÍSTICO DE ALEATORIEDAD
+======================================================================
+  Archivo de entrada: results/data/rsa1024.csv
+
+  Cargando datos...
+  Cargados 1,000,000 valores
+  Rango: [0.000000, 1.000000] (normalizado)
+
+======================================================================
+  SUITE COMPLETA DE TESTS ESTADÍSTICOS
+======================================================================
+
+======================================================================
+  ANÁLISIS DE MEDIA Y VARIANZA
+======================================================================
+  Media observada:  0.5003
+  Media esperada:   0.5000
+  Var. observada:   0.0832
+  Var. esperada:    0.0833
+  P-value (media):  0.270888
+  Resultado:        PASS
+
+======================================================================
+  TEST DE UNIFORMIDAD (Chi-cuadrado)
+======================================================================
+  Chi-cuadrado:     7.5265
+  Grados libertad:  9
+  P-value:          0.582472
+  Resultado:        PASS (alpha=0.05)
+  -> Los datos SON uniformes (no rechazo H0)
+
+======================================================================
+  TEST DE KOLMOGOROV-SMIRNOV
+======================================================================
+  Estadístico KS:   0.001021
+  P-value:          0.248496
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE RUNS (RACHAS)
+======================================================================
+  Runs observados:  500108
+  Runs esperados:   500001.00
+  Z-score:          0.1513
+  P-value:          0.879723
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE AUTOCORRELACIÓN
+======================================================================
+  Lags analizados:  20
+  Límite confianza: ±0.0020
+  Violaciones:      1 / 20
+  Máximo permitido: 2
+  Resultado:        PASS
+
+======================================================================
+  ANÁLISIS DE ENTROPÍA
+======================================================================
+  Entropía:         7.9998 bits
+  Entropía máxima:  8.0000 bits
+  Ratio:            99.9979%
+  Resultado:        PASS
+
+======================================================================
+  RESUMEN DE RESULTADOS
+======================================================================
+  Media y Varianza          PASS
+  Uniformidad (Chi²)        PASS
+  Kolmogorov-Smirnov        PASS
+  Runs (Rachas)             PASS
+  Autocorrelación           PASS
+  Entropía                  PASS
+
+  Total: 6/6 tests pasados (100.0%)
+
+  EXCELENTE: Todos los tests pasaron
+  -> El RNG muestra características de aleatoriedad criptográfica
+======================================================================
+
+======================================================================
+  GENERANDO GRÁFICAS
+======================================================================
+  Guardado: results/plots/histogram.png
+  Guardado: results/plots/autocorrelation.png
+  Guardado: results/plots/consecutive_pairs.png
+  Guardado: results/plots/runs.png
+  Guardado: results/plots/cdf.png
+
+  Todas las gráficas generadas en: results/plots
+
+======================================================================
+  ANÁLISIS COMPLETADO
+======================================================================
+  Revisa los resultados y las gráficas generadas.
+======================================================================
+
+root@18fbc909a7d0:/workspace# 
 ```
 
-## Qué hace este script
+</details>
 
-El script ./run_rng_analysis.sh:
+#### RSA 2048 bits
 
-   1. Compila la herramienta de análisis
-   2. Genera 4 datasets diferentes:
-      - 1M números en [0, 1000)
-      - 5M bits individuales
-      - 100K números de 32 bits
-      - 100K pares consecutivos
-   
-   3. Ejecuta 6 tests estadísticos:
-      ✓ Test de uniformidad (Chi-cuadrado)
-      ✓ Test de Kolmogorov-Smirnov
-      ✓ Test de runs (rachas)
-      ✓ Test de autocorrelación
-      ✓ Análisis de entropía
-      ✓ Test de media y varianza
-   
-   4. Genera gráficas en plots/:
-      - Histogramas
-      - Autocorrelación
-      - Pares consecutivos
-      - CDF empírica
-      - Análisis de runs
-   
-   5. Crea reporte en reports/
+##### Prueba de 100k muestras
+
+<details>
+<summary>Mostrar resultados</summary>
+
+```bash
+root@18fbc909a7d0:/workspace# ./bin/rng_analysis -n 100000 -m fixedbits -b 2048 -o results/data/rsa2048.csv -v
+
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/rsa2048.csv
+  Samples:          100000
+  Generation mode:  fixedbits
+  Bits per number:  2048
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       YES
+======================================================================
+
+Generating 100000 numbers of 2048 bits (normalized)...
+  Generated 100000 / 100000
+Generated 100000 normalized numbers
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     62 ms
+  Rate:             1.6129e+06 samples/sec
+  Output file:      results/data/rsa2048.csv
+  Data range:       [0.0, 1.0] (normalized)
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/rsa2048.csv results/plots
+
+root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data/rsa2048.csv results/plots
+
+======================================================================
+  ANÁLISIS ESTADÍSTICO DE ALEATORIEDAD
+======================================================================
+  Archivo de entrada: results/data/rsa2048.csv
+
+  Cargando datos...
+  Cargados 100,000 valores
+  Rango: [0.000022, 0.999998] (normalizado)
+
+======================================================================
+  SUITE COMPLETA DE TESTS ESTADÍSTICOS
+======================================================================
+
+======================================================================
+  ANÁLISIS DE MEDIA Y VARIANZA
+======================================================================
+  Media observada:  0.5004
+  Media esperada:   0.5000
+  Var. observada:   0.0833
+  Var. esperada:    0.0833
+  P-value (media):  0.630015
+  Resultado:        PASS
+
+======================================================================
+  TEST DE UNIFORMIDAD (Chi-cuadrado)
+======================================================================
+  Chi-cuadrado:     8.9348
+  Grados libertad:  9
+  P-value:          0.443314
+  Resultado:        PASS (alpha=0.05)
+  -> Los datos SON uniformes (no rechazo H0)
+
+======================================================================
+  TEST DE KOLMOGOROV-SMIRNOV
+======================================================================
+  Estadístico KS:   0.002676
+  P-value:          0.470284
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE RUNS (RACHAS)
+======================================================================
+  Runs observados:  49542
+  Runs esperados:   50001.00
+  Z-score:          -2.0527
+  P-value:          0.040101
+  Resultado:        FAIL (alpha=0.05)
+
+======================================================================
+  TEST DE AUTOCORRELACIÓN
+======================================================================
+  Lags analizados:  20
+  Límite confianza: ±0.0062
+  Violaciones:      3 / 20
+  Máximo permitido: 2
+  Resultado:        FAIL
+
+======================================================================
+  ANÁLISIS DE ENTROPÍA
+======================================================================
+  Entropía:         7.9977 bits
+  Entropía máxima:  8.0000 bits
+  Ratio:            99.9716%
+  Resultado:        PASS
+
+======================================================================
+  RESUMEN DE RESULTADOS
+======================================================================
+  Media y Varianza          PASS
+  Uniformidad (Chi²)        PASS
+  Kolmogorov-Smirnov        PASS
+  Runs (Rachas)             FAIL
+  Autocorrelación           FAIL
+  Entropía                  PASS
+
+  Total: 4/6 tests pasados (66.7%)
+
+  ADVERTENCIA: Varios tests fallaron
+  -> Revisar la calidad del RNG
+======================================================================
+
+======================================================================
+  GENERANDO GRÁFICAS
+======================================================================
+  Guardado: results/plots/histogram.png
+  Guardado: results/plots/autocorrelation.png
+  Guardado: results/plots/consecutive_pairs.png
+  Guardado: results/plots/runs.png
+  Guardado: results/plots/cdf.png
+
+  Todas las gráficas generadas en: results/plots
+
+======================================================================
+  ANÁLISIS COMPLETADO
+======================================================================
+  Revisa los resultados y las gráficas generadas.
+======================================================================
+
+root@18fbc909a7d0:/workspace# 
+```
+
+</details>
+
+##### Prueba de 1M muestras
+
+<details>
+<summary>Mostrar resultados</summary>
+
+```bash
+root@18fbc909a7d0:/workspace# ./bin/rng_analysis -n 1000000 -m fixedbits -b 2048 -o results/data/rsa2048.csv -v
+
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/rsa2048.csv
+  Samples:          1000000
+  Generation mode:  fixedbits
+  Bits per number:  2048
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       YES
+======================================================================
+
+Generating 1000000 numbers of 2048 bits (normalized)...
+  Generated 1000000 / 1000000
+Generated 1000000 normalized numbers
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     601 ms
+  Rate:             1.66389e+06 samples/sec
+  Output file:      results/data/rsa2048.csv
+  Data range:       [0.0, 1.0] (normalized)
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/rsa2048.csv results/plots
+
+root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data/rsa2048.csv results/plots
+
+======================================================================
+  ANÁLISIS ESTADÍSTICO DE ALEATORIEDAD
+======================================================================
+  Archivo de entrada: results/data/rsa2048.csv
+
+  Cargando datos...
+  Cargados 1,000,000 valores
+  Rango: [0.000000, 1.000000] (normalizado)
+
+======================================================================
+  SUITE COMPLETA DE TESTS ESTADÍSTICOS
+======================================================================
+
+======================================================================
+  ANÁLISIS DE MEDIA Y VARIANZA
+======================================================================
+  Media observada:  0.4999
+  Media esperada:   0.5000
+  Var. observada:   0.0833
+  Var. esperada:    0.0833
+  P-value (media):  0.613836
+  Resultado:        PASS
+
+======================================================================
+  TEST DE UNIFORMIDAD (Chi-cuadrado)
+======================================================================
+  Chi-cuadrado:     5.3805
+  Grados libertad:  9
+  P-value:          0.799957
+  Resultado:        PASS (alpha=0.05)
+  -> Los datos SON uniformes (no rechazo H0)
+
+======================================================================
+  TEST DE KOLMOGOROV-SMIRNOV
+======================================================================
+  Estadístico KS:   0.000765
+  P-value:          0.602302
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE RUNS (RACHAS)
+======================================================================
+  Runs observados:  499137
+  Runs esperados:   500001.00
+  Z-score:          -1.2219
+  P-value:          0.221753
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE AUTOCORRELACIÓN
+======================================================================
+  Lags analizados:  20
+  Límite confianza: ±0.0020
+  Violaciones:      4 / 20
+  Máximo permitido: 2
+  Resultado:        FAIL
+
+======================================================================
+  ANÁLISIS DE ENTROPÍA
+======================================================================
+  Entropía:         7.9998 bits
+  Entropía máxima:  8.0000 bits
+  Ratio:            99.9978%
+  Resultado:        PASS
+
+======================================================================
+  RESUMEN DE RESULTADOS
+======================================================================
+  Media y Varianza          PASS
+  Uniformidad (Chi²)        PASS
+  Kolmogorov-Smirnov        PASS
+  Runs (Rachas)             PASS
+  Autocorrelación           FAIL
+  Entropía                  PASS
+
+  Total: 5/6 tests pasados (83.3%)
+
+  BUENO: La mayoría de tests pasaron
+  -> El RNG es adecuado para uso general
+======================================================================
+
+======================================================================
+  GENERANDO GRÁFICAS
+======================================================================
+  Guardado: results/plots/histogram.png
+  Guardado: results/plots/autocorrelation.png
+  Guardado: results/plots/consecutive_pairs.png
+  Guardado: results/plots/runs.png
+  Guardado: results/plots/cdf.png
+
+  Todas las gráficas generadas en: results/plots
+
+======================================================================
+  ANÁLISIS COMPLETADO
+======================================================================
+  Revisa los resultados y las gráficas generadas.
+======================================================================
+
+root@18fbc909a7d0:/workspace# 
+```
+
+</details>
+
+#### RSA 4096 bits
+
+##### Prueba de 100k muestras
+
+<details>
+<summary>Mostrar resultados</summary>
+
+```bash
+root@18fbc909a7d0:/workspace# ./bin/rng_analysis -n 100000 -m fixedbits -b 4096 -o results/data/rsa4096.csv -v
+
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/rsa4096.csv
+  Samples:          100000
+  Generation mode:  fixedbits
+  Bits per number:  4096
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       YES
+======================================================================
+
+Generating 100000 numbers of 4096 bits (normalized)...
+  Generated 100000 / 100000
+Generated 100000 normalized numbers
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     76 ms
+  Rate:             1.31579e+06 samples/sec
+  Output file:      results/data/rsa4096.csv
+  Data range:       [0.0, 1.0] (normalized)
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/rsa4096.csv results/plots
+
+root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data/rsa4096.csv results/plots
+
+======================================================================
+  ANÁLISIS ESTADÍSTICO DE ALEATORIEDAD
+======================================================================
+  Archivo de entrada: results/data/rsa4096.csv
+
+  Cargando datos...
+  Cargados 100,000 valores
+  Rango: [0.000013, 1.000000] (normalizado)
+
+======================================================================
+  SUITE COMPLETA DE TESTS ESTADÍSTICOS
+======================================================================
+
+======================================================================
+  ANÁLISIS DE MEDIA Y VARIANZA
+======================================================================
+  Media observada:  0.4995
+  Media esperada:   0.5000
+  Var. observada:   0.0834
+  Var. esperada:    0.0833
+  P-value (media):  0.613574
+  Resultado:        PASS
+
+======================================================================
+  TEST DE UNIFORMIDAD (Chi-cuadrado)
+======================================================================
+  Chi-cuadrado:     9.7848
+  Grados libertad:  9
+  P-value:          0.368186
+  Resultado:        PASS (alpha=0.05)
+  -> Los datos SON uniformes (no rechazo H0)
+
+======================================================================
+  TEST DE KOLMOGOROV-SMIRNOV
+======================================================================
+  Estadístico KS:   0.002377
+  P-value:          0.623701
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE RUNS (RACHAS)
+======================================================================
+  Runs observados:  50083
+  Runs esperados:   50001.00
+  Z-score:          0.3667
+  P-value:          0.713832
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE AUTOCORRELACIÓN
+======================================================================
+  Lags analizados:  20
+  Límite confianza: ±0.0062
+  Violaciones:      1 / 20
+  Máximo permitido: 2
+  Resultado:        PASS
+
+======================================================================
+  ANÁLISIS DE ENTROPÍA
+======================================================================
+  Entropía:         7.9979 bits
+  Entropía máxima:  8.0000 bits
+  Ratio:            99.9742%
+  Resultado:        PASS
+
+======================================================================
+  RESUMEN DE RESULTADOS
+======================================================================
+  Media y Varianza          PASS
+  Uniformidad (Chi²)        PASS
+  Kolmogorov-Smirnov        PASS
+  Runs (Rachas)             PASS
+  Autocorrelación           PASS
+  Entropía                  PASS
+
+  Total: 6/6 tests pasados (100.0%)
+
+  EXCELENTE: Todos los tests pasaron
+  -> El RNG muestra características de aleatoriedad criptográfica
+======================================================================
+
+======================================================================
+  GENERANDO GRÁFICAS
+======================================================================
+  Guardado: results/plots/histogram.png
+  Guardado: results/plots/autocorrelation.png
+  Guardado: results/plots/consecutive_pairs.png
+  Guardado: results/plots/runs.png
+  Guardado: results/plots/cdf.png
+
+  Todas las gráficas generadas en: results/plots
+
+======================================================================
+  ANÁLISIS COMPLETADO
+======================================================================
+  Revisa los resultados y las gráficas generadas.
+======================================================================
+
+root@18fbc909a7d0:/workspace# 
+```
+
+</details>
+
+##### Prueba de 1M muestras
+
+<details>
+<summary>Mostrar resultados</summary>
+
+```bash
+root@18fbc909a7d0:/workspace# ./bin/rng_analysis -n 1000000 -m fixedbits -b 4096 -o results/data/rsa4096.csv -v
+
+======================================================================
+RNG DATA GENERATOR v3.0
+======================================================================
+  Output file:      results/data/rsa4096.csv
+  Samples:          1000000
+  Generation mode:  fixedbits
+  Bits per number:  4096
+  Seed mode:        fixed
+  Seed value:       0
+  Normalized:       YES
+======================================================================
+
+Generating 1000000 numbers of 4096 bits (normalized)...
+  Generated 1000000 / 1000000
+Generated 1000000 normalized numbers
+
+======================================================================
+COMPLETED
+======================================================================
+  Time elapsed:     759 ms
+  Rate:             1.31752e+06 samples/sec
+  Output file:      results/data/rsa4096.csv
+  Data range:       [0.0, 1.0] (normalized)
+======================================================================
+
+Next step: Analyze with Python:
+  python3 scripts/analyze_randomness.py results/data/rsa4096.csv results/plots
+
+root@18fbc909a7d0:/workspace# python3 scripts/analyze_randomness.py results/data/rsa4096.csv results/plots
+
+======================================================================
+  ANÁLISIS ESTADÍSTICO DE ALEATORIEDAD
+======================================================================
+  Archivo de entrada: results/data/rsa4096.csv
+
+  Cargando datos...
+  Cargados 1,000,000 valores
+  Rango: [0.000001, 1.000000] (normalizado)
+
+======================================================================
+  SUITE COMPLETA DE TESTS ESTADÍSTICOS
+======================================================================
+
+======================================================================
+  ANÁLISIS DE MEDIA Y VARIANZA
+======================================================================
+  Media observada:  0.5001
+  Media esperada:   0.5000
+  Var. observada:   0.0833
+  Var. esperada:    0.0833
+  P-value (media):  0.763279
+  Resultado:        PASS
+
+======================================================================
+  TEST DE UNIFORMIDAD (Chi-cuadrado)
+======================================================================
+  Chi-cuadrado:     11.1204
+  Grados libertad:  9
+  P-value:          0.267546
+  Resultado:        PASS (alpha=0.05)
+  -> Los datos SON uniformes (no rechazo H0)
+
+======================================================================
+  TEST DE KOLMOGOROV-SMIRNOV
+======================================================================
+  Estadístico KS:   0.000679
+  P-value:          0.745534
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE RUNS (RACHAS)
+======================================================================
+  Runs observados:  499692
+  Runs esperados:   500001.00
+  Z-score:          -0.4370
+  P-value:          0.662117
+  Resultado:        PASS (alpha=0.05)
+
+======================================================================
+  TEST DE AUTOCORRELACIÓN
+======================================================================
+  Lags analizados:  20
+  Límite confianza: ±0.0020
+  Violaciones:      0 / 20
+  Máximo permitido: 2
+  Resultado:        PASS
+
+======================================================================
+  ANÁLISIS DE ENTROPÍA
+======================================================================
+  Entropía:         7.9998 bits
+  Entropía máxima:  8.0000 bits
+  Ratio:            99.9976%
+  Resultado:        PASS
+
+======================================================================
+  RESUMEN DE RESULTADOS
+======================================================================
+  Media y Varianza          PASS
+  Uniformidad (Chi²)        PASS
+  Kolmogorov-Smirnov        PASS
+  Runs (Rachas)             PASS
+  Autocorrelación           PASS
+  Entropía                  PASS
+
+  Total: 6/6 tests pasados (100.0%)
+
+  EXCELENTE: Todos los tests pasaron
+  -> El RNG muestra características de aleatoriedad criptográfica
+======================================================================
+
+======================================================================
+  GENERANDO GRÁFICAS
+======================================================================
+  Guardado: results/plots/histogram.png
+  Guardado: results/plots/autocorrelation.png
+  Guardado: results/plots/consecutive_pairs.png
+  Guardado: results/plots/runs.png
+  Guardado: results/plots/cdf.png
+
+  Todas las gráficas generadas en: results/plots
+
+======================================================================
+  ANÁLISIS COMPLETADO
+======================================================================
+  Revisa los resultados y las gráficas generadas.
+======================================================================
+
+root@18fbc909a7d0:/workspace# 
+```
+
+</details>
+
+## VALIDACIÓN
+
+### Expectativas para RNG Criptográfico
+
+| Test | P-value mínimo | Criterio |
+|------|----------------|----------|
+| Media y Varianza | > 0.05 | ~0.5 ± 0.01 |
+| Uniformidad (Chi²) | > 0.05 | Distribución plana |
+| Kolmogorov-Smirnov | > 0.05 | CDF uniforme |
+| Runs | > 0.05 | Sin patrones |
+| Autocorrelación | ≤10% violaciones | Independencia |
+| Entropía | > 95% | Alta aleatoriedad |
