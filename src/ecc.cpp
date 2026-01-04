@@ -1,56 +1,471 @@
 // ecc.cpp
-// Implementación stub de ECC
+// Implementación de Elliptic Curve Cryptography (ECC)
+// 
 // Autor: Leon Elliott Fuller
-// Fecha: 2025-12-06
+// Fecha: 2025-01-06
 
 #include "ecc.hpp"
-#include <sstream>
+#include <iostream>
+#include <iomanip>
+#include <stdexcept>
 
 namespace crypto {
 
 // ============================================================================
-// IMPLEMENTACIÓN STUB DE ECC
+// PARÁMETROS DE CURVAS ESTÁNDAR
 // ============================================================================
 
-std::string ECCPublicKey::to_string() const {
-    std::ostringstream oss;
-    oss << "ECC Public Key (" << curve_name << ")\n"
-        << "  x = " << x << "\n"
-        << "  y = " << y;
-    return oss.str();
-}
-
-std::string ECCPrivateKey::to_string() const {
-    std::ostringstream oss;
-    oss << "ECC Private Key (" << curve_name << ")\n"
-        << "  d = " << d;
-    return oss.str();
-}
-
-ECCKeyPair ECC::generate_key(RNG& rng, const std::string& curve_name) {
-    // STUB: Generar valores dummy para permitir compilación
-    // TODO: Implementar generación real de claves ECC
+/**
+ * @brief Obtiene parámetros de curvas elípticas estándar
+ * 
+ * Fuentes:
+ * - NIST P-256: FIPS 186-4
+ * - NIST P-384: FIPS 186-4
+ * - secp256k1: SEC 2
+ */
+CurveParams get_curve_params(CurveType type) {
+    CurveParams params;
     
-    BigInt d = rng.random_bits(256);
-    BigInt x = rng.random_bits(256);
-    BigInt y = rng.random_bits(256);
+    switch (type) {
+        case CurveType::NIST_P256: {
+            // NIST P-256 (secp256r1)
+            // Curva: y² = x³ - 3x + b (mod p)
+            // Seguridad equivalente: RSA-3072
+            
+            params.name = "NIST P-256 (secp256r1)";
+            params.bits = 256;
+            
+            // p = 2^256 - 2^224 + 2^192 + 2^96 - 1
+            conv(params.p, "115792089210356248762697446949407573530086143415290314195533631308867097853951");
+            
+            // a = -3 (mod p)
+            conv(params.a, "115792089210356248762697446949407573530086143415290314195533631308867097853948");
+            
+            // b
+            conv(params.b, "41058363725152142129326129780047268409114441015993725554835256314039467401291");
+            
+            // Generator G
+            conv(params.Gx, "48439561293906451759052585252797914202762949526041747995844080717082404635286");
+            conv(params.Gy, "36134250956749795798585127919587881956611106672985015071877198253568414405109");
+            
+            // Order n (prime)
+            conv(params.n, "115792089210356248762697446949407573529996955224135760342422259061068512044369");
+            
+            // Cofactor
+            params.h = to_ZZ(1);
+            
+            break;
+        }
+        
+        case CurveType::NIST_P384: {
+            // NIST P-384
+            // Curva: y² = x³ - 3x + b (mod p)
+            // Seguridad equivalente: RSA-7680
+            
+            params.name = "NIST P-384";
+            params.bits = 384;
+            
+            // p = 2^384 - 2^128 - 2^96 + 2^32 - 1
+            conv(params.p, "39402006196394479212279040100143613805079739270465446667948293404245721771496870329047266088258938001861606973112319");
+            
+            // a = -3 (mod p)
+            conv(params.a, "39402006196394479212279040100143613805079739270465446667948293404245721771496870329047266088258938001861606973112316");
+            
+            // b
+            conv(params.b, "27580193559959705877849011840389048093056905856361568521428707301988689241309860865136260764883745107765439761230575");
+            
+            // Generator G
+            conv(params.Gx, "26247035095799689268623156744566981891852923491109213387815615900925518854738050089022388053975719786650872476732087");
+            conv(params.Gy, "8325710961489029985546751289520108179287853048861315594709205902480503199884419224438643760392947333078086511627871");
+            
+            // Order n
+            conv(params.n, "39402006196394479212279040100143613805079739270465446667946905279627659399113263569398956308152294913554433653942643");
+            
+            // Cofactor
+            params.h = to_ZZ(1);
+            
+            break;
+        }
+        
+        case CurveType::SECP256K1: {
+            // secp256k1 (Bitcoin/Ethereum)
+            // Curva: y² = x³ + 7 (mod p)
+            // a = 0, b = 7
+            // Seguridad equivalente: RSA-3072
+            
+            params.name = "secp256k1 (Bitcoin)";
+            params.bits = 256;
+            
+            // p = 2^256 - 2^32 - 977
+            conv(params.p, "115792089237316195423570985008687907853269984665640564039457584007908834671663");
+            
+            // a = 0
+            params.a = to_ZZ(0);
+            
+            // b = 7
+            params.b = to_ZZ(7);
+            
+            // Generator G
+            conv(params.Gx, "55066263022277343669578718895168534326250603453777594175500187360389116729240");
+            conv(params.Gy, "32670510020758816978083085130507043184471273380659243275938904335757337482424");
+            
+            // Order n
+            conv(params.n, "115792089237316195423570985008687907852837564279074904382605163141518161494337");
+            
+            // Cofactor
+            params.h = to_ZZ(1);
+            
+            break;
+        }
+        
+        case CurveType::CUSTOM:
+            throw std::runtime_error("CUSTOM curve type requires manual parameter setting");
+        
+        default:
+            throw std::runtime_error("Unknown curve type");
+    }
     
-    ECCPublicKey pub(x, y, curve_name);
-    ECCPrivateKey priv(d, curve_name);
-    
-    return ECCKeyPair(pub, priv);
+    return params;
 }
 
-BigInt ECC::sign(const BigInt& message_hash, const ECCPrivateKey& private_key) {
-    // STUB: Retornar valor dummy
-    // TODO: Implementar ECDSA
-    return message_hash;
-}
-
-bool ECC::verify(const BigInt& message_hash, const BigInt& signature, const ECCPublicKey& public_key) {
-    // STUB: Siempre retorna true
-    // TODO: Implementar verificación ECDSA
+bool CurveParams::validate() const {
+    // Validaciones básicas
+    
+    // 1. p debe ser primo (simplificado: solo verificamos que sea > 3)
+    if (p <= 3) return false;
+    
+    // 2. Verificar discriminante: 4a³ + 27b² ≠ 0 (mod p)
+    ZZ_p::init(p);
+    ZZ_p a_p = conv<ZZ_p>(a);
+    ZZ_p b_p = conv<ZZ_p>(b);
+    
+    ZZ_p discriminant = 4 * power(a_p, 3) + 27 * power(b_p, 2);
+    if (IsZero(discriminant)) return false;
+    
+    // 3. Verificar que G está en la curva
+    ZZ_p Gx_p = conv<ZZ_p>(Gx);
+    ZZ_p Gy_p = conv<ZZ_p>(Gy);
+    
+    ZZ_p lhs = power(Gy_p, 2);
+    ZZ_p rhs = power(Gx_p, 3) + a_p * Gx_p + b_p;
+    
+    if (lhs != rhs) return false;
+    
+    // 4. n debe ser > 0
+    if (n <= 0) return false;
+    
+    // 5. h debe ser > 0
+    if (h <= 0) return false;
+    
     return true;
+}
+
+void CurveParams::print() const {
+    std::cout << "\n" << std::string(70, '=') << "\n";
+    std::cout << "CURVA: " << name << "\n";
+    std::cout << std::string(70, '=') << "\n";
+    std::cout << "Bits:       " << bits << "\n";
+    std::cout << "p (módulo): " << p << "\n";
+    std::cout << "a:          " << a << "\n";
+    std::cout << "b:          " << b << "\n";
+    std::cout << "Gx:         " << Gx << "\n";
+    std::cout << "Gy:         " << Gy << "\n";
+    std::cout << "n (orden):  " << n << "\n";
+    std::cout << "h (cofact): " << h << "\n";
+    std::cout << std::string(70, '=') << "\n";
+}
+
+// ============================================================================
+// ECPoint - IMPLEMENTACIÓN
+// ============================================================================
+
+ECPoint::ECPoint(const CurveParams* curve)
+    : x_(0), y_(0), is_infinity_(true), curve_(curve) {
+    if (!curve_) {
+        throw std::invalid_argument("Curve parameters cannot be null");
+    }
+}
+
+ECPoint::ECPoint(const BigInt& x, const BigInt& y, const CurveParams* curve)
+    : x_(x), y_(y), is_infinity_(false), curve_(curve) {
+    if (!curve_) {
+        throw std::invalid_argument("Curve parameters cannot be null");
+    }
+    
+    if (!is_on_curve()) {
+        throw std::invalid_argument("Point is not on the curve");
+    }
+}
+
+bool ECPoint::is_on_curve() const {
+    if (is_infinity_) return true;
+    
+    // Verificar: y² = x³ + ax + b (mod p)
+    ZZ_p::init(curve_->p);
+    
+    ZZ_p x_p = conv<ZZ_p>(x_);
+    ZZ_p y_p = conv<ZZ_p>(y_);
+    ZZ_p a_p = conv<ZZ_p>(curve_->a);
+    ZZ_p b_p = conv<ZZ_p>(curve_->b);
+    
+    ZZ_p lhs = power(y_p, 2);
+    ZZ_p rhs = power(x_p, 3) + a_p * x_p + b_p;
+    
+    return lhs == rhs;
+}
+
+bool ECPoint::operator==(const ECPoint& other) const {
+    // Verificar que están en la misma curva
+    if (curve_ != other.curve_) return false;
+    
+    // Ambos infinito
+    if (is_infinity_ && other.is_infinity_) return true;
+    
+    // Uno infinito, otro no
+    if (is_infinity_ != other.is_infinity_) return false;
+    
+    // Comparar coordenadas
+    return (x_ == other.x_) && (y_ == other.y_);
+}
+
+void ECPoint::print() const {
+    if (is_infinity_) {
+        std::cout << "Point at infinity (O)\n";
+    } else {
+        std::cout << "Point on " << curve_->name << ":\n";
+        std::cout << "  x = " << x_ << "\n";
+        std::cout << "  y = " << y_ << "\n";
+    }
+}
+
+// ============================================================================
+// OPERACIONES - ESQUELETOS (A IMPLEMENTAR)
+// ============================================================================
+
+ECPoint ec_add(const ECPoint& P, const ECPoint& Q) {
+    // Verificar misma curva
+    if (P.curve() != Q.curve()) {
+        throw std::invalid_argument("Points must be on the same curve");
+    }
+    
+    const CurveParams* curve = P.curve();
+    
+    // Caso 1: P es infinito → return Q
+    if (P.is_infinity()) return Q;
+    
+    // Caso 2: Q es infinito → return P
+    if (Q.is_infinity()) return P;
+    
+    // Caso 3: P = -Q → return infinito
+    if (P.x() == Q.x() && P.y() != Q.y()) {
+        return ECPoint(curve);  // Punto infinito
+    }
+    
+    // Caso 4: P = Q → duplicación
+    if (P == Q) {
+        return ec_double(P);
+    }
+    
+    // Caso 5: P ≠ Q, suma general
+    // TODO: Implementar suma general
+    // Fórmulas:
+    // λ = (Q.y - P.y) / (Q.x - P.x) (mod p)
+    // x3 = λ² - P.x - Q.x (mod p)
+    // y3 = λ(P.x - x3) - P.y (mod p)
+    
+    ZZ_p::init(curve->p);
+    
+    ZZ_p x1 = conv<ZZ_p>(P.x());
+    ZZ_p y1 = conv<ZZ_p>(P.y());
+    ZZ_p x2 = conv<ZZ_p>(Q.x());
+    ZZ_p y2 = conv<ZZ_p>(Q.y());
+    
+    // λ = (y2 - y1) / (x2 - x1)
+    ZZ_p lambda = (y2 - y1) / (x2 - x1);
+    
+    // x3 = λ² - x1 - x2
+    ZZ_p x3 = power(lambda, 2) - x1 - x2;
+    
+    // y3 = λ(x1 - x3) - y1
+    ZZ_p y3 = lambda * (x1 - x3) - y1;
+    
+    return ECPoint(conv<BigInt>(x3), conv<BigInt>(y3), curve);
+}
+
+ECPoint ec_double(const ECPoint& P) {
+    if (P.is_infinity()) return P;
+    
+    const CurveParams* curve = P.curve();
+    
+    // Si y = 0, retornar infinito
+    if (P.y() == 0) {
+        return ECPoint(curve);
+    }
+    
+    // TODO: Implementar duplicación
+    // Fórmulas:
+    // λ = (3x² + a) / (2y) (mod p)
+    // x3 = λ² - 2x (mod p)
+    // y3 = λ(x - x3) - y (mod p)
+    
+    ZZ_p::init(curve->p);
+    
+    ZZ_p x = conv<ZZ_p>(P.x());
+    ZZ_p y = conv<ZZ_p>(P.y());
+    ZZ_p a = conv<ZZ_p>(curve->a);
+    
+    // λ = (3x² + a) / (2y)
+    ZZ_p lambda = (3 * power(x, 2) + a) / (2 * y);
+    
+    // x3 = λ² - 2x
+    ZZ_p x3 = power(lambda, 2) - 2 * x;
+    
+    // y3 = λ(x - x3) - y
+    ZZ_p y3 = lambda * (x - x3) - y;
+    
+    return ECPoint(conv<BigInt>(x3), conv<BigInt>(y3), curve);
+}
+
+ECPoint ec_negate(const ECPoint& P) {
+    if (P.is_infinity()) return P;
+    
+    const CurveParams* curve = P.curve();
+    
+    // -P = (x, -y mod p)
+    BigInt neg_y = (curve->p - P.y()) % curve->p;
+    
+    return ECPoint(P.x(), neg_y, curve);
+}
+
+ECPoint ec_scalar_mult(const BigInt& k, const ECPoint& P) {
+    if (k == 0 || P.is_infinity()) {
+        return ECPoint(P.curve());  // Infinito
+    }
+    
+    // TODO: Implementar multiplicación escalar eficiente
+    // Algoritmo: Double-and-add (binary method)
+    // Complejidad: O(log k)
+    
+    const CurveParams* curve = P.curve();
+    
+    // Algoritmo double-and-add
+    ECPoint result(curve);  // Empieza en infinito
+    ECPoint addend = P;
+    
+    BigInt k_copy = k % curve->n;  // Reducir módulo n
+    
+    // Recorrer bits de k de derecha a izquierda
+    while (k_copy > 0) {
+        if (k_copy % 2 == 1) {
+            result = ec_add(result, addend);
+        }
+        addend = ec_double(addend);
+        k_copy /= 2;
+    }
+    
+    return result;
+}
+
+// ============================================================================
+// GENERACIÓN DE CLAVES
+// ============================================================================
+
+ECKeyPair generate_keypair(const CurveParams& curve, RNG& rng) {
+    ECKeyPair keypair;
+    keypair.curve = &curve;
+    
+    // 1. Generar clave privada: d ∈ [1, n-1]
+    keypair.private_key = rng.random_range(to_ZZ(1), curve.n - 1);
+    
+    // 2. Calcular clave pública: Q = d*G
+    ECPoint G(curve.Gx, curve.Gy, &curve);
+    keypair.public_key = ec_scalar_mult(keypair.private_key, G);
+    
+    return keypair;
+}
+
+void ECKeyPair::print(bool show_private) const {
+    std::cout << "\n" << std::string(70, '=') << "\n";
+    std::cout << "PAR DE CLAVES ECC\n";
+    std::cout << std::string(70, '=') << "\n";
+    std::cout << "Curva: " << curve->name << "\n";
+    
+    if (show_private) {
+        std::cout << "Clave privada (d): " << private_key << "\n";
+    } else {
+        std::cout << "Clave privada: [OCULTA]\n";
+    }
+    
+    std::cout << "\nClave pública (Q):\n";
+    public_key.print();
+    std::cout << std::string(70, '=') << "\n";
+}
+
+// ============================================================================
+// ECDH
+// ============================================================================
+
+ECPoint ecdh_shared_secret(const BigInt& private_key, 
+                           const ECPoint& public_key) {
+    // S = private_key * public_key
+    return ec_scalar_mult(private_key, public_key);
+}
+
+BigInt ecdh_derive_key(const ECPoint& shared_point, int key_bits) {
+    if (shared_point.is_infinity()) {
+        throw std::runtime_error("Cannot derive key from point at infinity");
+    }
+    
+    // Derivación simple: usar coordenada x como clave
+    // En producción: usar KDF como HKDF o PBKDF2
+    
+    // Tomar solo los bits necesarios
+    BigInt key = shared_point.x();
+    
+    if (key_bits < NumBits(key)) {
+        // Truncar a los bits necesarios
+        key = key % power2_ZZ(key_bits);
+    }
+    
+    return key;
+}
+
+// ============================================================================
+// UTILIDADES
+// ============================================================================
+
+std::string curve_type_to_string(CurveType type) {
+    switch (type) {
+        case CurveType::NIST_P256:  return "NIST P-256";
+        case CurveType::NIST_P384:  return "NIST P-384";
+        case CurveType::SECP256K1:  return "secp256k1";
+        case CurveType::CUSTOM:     return "Custom";
+        default:                    return "Unknown";
+    }
+}
+
+int ecc_to_rsa_security(int curve_bits) {
+    // Mapeo de seguridad ECC → RSA
+    // Fuente: NIST SP 800-57
+    
+    if (curve_bits <= 160) return 1024;   // Débil
+    if (curve_bits <= 224) return 2048;   // Mínimo actual
+    if (curve_bits <= 256) return 3072;   // Estándar
+    if (curve_bits <= 384) return 7680;   // Alta seguridad
+    if (curve_bits <= 521) return 15360;  // Muy alta
+    
+    return 15360;  // Máximo
+}
+
+CurveType rsa_to_ecc_curve(int rsa_bits) {
+    // Mapeo RSA → Curva ECC recomendada
+    
+    if (rsa_bits <= 1024) return CurveType::NIST_P256;  // Mínimo
+    if (rsa_bits <= 2048) return CurveType::NIST_P256;
+    if (rsa_bits <= 3072) return CurveType::NIST_P256;
+    if (rsa_bits <= 4096) return CurveType::NIST_P384;
+    
+    return CurveType::NIST_P384;  // Máximo soportado
 }
 
 } // namespace crypto
