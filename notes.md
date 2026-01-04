@@ -31,6 +31,16 @@
 - [ ] Gráficos de comparación
 - [ ] Análisis estadístico avanzado
 
+### RSA vs ECC
+#### Niveles de Seguridad Aproximados
+| Seguridad (bits) | RSA (bits) | ECC (bits) | Relación de Seguridad |
+|------------------|------------|------------| -----------------------|
+| 80               | 1024       | 160        | débil
+| 112              | 2048       | 224        | mínimo recomendado
+| 128              | 3072       | 256        | estándar
+| 192              | 4096       | 384        | alta seguridad
+
+
 ### TL;DR
 
 * **Feature branches**: one per logical change (e.g. `docs-updates`, `rsa-implementation`).

@@ -10,8 +10,12 @@
 - [x] Arquitectura modular sin duplicación
 - [x] Documentación exhaustiva
 - [x] Corrección de bugs (PowerMod, random_prime)
+- [x] Normalización en C++ con NTL::RR
+  - [x] Realizar toda la generación y normalización en C++, volcar datos ya normalizados, y Python lee los datos limpios
+- [x] Scripts de automatización para análisis RNG
+- [x] Análisis estadístico básico (histogramas, autocorrelación, entropía)
 
-## FASE 2: Validación Estadística del RNG (EN CURSO)
+## FASE 2: Validación Estadística del RNG (COMPLETADO)
 
 ### Objetivos
 Verificar la calidad criptográfica del generador de números aleatorios.
@@ -46,7 +50,7 @@ Verificar la calidad criptográfica del generador de números aleatorios.
 - [ ] Comparación con generadores estándar
 - [ ] Conclusiones sobre calidad criptográfica
 
-## FASE 3: Implementación Completa de ECC (PRÓXIMO)
+## FASE 3: Implementación Completa de ECC (EN CURSO)
 
 ### Objetivos
 Implementar ECC con las mismas características que RSA.
@@ -54,15 +58,18 @@ Implementar ECC con las mismas características que RSA.
 ### Tareas
 
 #### 3.1. Aritmética de Curvas Elípticas
-- [ ] Estructura de punto en curva elíptica
-- [ ] Operaciones de punto (suma, doblado)
-- [ ] Multiplicación escalar
-- [ ] Selección de curvas estándar (secp256k1, P-256, etc.)
+- [x] Estructura de punto en curva elíptica (`ECPoint`)
+- [x] Operaciones de punto (suma, doblado, negación)
+- [x] Multiplicación escalar (algoritmo double-and-add)
+- [x] Curvas estándar: secp256k1, P-256, P-384
+- [x] Validación de parámetros de curva
+- [x] Verificación de puntos en curva
 
 #### 3.2. Generación de Claves ECC
-- [ ] Generar clave privada (escalar aleatorio)
-- [ ] Calcular clave pública (punto en curva)
-- [ ] Validación de puntos en curva
+- [x] Generar clave privada (escalar aleatorio en [1, n-1])
+- [x] Calcular clave pública (Q = d*G)
+- [x] Validación de puntos en curva
+- [x] Reproducibilidad con RNG
 
 #### 3.3. ECDSA (Firma Digital)
 - [ ] Implementar firma ECDSA
@@ -193,8 +200,8 @@ Preparar toda la documentación para el TFG.
 | Fase | Estado | Completado | Tiempo Estimado |
 |------|--------|-----------|-----------------|
 | 1. Infraestructura Base | ✅ COMPLETADO | 100% | - |
-| 2. Validación RNG | 🔄 EN CURSO | 20% | 1-2 semanas |
-| 3. Implementación ECC | ⏳ PENDIENTE | 0% | 2-3 semanas |
+| 2. Validación RNG | ✅ COMPLETADO | 100% | 1-2 semanas |
+| 3. Implementación ECC | 🔄 EN CURSO | 0% | 2-3 semanas |
 | 4. Análisis Comparativo | ⏳ PENDIENTE | 0% | 2-3 semanas |
 | 5. Optimizaciones | ⏳ OPCIONAL | 0% | 2-3 semanas |
 | 6. Visualización | ⏳ OPCIONAL | 0% | 1-2 semanas |
