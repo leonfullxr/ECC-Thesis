@@ -70,5 +70,4 @@ inline void validate_key_size(int bits, int min_bits, int max_bits) {
 }
 
 } // namespace crypto
-
 #endif // COMMON_HPP

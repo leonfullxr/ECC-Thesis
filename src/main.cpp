@@ -1,7 +1,7 @@
 // main.cpp
 // Programa principal para benchmarking de RSA y ECC
 // Autor: Leon Elliott Fuller
-// Fecha: 2025-12-06
+// Fecha: 2026-01-04
 
 #include <iostream>
 #include <string>
@@ -179,28 +179,66 @@ void benchmark_rsa(RNG& rng, int bits, int iterations) {
 /**
  * @brief Benchmark de generación de claves ECC
  */
-BenchmarkResult benchmark_ecc_keygen(RNG& rng, const string& curve, int iterations) {
-    string label = "ECC Key Generation (" + curve + ")";
+BenchmarkResult benchmark_ecc_keygen(RNG& rng, CurveType curve_type, int iterations) {
+    CurveParams curve = get_curve_params(curve_type);
+    string label = "ECC Key Generation (" + curve.name + ")";
     
     return run_benchmark(label, [&]() {
-        ECC::generate_key(rng, curve);
+        generate_keypair(curve, rng);
     }, iterations);
+}
+
+/**
+ * @brief Benchmark de ECDH
+ */
+vector<BenchmarkResult> benchmark_ecc_ecdh(RNG& rng, CurveType curve_type, int iterations) {
+    vector<BenchmarkResult> results;
+    CurveParams curve = get_curve_params(curve_type);
+    
+    // Generar claves de Alice y Bob para las pruebas
+    cout << "\nGenerating ECC keypairs for ECDH tests...\n";
+    ECKeyPair alice = generate_keypair(curve, rng);
+    ECKeyPair bob = generate_keypair(curve, rng);
+    
+    // Benchmark de cálculo de secreto compartido
+    auto ecdh_result = run_benchmark("ECDH Shared Secret (" + curve.name + ")",
+        [&]() {
+            ecdh_shared_secret(alice.private_key, bob.public_key);
+        }, iterations);
+    results.push_back(ecdh_result);
+    
+    return results;
 }
 
 /**
  * @brief Benchmark completo de ECC
  */
-void benchmark_ecc(RNG& rng, const string& curve, int iterations) {
+void benchmark_ecc(RNG& rng, const string& curve_name, int iterations) {
     cout << "\n" << string(80, '=') << "\n";
-    cout << "ECC BENCHMARK - " << curve << "\n";
+    cout << "ECC BENCHMARK - " << curve_name << "\n";
     cout << string(80, '=') << "\n";
     
-    cout << "\nNOTE: ECC implementation is a stub. Results are not meaningful.\n";
+    // Convertir nombre de curva a tipo
+    CurveType curve_type;
+    if (curve_name == "P-256" || curve_name == "NIST_P256") {
+        curve_type = CurveType::NIST_P256;
+    } else if (curve_name == "P-384" || curve_name == "NIST_P384") {
+        curve_type = CurveType::NIST_P384;
+    } else if (curve_name == "secp256k1") {
+        curve_type = CurveType::SECP256K1;
+    } else {
+        cerr << "Error: Unknown curve " << curve_name << "\n";
+        return;
+    }
     
     vector<BenchmarkResult> results;
     
     // Benchmark de generación de claves
-    results.push_back(benchmark_ecc_keygen(rng, curve, iterations));
+    results.push_back(benchmark_ecc_keygen(rng, curve_type, iterations));
+    
+    // Benchmark de ECDH
+    auto ecdh_results = benchmark_ecc_ecdh(rng, curve_type, iterations);
+    results.insert(results.end(), ecdh_results.begin(), ecdh_results.end());
     
     // Imprimir resultados
     cout << "\n" << string(80, '-') << "\n";

@@ -48,6 +48,16 @@ BigInt NTLRNG::random_bnd(const BigInt& n) {
     return result;
 }
 
+BigInt NTLRNG::random_range(const BigInt& min, const BigInt& max) {
+    if (min > max) {
+        throw CryptoException("Invalid range: min > max");
+    }
+    
+    BigInt range = max - min + 1; // +1 para incluir 'max'
+    BigInt rand_in_range = random_bnd(range);
+    return min + rand_in_range;
+}
+
 BigInt NTLRNG::random_len(long l) {
     if (l <= 0) {
         return BigInt(0);

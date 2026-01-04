@@ -2,7 +2,7 @@
 // Implementación de Elliptic Curve Cryptography (ECC)
 // 
 // Autor: Leon Elliott Fuller
-// Fecha: 2025-01-06
+// Fecha: 2026-01-04
 
 #include "ecc.hpp"
 #include <iostream>
@@ -239,7 +239,7 @@ void ECPoint::print() const {
 }
 
 // ============================================================================
-// OPERACIONES - ESQUELETOS (A IMPLEMENTAR)
+// OPERACIONES
 // ============================================================================
 
 ECPoint ec_add(const ECPoint& P, const ECPoint& Q) {
@@ -267,12 +267,6 @@ ECPoint ec_add(const ECPoint& P, const ECPoint& Q) {
     }
     
     // Caso 5: P ≠ Q, suma general
-    // TODO: Implementar suma general
-    // Fórmulas:
-    // λ = (Q.y - P.y) / (Q.x - P.x) (mod p)
-    // x3 = λ² - P.x - Q.x (mod p)
-    // y3 = λ(P.x - x3) - P.y (mod p)
-    
     ZZ_p::init(curve->p);
     
     ZZ_p x1 = conv<ZZ_p>(P.x());
@@ -301,12 +295,6 @@ ECPoint ec_double(const ECPoint& P) {
     if (P.y() == 0) {
         return ECPoint(curve);
     }
-    
-    // TODO: Implementar duplicación
-    // Fórmulas:
-    // λ = (3x² + a) / (2y) (mod p)
-    // x3 = λ² - 2x (mod p)
-    // y3 = λ(x - x3) - y (mod p)
     
     ZZ_p::init(curve->p);
     
@@ -342,10 +330,6 @@ ECPoint ec_scalar_mult(const BigInt& k, const ECPoint& P) {
         return ECPoint(P.curve());  // Infinito
     }
     
-    // TODO: Implementar multiplicación escalar eficiente
-    // Algoritmo: Double-and-add (binary method)
-    // Complejidad: O(log k)
-    
     const CurveParams* curve = P.curve();
     
     // Algoritmo double-and-add
@@ -371,17 +355,15 @@ ECPoint ec_scalar_mult(const BigInt& k, const ECPoint& P) {
 // ============================================================================
 
 ECKeyPair generate_keypair(const CurveParams& curve, RNG& rng) {
-    ECKeyPair keypair;
-    keypair.curve = &curve;
-    
     // 1. Generar clave privada: d ∈ [1, n-1]
-    keypair.private_key = rng.random_range(to_ZZ(1), curve.n - 1);
+    BigInt private_key = rng.random_range(to_ZZ(1), curve.n - 1);
     
     // 2. Calcular clave pública: Q = d*G
     ECPoint G(curve.Gx, curve.Gy, &curve);
-    keypair.public_key = ec_scalar_mult(keypair.private_key, G);
+    ECPoint public_key = ec_scalar_mult(private_key, G);
     
-    return keypair;
+    // 3. Retornar usando brace initialization (aggregate initialization)
+    return ECKeyPair{private_key, public_key, &curve};
 }
 
 void ECKeyPair::print(bool show_private) const {

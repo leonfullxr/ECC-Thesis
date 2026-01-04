@@ -3,7 +3,7 @@
 // Implementación limpia, escalable, sin números mágicos
 // 
 // Autor: Leon Elliott Fuller
-// Fecha: 2025-01-06
+// Fecha: 2026-01-04
 
 #ifndef ECC_HPP
 #define ECC_HPP
