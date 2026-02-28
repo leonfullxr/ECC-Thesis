@@ -30,8 +30,8 @@ PYTHON_DIR := scripts
 INCLUDE_DIR := include
 
 ######################### Source and object files
-SOURCES := $(SRC_DIR)/rng.cpp $(SRC_DIR)/rsa.cpp $(SRC_DIR)/ecc.cpp $(SRC_DIR)/main.cpp
-OBJS    := $(BUILD_DIR)/rng.o $(BUILD_DIR)/rsa.o $(BUILD_DIR)/ecc.o $(BUILD_DIR)/main.o
+SOURCES := $(SRC_DIR)/rng.cpp $(SRC_DIR)/rsa.cpp $(SRC_DIR)/ecc.cpp  $(SRC_DIR)/sha256.cpp $(SRC_DIR)/main.cpp
+OBJS    := $(BUILD_DIR)/rng.o $(BUILD_DIR)/rsa.o $(BUILD_DIR)/ecc.o $(BUILD_DIR)/sha256.o $(BUILD_DIR)/main.o
 
 ######################### Parameters override
 KEY_SIZE ?= 2048 # RSA key size for test-rsa target

@@ -1,15 +1,15 @@
 // ecc.hpp
 // Elliptic Curve Cryptography (ECC)
-// Implementación limpia, escalable, sin números mágicos
 // 
 // Autor: Leon Elliott Fuller
-// Fecha: 2026-01-04
+// Fecha: 2026-02-28
 
 #ifndef ECC_HPP
 #define ECC_HPP
 
 #include "common.hpp"
 #include "rng.hpp"
+#include "sha256.hpp"
 #include <NTL/ZZ.h>
 #include <NTL/ZZ_p.h>
 #include <string>
@@ -20,14 +20,14 @@ namespace crypto {
 using namespace NTL;
 
 // ============================================================================
-// CURVAS ELÍPTICAS ESTÁNDAR
+// CURVAS ELIPTICAS ESTANDAR
 // ============================================================================
 
 /**
- * @brief Tipo de curva elíptica
+ * @brief Tipo de curva eli­ptica
  * 
- * Curvas estándar soportadas:
- * - NIST P-256 (secp256r1): Estándar NIST, ampliamente usado
+ * Curvas estandar soportadas:
+ * - NIST P-256 (secp256r1): Estandar NIST, ampliamente usado
  * - NIST P-384: Alta seguridad
  * - secp256k1: Usado en Bitcoin/Ethereum
  * - CUSTOM: Curva definida por el usuario
@@ -40,19 +40,19 @@ enum class CurveType {
 };
 
 /**
- * @brief Parámetros de una curva elíptica
+ * @brief Parametros de una curva eli­ptica
  * 
- * Curva en forma de Weierstrass: y² = x³ + ax + b (mod p)
+ * Curva en forma de Weierstrass: yÂ² = xÂ³ + ax + b (mod p)
  * 
- * Parámetros del dominio:
+ * Parametros del dominio:
  * - p: Primo que define el campo finito Fp
- * - a, b: Coeficientes de la ecuación de la curva
+ * - a, b: Coeficientes de la ecuacion de la curva
  * - G: Punto generador (base point)
- * - n: Orden del punto generador (número de puntos)
+ * - n: Orden del punto generador (numero de puntos)
  * - h: Cofactor (normalmente 1)
  */
 struct CurveParams {
-    BigInt p;           // Primo del campo (módulo)
+    BigInt p;           // Primo del campo (modulo)
     BigInt a;           // Coeficiente a
     BigInt b;           // Coeficiente b
     BigInt Gx;          // Coordenada x del generador
@@ -61,7 +61,7 @@ struct CurveParams {
     BigInt h;           // Cofactor
     
     std::string name;   // Nombre de la curva (para debugging)
-    int bits;           // Tamaño en bits (para referencia)
+    int bits;           // Tamai±o en bits (para referencia)
     
     /**
      * @brief Constructor por defecto
@@ -69,35 +69,35 @@ struct CurveParams {
     CurveParams() = default;
     
     /**
-     * @brief Valida los parámetros de la curva
-     * @return true si los parámetros son válidos
+     * @brief Valida los parametros de la curva
+     * @return true si los parametros son validos
      */
     bool validate() const;
     
     /**
-     * @brief Imprime los parámetros de la curva
+     * @brief Imprime los parametros de la curva
      */
     void print() const;
 };
 
 /**
- * @brief Obtiene los parámetros de una curva estándar
+ * @brief Obtiene los parametros de una curva estandar
  * @param type Tipo de curva
- * @return Parámetros de la curva
+ * @return Parametros de la curva
  */
 CurveParams get_curve_params(CurveType type);
 
 // ============================================================================
-// PUNTO EN CURVA ELÍPTICA
+// PUNTO EN CURVA ELiPTICA
 // ============================================================================
 
 /**
- * @brief Representa un punto en una curva elíptica
+ * @brief Representa un punto en una curva eli­ptica
  * 
  * Soporta:
  * - Punto en el infinito (punto de identidad)
  * - Coordenadas afines (x, y)
- * - Coordenadas proyectivas (X, Y, Z) para optimización (futuro)
+ * - Coordenadas proyectivas (X, Y, Z) para optimizacion (futuro)
  */
 class ECPoint {
 private:
@@ -118,7 +118,7 @@ public:
      * @brief Constructor con coordenadas afines
      * @param x Coordenada x
      * @param y Coordenada y
-     * @param curve Parámetros de la curva
+     * @param curve Parametros de la curva
      */
     ECPoint(const BigInt& x, const BigInt& y, const CurveParams* curve);
     
@@ -129,8 +129,8 @@ public:
     const CurveParams* curve() const { return curve_; }
     
     /**
-     * @brief Verifica si el punto está en la curva
-     * @return true si el punto satisface la ecuación de la curva
+     * @brief Verifica si el punto esta en la curva
+     * @return true si el punto satisface la ecuacion de la curva
      */
     bool is_on_curve() const;
     
@@ -147,19 +147,19 @@ public:
 };
 
 // ============================================================================
-// OPERACIONES EN CURVA ELÍPTICA
+// OPERACIONES EN CURVA ELiPTICA
 // ============================================================================
 
 /**
- * @brief Suma de puntos en curva elíptica
+ * @brief Suma de puntos en curva eli­ptica
  * 
- * Implementa la ley de grupo de la curva elíptica:
+ * Implementa la ley de grupo de la curva eli­ptica:
  * P + Q = R
  * 
  * Casos especiales:
  * - P + O = P (O = punto infinito)
  * - P + (-P) = O
- * - P + P = 2P (duplicación)
+ * - P + P = 2P (duplicacion)
  * 
  * @param P Primer punto
  * @param Q Segundo punto
@@ -168,28 +168,28 @@ public:
 ECPoint ec_add(const ECPoint& P, const ECPoint& Q);
 
 /**
- * @brief Duplicación de punto (caso especial de suma)
+ * @brief Duplicacion de punto (caso especial de suma)
  * @param P Punto a duplicar
  * @return 2P
  */
 ECPoint ec_double(const ECPoint& P);
 
 /**
- * @brief Negación de punto
+ * @brief Negacion de punto
  * @param P Punto
- * @return -P (reflexión sobre eje x)
+ * @return -P (reflexion sobre eje x)
  */
 ECPoint ec_negate(const ECPoint& P);
 
 /**
- * @brief Multiplicación escalar (operación fundamental)
+ * @brief Multiplicacion escalar (operacion fundamental)
  * 
  * Calcula k*P = P + P + ... + P (k veces)
  * 
  * Usa algoritmo "double-and-add" para eficiencia:
  * Complejidad: O(log k)
  * 
- * @param k Escalar (número de veces)
+ * @param k Escalar (numero de veces)
  * @param P Punto base
  * @return k*P
  */
@@ -203,8 +203,8 @@ ECPoint ec_scalar_mult(const BigInt& k, const ECPoint& P);
  * @brief Par de claves ECC
  */
 struct ECKeyPair {
-    BigInt private_key;     // Clave privada: número aleatorio en [1, n-1]
-    ECPoint public_key;     // Clave pública: Q = d*G
+    BigInt private_key;     // Clave privada: numero aleatorio en [1, n-1]
+    ECPoint public_key;     // Clave publica: Q = d*G
     
     const CurveParams* curve;  // Curva utilizada
     
@@ -218,17 +218,17 @@ struct ECKeyPair {
  * @brief Genera un par de claves ECC
  * 
  * Proceso:
- * 1. Genera número aleatorio d en [1, n-1] (clave privada)
- * 2. Calcula Q = d*G (clave pública)
+ * 1. Genera numero aleatorio d en [1, n-1] (clave privada)
+ * 2. Calcula Q = d*G (clave publica)
  * 
- * @param curve Parámetros de la curva
- * @param rng Generador de números aleatorios
+ * @param curve Parametros de la curva
+ * @param rng Generador de numeros aleatorios
  * @return Par de claves
  */
 ECKeyPair generate_keypair(const CurveParams& curve, RNG& rng);
 
 // ============================================================================
-// DIFFIE-HELLMAN EN CURVAS ELÍPTICAS (ECDH)
+// DIFFIE-HELLMAN EN CURVAS ELIPTICAS (ECDH)
 // ============================================================================
 
 /**
@@ -241,19 +241,128 @@ ECKeyPair generate_keypair(const CurveParams& curve, RNG& rng);
  * Ambos obtienen el mismo punto S (secreto compartido)
  * 
  * @param private_key Clave privada propia
- * @param public_key Clave pública del otro
+ * @param public_key Clave publica del otro
  * @return Punto compartido (usar x como secreto)
  */
 ECPoint ecdh_shared_secret(const BigInt& private_key, 
                            const ECPoint& public_key);
 
 /**
- * @brief Deriva clave simétrica del secreto ECDH
+ * @brief Deriva clave simetrica del secreto ECDH
  * @param shared_point Punto compartido
  * @param key_bits Tamaño de clave deseado (128, 192, 256)
- * @return Clave simétrica derivada
+ * @return Clave simetrica derivada
  */
 BigInt ecdh_derive_key(const ECPoint& shared_point, int key_bits = 256);
+
+// ============================================================================
+// ECDSA - FIRMA DIGITAL EN CURVAS ELIPTICAS
+// ============================================================================
+
+/**
+ * @brief Firma ECDSA
+ * 
+ * Una firma ECDSA consiste en un par (r, s) donde:
+ * - r: coordenada x del punto k*G reducida módulo n
+ * - s: prueba criptográfica calculada con la clave privada
+ */
+struct ECDSASignature {
+    BigInt r;   // Componente r de la firma
+    BigInt s;   // Componente s de la firma
+    
+    /**
+     * @brief Verifica si la firma tiene formato válido
+     * @param n Orden del grupo de la curva
+     * @return true si r,s ∈ [1, n-1]
+     */
+    bool is_valid_format(const BigInt& n) const;
+    
+    /**
+     * @brief Imprime la firma
+     */
+    void print() const;
+};
+
+/**
+ * @brief Firma un mensaje usando ECDSA
+ * 
+ * Algoritmo (FIPS 186-4, Sección 6.4):
+ * 1. e = SHA-256(message)
+ * 2. z = bits más significativos de e (truncado a bit_length(n))
+ * 3. Seleccionar k aleatorio en [1, n-1]
+ * 4. (x1, y1) = k * G
+ * 5. r = x1 mod n  (si r == 0, repetir desde 3)
+ * 6. s = k⁻¹ · (z + r·d) mod n  (si s == 0, repetir desde 3)
+ * 7. Firma = (r, s)
+ * 
+ * @param message Mensaje a firmar (string)
+ * @param private_key Clave privada (escalar d)
+ * @param curve Parámetros de la curva
+ * @param rng Generador de números aleatorios
+ * @return Firma ECDSA (r, s)
+ */
+ECDSASignature ecdsa_sign(const std::string& message,
+                          const BigInt& private_key,
+                          const CurveParams& curve,
+                          RNG& rng);
+
+/**
+ * @brief Firma un hash (BigInt) directamente usando ECDSA
+ * 
+ * @param hash_value Hash del mensaje como BigInt
+ * @param private_key Clave privada (escalar d)
+ * @param curve Parámetros de la curva
+ * @param rng Generador de números aleatorios
+ * @return Firma ECDSA (r, s)
+ */
+ECDSASignature ecdsa_sign_hash(const BigInt& hash_value,
+                               const BigInt& private_key,
+                               const CurveParams& curve,
+                               RNG& rng);
+
+/**
+ * @brief Verifica una firma ECDSA
+ * 
+ * Algoritmo (FIPS 186-4, Sección 6.4):
+ * 1. Verificar r, s ∈ [1, n-1]
+ * 2. e = SHA-256(message)
+ * 3. z = bits más significativos de e
+ * 4. w = s⁻¹ mod n
+ * 5. u1 = z·w mod n
+ * 6. u2 = r·w mod n
+ * 7. (x1, y1) = u1·G + u2·Q
+ * 8. Firma válida si r ≡ x1 (mod n)
+ * 
+ * @param message Mensaje original
+ * @param signature Firma a verificar
+ * @param public_key Clave pública (punto Q)
+ * @param curve Parámetros de la curva
+ * @return true si la firma es válida
+ */
+bool ecdsa_verify(const std::string& message,
+                  const ECDSASignature& signature,
+                  const ECPoint& public_key,
+                  const CurveParams& curve);
+
+/**
+ * @brief Verifica una firma ECDSA a partir de un hash precalculado
+ */
+bool ecdsa_verify_hash(const BigInt& hash_value,
+                       const ECDSASignature& signature,
+                       const ECPoint& public_key,
+                       const CurveParams& curve);
+
+/**
+ * @brief Trunca un hash al tamaño del orden de la curva
+ * 
+ * Si el hash tiene mas bits que n, se truncan los bits
+ * mas significativos según FIPS 186-4.
+ * 
+ * @param hash Hash como BigInt
+ * @param n Orden del grupo
+ * @return Hash truncado
+ */
+BigInt truncate_hash(const BigInt& hash, const BigInt& n);
 
 // ============================================================================
 // UTILIDADES
