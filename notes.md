@@ -15,6 +15,10 @@
 - Lambdas para operaciones
 - Chrono para timing preciso
 
+### Cuestiones (Compilador, optimizaciones, CPU affinity)
+
+Lo dejamos en [optimi­zaciones](./optimization.md) para mas detalle.
+
 ### Testing
 
 - Usa semilla fija para debugging
@@ -24,7 +28,6 @@
 
 ### Pendientes (Trabajo Futuro)
 
-- [ ] Implementación completa de ECC
 - [ ] Modo paralelo (`-m par`)
 - [ ] Exportar resultados a CSV/JSON
 - [ ] Padding OAEP para RSA seguro
@@ -42,11 +45,6 @@
 
 
 ### TL;DR
-
-* **Feature branches**: one per logical change (e.g. `docs-updates`, `rsa-implementation`).
-* **To get a feature into `main`**: open (or locally run) a **merge** or **rebase** from your feature-branch into `main`, then `git push origin main`.
-* **To share commits between two feature branches**: check out the branch that needs the commits and **merge** (or **rebase**) the other branch into it.
-
 
 1. **PR: RSA Core**
 
@@ -107,5 +105,3 @@
 
     * Añade opciones de compilación (`-march=…`, perfiles PGO).
     * Integra Warm-up automático, CPU affinity y governor en el harness.
-
-Cada PR debería centrarse en una única área de responsabilidad y venir acompañado de su propio conjunto de tests o ejemplos de uso, de modo que la revisión sea sencilla y el historial de cambios claro.
