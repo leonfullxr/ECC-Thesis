@@ -36,6 +36,14 @@ public:
     virtual BigInt random_bnd(const BigInt& n) = 0;
 
     /**
+     * @brief Genera un número aleatorio en el rango [min, max]
+     * @param min Límite inferior (inclusive)
+     * @param max Límite superior (inclusive)
+     * @return Número aleatorio en [min, max]
+     */
+    virtual BigInt random_range(const BigInt& min, const BigInt& max) = 0;
+
+    /**
      * @brief Genera un número aleatorio de exactamente l bits
      * @param l Número de bits
      * @return Número aleatorio de l bits (el bit más significativo es 1)
@@ -124,6 +132,7 @@ public:
 
     // Implementación de la interfaz RNG
     BigInt random_bnd(const BigInt& n) override;
+    BigInt random_range(const BigInt& min, const BigInt& max) override;
     BigInt random_len(long l) override;
     BigInt random_bits(long l) override;
     BigInt get_seed() const override;

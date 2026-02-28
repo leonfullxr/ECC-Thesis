@@ -587,6 +587,14 @@ make test-rsa-2k ITERS=10
 ./bin/bench -a RSA -b 2048 -i 10 -s fixed
 ./bin/bench -a RSA -b 2048 -i 10 -s random
 ./bin/bench -a RSA -b 4096 -i 5 -s fixed
+# NIST P-256
+./bin/bench -a ECC -c P-256 -i 10
+
+# NIST P-384
+./bin/bench -a ECC -c P-384 -i 10
+
+# secp256k1 (Bitcoin)
+./bin/bench -a ECC -c secp256k1 -i 10
 ```
 
 #### RNG analysis tests
