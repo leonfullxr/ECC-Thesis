@@ -113,12 +113,21 @@ echo "[4/4] Generating visualizations..."
 
 if command -v python3 &> /dev/null; then
     python3 scripts/visualize_benchmarks.py "$SUMMARY" "$RAW" "$RESULTS_DIR"
+
+    # Generate collage images (requires Pillow)
+    if python3 -c "import PIL" 2>/dev/null; then
+        python3 scripts/create_collages.py "$RESULTS_DIR" "$RESULTS_DIR"
+    else
+        echo "  NOTE: Install Pillow for collage generation: pip install Pillow"
+    fi
+
     echo ""
     CHART_COUNT=$(ls "$RESULTS_DIR"/chart_*.png 2>/dev/null | wc -l)
-    echo "  $CHART_COUNT charts generated."
+    COLLAGE_COUNT=$(ls "$RESULTS_DIR"/collage_*.png 2>/dev/null | wc -l)
+    echo "  $CHART_COUNT charts + $COLLAGE_COUNT collages generated."
 else
     echo "  WARNING: python3 not found. Skipping visualizations."
-    echo "  Install: pip install pandas matplotlib numpy"
+    echo "  Install: pip install pandas matplotlib numpy Pillow"
     echo "  Run manually: python3 scripts/visualize_benchmarks.py $SUMMARY $RAW $RESULTS_DIR"
 fi
 
@@ -131,6 +140,7 @@ echo "  Output files:"
 echo "    $SUMMARY"
 echo "    $RAW"
 echo "    $LOG"
+ls "$RESULTS_DIR"/collage_*.png 2>/dev/null | sed 's/^/    /' || true
 ls "$RESULTS_DIR"/chart_*.png 2>/dev/null | sed 's/^/    /' || true
 echo ""
 echo "  Quick access (symlinks):"

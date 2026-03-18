@@ -425,7 +425,7 @@ def chart_summary_table(df, output_dir):
             if not row.empty:
                 matrix[i, j] = row['median_us'].values[0]
 
-    fig, ax = plt.subplots(figsize=(12, 5))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     # Use log scale for colors
     log_matrix = np.where(np.isnan(matrix), np.nan, np.log10(np.maximum(matrix, 1)))
