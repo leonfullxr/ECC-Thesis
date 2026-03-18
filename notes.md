@@ -105,3 +105,47 @@ Lo dejamos en [optimi­zaciones](./optimization.md) para mas detalle.
 
     * Añade opciones de compilación (`-march=…`, perfiles PGO).
     * Integra Warm-up automático, CPU affinity y governor en el harness.
+
+Cada PR debería centrarse en una única área de responsabilidad y venir acompañado de su propio conjunto de tests o ejemplos de uso, de modo que la revisión sea sencilla y el historial de cambios claro.
+
+
+# ECC notes
+
+## Basic Operations
+
+Last but surely not least, ECC hinges on a collection of basic operations, which are also crucial for the implementation
+of higher-level cryptographic protocols. The operations benchmarked were:
+• Scalar Multiplication: This is the most compute-heavy operation in ECC, as it corresponds to adding an elliptic
+curve point P by a scalar k multiple times. Scalar multiplication is fundamental to ECC because it forms the basis for other
+functions such as key generation and signature schemes. Its efficiency is essential for gauging whether ECC is viable
+on resource-limited platforms.
+• Point Addition: This operation takes the two points P, Q on the elliptic curve to get R = P + Q. Although point
+addition is lighter than scalar multiplication, it is also carried out many times within higher-level operations, e.g., scalar
+multiplication and key exchange.
+• Small Scalar Multiplication: A Special case of scalar multiplication where the scalar value k is small. This is an
+operation that encrypts one bit of data, and is typically used to be lightweight cryptographic applications like session key
+generation in IoT devices where cryptographic strength is compromised for speed.
+Execution time, memory usage, and energy consumption were measured for these basic operations to obtain a detailed
+resource profile and identify potential bottlenecks
+
+## Higher Level Operations
+
+High-level cryptographic operations use the basic operations to create secure protocols and real-world applications. The
+following high-level operations were benchmarked:
+• Encryption/ Decryption: Encryption enables encoding a plaintext to a cipher text using a recipient's public key, whereas
+decryption takes an encrypted code to get the original plaintext back using the corresponding private key. ECCbased encryption systems are very efficient in terms of traditional node systems, such as RSA, especially on resourceconstrained platforms.
+Signature Generation and Verification: Signature generation is a mechanism to form the digital signature by using the
+sender’s private key in order to guarantee message authenticity and integrity. Signature verification makes use of the
+sender’s public key to check the legitimacy of the signature. Such operations are a core requirement for secure
+communication protocols and are widely applicable in IoT systems and blockchain.
+• Key Exchange (ECDH): The Elliptic Curve Diffie-Hellman (ECDH) algorithm allows two parties to securely agree to a
+shared secret over an insecure channel. Given the decisive role that scalar multiplication has on ECDH performance, it is
+fundamental to offer an extensive exploration of its construction, especially when considering its practical employment for
+the purpose of secure key exchange.
+To provide consistency and reliability, each of these operations was benchmarked several times. The performance data
+collected offers valuable insights into the computational requirements and trade-offs involved in utilizing ECC for protocol
+implementation on the Raspberry Pi platform. The goal of the study is to provide insights into ECC optimization by profiling
+the resource-intensive operations in the ECC. By getting an insight into the resource requirements of such operations, the
+study aims to optimize ECC for resource-poor environments.
+
+Reference: https://www.ijirss.com/index.php/ijirss/article/download/6195/1165/9774#:~:text=The%20average%20execution%20time%20to,operations%2C%20Resource%2Dconstrained%20platforms.
