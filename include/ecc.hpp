@@ -88,16 +88,23 @@ struct CurveParams {
 CurveParams get_curve_params(CurveType type);
 
 // ============================================================================
-// PUNTO EN CURVA ELiPTICA
+// PUNTO EN CURVA ELIPTICA (COORDENADAS AFINES)
 // ============================================================================
 
 /**
- * @brief Representa un punto en una curva eli­ptica
+ * @brief Representa un punto en coordenadas afines (x, y) 
  * 
- * Soporta:
- * - Punto en el infinito (punto de identidad)
- * - Coordenadas afines (x, y)
- * - Coordenadas proyectivas (X, Y, Z) para optimizacion (futuro)
+ * Coordenadas afines: representacion directa del punto como (x, y) en Fp.
+ * Cada operacion de suma/doblado requiere una inversion modular (costosa).
+ * 
+ * Ventajas:
+ * - Representacion natural y facil de verificar
+ * - Cada punto intermedio se puede comprobar con is_on_curve()
+ * - Ideal para debugging y comprension educativa
+ * 
+ * Desventajas:
+ * - La inversion modular en cada operacion es costosa (~100x una multiplicacion)
+ * - Para multiplicacion escalar con ~256 pasos, el coste se acumula
  */
 class ECPoint {
 private:
@@ -147,7 +154,67 @@ public:
 };
 
 // ============================================================================
-// OPERACIONES EN CURVA ELiPTICA
+// PUNTO EN COORDENADAS JACOBIANAS
+// ============================================================================
+ 
+/**
+ * @brief Representa un punto en coordenadas Jacobianas (X, Y, Z)
+ * 
+ * Relacion con coordenadas afines:
+ *   (x, y) = (X/Z^2, Y/Z^3)
+ * 
+ * El punto en el infinito se representa como Z = 0.
+ * 
+ * Ventajas de coordenadas Jacobianas:
+ * - Eliminan la inversion modular durante suma y doblado
+ * - Solo se necesita UNA inversion al convertir de vuelta a afines
+ * - Para multiplicacion escalar de ~256 bits: ~255 inversiones eliminadas
+ * - Speedup tipico: 3-5x sobre coordenadas afines
+ * 
+ * Coste por operacion (M = multiplicacion, S = cuadrado, I = inversion):
+ * 
+ *   Operacion        | Afin          | Jacobiano
+ *   -----------------+---------------+----------
+ *   Doblado          | 1I + 2M + 2S  | 4M + 4S
+ *   Suma             | 1I + 2M + 1S  | 12M + 4S
+ *   Scalar mult 256b | ~384 I        | 1 I (al final)
+ * 
+ * Como I ~ 80-100 M en campos grandes, la diferencia es enorme.
+ * 
+ * Por que no usamos Jacobianas desde el principio:
+ * - Las coordenadas afines son mas intuitivas para aprender ECC
+ * - Cada resultado intermedio es verificable directamente (is_on_curve)
+ * - En Jacobianas, el mismo punto tiene infinitas representaciones
+ *   Ej: (x,y,1) == (4x, 8y, 2) == (9x, 27y, 3) ...
+ * - Depurar errores en Jacobiano es mucho mas dificil
+ * - El enfoque educativo: primero correccion, luego optimizacion
+ */
+class JacobianPoint {
+private:
+    BigInt X_;
+    BigInt Y_;
+    BigInt Z_;
+    const CurveParams* curve_;
+    
+public:
+    /** @brief Constructor para el punto en el infinito (Z = 0) */
+    JacobianPoint(const CurveParams* curve);
+    
+    /** @brief Constructor con coordenadas Jacobianas */
+    JacobianPoint(const BigInt& X, const BigInt& Y, const BigInt& Z,
+                  const CurveParams* curve);
+    
+    const BigInt& X() const { return X_; }
+    const BigInt& Y() const { return Y_; }
+    const BigInt& Z() const { return Z_; }
+    bool is_infinity() const { return Z_ == 0; }
+    const CurveParams* curve() const { return curve_; }
+    
+    void print() const;
+};
+
+// ============================================================================
+// OPERACIONES EN COORDENADAS AFINES
 // ============================================================================
 
 /**
@@ -196,6 +263,25 @@ ECPoint ec_negate(const ECPoint& P);
 ECPoint ec_scalar_mult(const BigInt& k, const ECPoint& P);
 
 // ============================================================================
+// OPERACIONES EN COORDENADAS JACOBIANAS
+// ============================================================================
+ 
+/** @brief Convierte punto afin a Jacobiano: (x, y) -> (x, y, 1) */
+JacobianPoint to_jacobian(const ECPoint& P);
+ 
+/** @brief Convierte Jacobiano a afin: (X, Y, Z) -> (X/Z^2, Y/Z^3) */
+ECPoint to_affine(const JacobianPoint& J);
+ 
+/** @brief Suma en Jacobianas. Coste: 12M + 4S, 0 inversiones */
+JacobianPoint jacobian_add(const JacobianPoint& P, const JacobianPoint& Q);
+ 
+/** @brief Doblado en Jacobianas. Coste: 4M + 4S, 0 inversiones */
+JacobianPoint jacobian_double(const JacobianPoint& P);
+ 
+/** @brief Multiplicacion escalar via Jacobianas (convierte al final) */
+ECPoint ec_scalar_mult_jacobian(const BigInt& k, const ECPoint& P);
+
+// ============================================================================
 // CLAVES ECC
 // ============================================================================
 
@@ -225,7 +311,7 @@ struct ECKeyPair {
  * @param rng Generador de numeros aleatorios
  * @return Par de claves
  */
-ECKeyPair generate_keypair(const CurveParams& curve, RNG& rng);
+ECKeyPair generate_keypair(const CurveParams& curve, RNG& rng, bool use_jacobian = false);
 
 // ============================================================================
 // DIFFIE-HELLMAN EN CURVAS ELIPTICAS (ECDH)
@@ -245,7 +331,8 @@ ECKeyPair generate_keypair(const CurveParams& curve, RNG& rng);
  * @return Punto compartido (usar x como secreto)
  */
 ECPoint ecdh_shared_secret(const BigInt& private_key, 
-                           const ECPoint& public_key);
+                           const ECPoint& public_key,
+                           bool use_jacobian = false);
 
 /**
  * @brief Deriva clave simetrica del secreto ECDH
@@ -304,7 +391,8 @@ struct ECDSASignature {
 ECDSASignature ecdsa_sign(const std::string& message,
                           const BigInt& private_key,
                           const CurveParams& curve,
-                          RNG& rng);
+                          RNG& rng,
+                          bool use_jacobian = false);
 
 /**
  * @brief Firma un hash (BigInt) directamente usando ECDSA
@@ -318,7 +406,8 @@ ECDSASignature ecdsa_sign(const std::string& message,
 ECDSASignature ecdsa_sign_hash(const BigInt& hash_value,
                                const BigInt& private_key,
                                const CurveParams& curve,
-                               RNG& rng);
+                               RNG& rng,
+                               bool use_jacobian = false);
 
 /**
  * @brief Verifica una firma ECDSA
@@ -342,7 +431,8 @@ ECDSASignature ecdsa_sign_hash(const BigInt& hash_value,
 bool ecdsa_verify(const std::string& message,
                   const ECDSASignature& signature,
                   const ECPoint& public_key,
-                  const CurveParams& curve);
+                  const CurveParams& curve,
+                  bool use_jacobian = false);
 
 /**
  * @brief Verifica una firma ECDSA a partir de un hash precalculado
@@ -350,7 +440,8 @@ bool ecdsa_verify(const std::string& message,
 bool ecdsa_verify_hash(const BigInt& hash_value,
                        const ECDSASignature& signature,
                        const ECPoint& public_key,
-                       const CurveParams& curve);
+                       const CurveParams& curve,
+                       bool use_jacobian = false);
 
 /**
  * @brief Trunca un hash al tamaño del orden de la curva
