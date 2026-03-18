@@ -1,8 +1,9 @@
 // main.cpp
 // Benchmark engine for RSA vs ECC comparative analysis
+// Supports: RSA, ECC (affine), ECC (Jacobian), ECC (binary fields)
 // Outputs structured CSV data for visualization
 // Author: Leon Elliott Fuller
-// Date: 2026-02-28
+// Date: 2026-03-18
 
 #include <iostream>
 #include <string>
@@ -21,6 +22,7 @@
 #include "rng.hpp"
 #include "rsa.hpp"
 #include "ecc.hpp"
+#include "ecc_binary.hpp"
 #include "sha256.hpp"
 
 using namespace crypto;
@@ -32,7 +34,7 @@ using namespace std::chrono;
 // ============================================================================
 
 struct BenchmarkResult {
-    string algorithm;       // RSA or ECC
+    string algorithm;       // RSA, ECC, ECC_JACOBIAN, ECC_BINARY
     string operation;       // keygen, sign, verify, encrypt, decrypt, etc.
     string params;          // key size or curve name
     int security_bits;      // equivalent security level in bits
@@ -229,7 +231,7 @@ vector<BenchmarkResult> benchmark_rsa(RNG& rng, int bits, int iters, bool verbos
 }
 
 // ============================================================================
-// ECC BENCHMARKS
+// ECC BENCHMARKS (PRIME FIELD - AFFINE COORDINATES)
 // ============================================================================
 
 int ecc_security_bits(CurveType type) {
@@ -245,7 +247,7 @@ CurveType parse_curve(const string& name) {
     if (name == "P-256" || name == "NIST_P256" || name == "p256") return CurveType::NIST_P256;
     if (name == "P-384" || name == "NIST_P384" || name == "p384") return CurveType::NIST_P384;
     if (name == "secp256k1" || name == "k1")                      return CurveType::SECP256K1;
-    throw runtime_error("Unknown curve: " + name);
+    throw runtime_error("Unknown prime curve: " + name);
 }
 
 // CSV-friendly curve name (no spaces or special chars)
@@ -265,15 +267,15 @@ vector<BenchmarkResult> benchmark_ecc(RNG& rng, CurveType curve_type,
     int sec = ecc_security_bits(curve_type);
     string params = csv_curve_name(curve_type);
 
-    if (verbose) cerr << "\n[ECC " << params << "]\n";
+    if (verbose) cerr << "\n[ECC-Affine " << params << "]\n";
 
-    // Key generation
+    // Key generation (affine)
     results.push_back(run_benchmark("ECC", "keygen", params, sec,
-        [&]() { generate_keypair(curve, rng); }, iters, verbose));
+        [&]() { generate_keypair(curve, rng, false); }, iters, verbose));
 
     // Generate keys for remaining benchmarks
-    ECKeyPair alice = generate_keypair(curve, rng);
-    ECKeyPair bob   = generate_keypair(curve, rng);
+    ECKeyPair alice = generate_keypair(curve, rng, false);
+    ECKeyPair bob   = generate_keypair(curve, rng, false);
 
     // Scalar multiplication (core operation)
     ECPoint G(curve.Gx, curve.Gy, &curve);
@@ -283,19 +285,19 @@ vector<BenchmarkResult> benchmark_ecc(RNG& rng, CurveType curve_type,
 
     // ECDH - shared secret computation
     results.push_back(run_benchmark("ECC", "ecdh", params, sec,
-        [&]() { ecdh_shared_secret(alice.private_key, bob.public_key); },
+        [&]() { ecdh_shared_secret(alice.private_key, bob.public_key, false); },
         iters, verbose));
 
     // ECDSA Sign
     string test_msg = "Benchmark test message for digital signature verification";
     results.push_back(run_benchmark("ECC", "sign", params, sec,
-        [&]() { ecdsa_sign(test_msg, alice.private_key, curve, rng); },
+        [&]() { ecdsa_sign(test_msg, alice.private_key, curve, rng, false); },
         iters, verbose));
 
     // ECDSA Verify
-    ECDSASignature sig = ecdsa_sign(test_msg, alice.private_key, curve, rng);
+    ECDSASignature sig = ecdsa_sign(test_msg, alice.private_key, curve, rng, false);
     results.push_back(run_benchmark("ECC", "verify", params, sec,
-        [&]() { ecdsa_verify(test_msg, sig, alice.public_key, curve); },
+        [&]() { ecdsa_verify(test_msg, sig, alice.public_key, curve, false); },
         iters, verbose));
 
     // SHA-256 hash (baseline reference)
@@ -306,33 +308,214 @@ vector<BenchmarkResult> benchmark_ecc(RNG& rng, CurveType curve_type,
 }
 
 // ============================================================================
+// ECC BENCHMARKS (PRIME FIELD - JACOBIAN COORDINATES)
+// ============================================================================
+
+/**
+ * Benchmarks the same prime field curves but using Jacobian coordinates.
+ * This allows direct comparison of affine vs Jacobian performance on
+ * identical operations and curve parameters.
+ *
+ * The algorithm label is "ECC_JACOBIAN" in CSV output so the visualization
+ * pipeline can distinguish between the two coordinate systems.
+ */
+vector<BenchmarkResult> benchmark_ecc_jacobian(RNG& rng, CurveType curve_type,
+                                                int iters, bool verbose) {
+    vector<BenchmarkResult> results;
+    CurveParams curve = get_curve_params(curve_type);
+    int sec = ecc_security_bits(curve_type);
+    string params = csv_curve_name(curve_type);
+
+    if (verbose) cerr << "\n[ECC-Jacobian " << params << "]\n";
+
+    // Key generation (Jacobian)
+    results.push_back(run_benchmark("ECC_JACOBIAN", "keygen", params, sec,
+        [&]() { generate_keypair(curve, rng, true); }, iters, verbose));
+
+    // Generate keys for remaining benchmarks (using Jacobian for consistency)
+    ECKeyPair alice = generate_keypair(curve, rng, true);
+    ECKeyPair bob   = generate_keypair(curve, rng, true);
+
+    // Scalar multiplication (Jacobian)
+    ECPoint G(curve.Gx, curve.Gy, &curve);
+    BigInt k = rng.random_range(to_ZZ(1), curve.n - 1);
+    results.push_back(run_benchmark("ECC_JACOBIAN", "scalar_mult", params, sec,
+        [&]() { ec_scalar_mult_jacobian(k, G); }, iters, verbose));
+
+    // ECDH (Jacobian)
+    results.push_back(run_benchmark("ECC_JACOBIAN", "ecdh", params, sec,
+        [&]() { ecdh_shared_secret(alice.private_key, bob.public_key, true); },
+        iters, verbose));
+
+    // ECDSA Sign (Jacobian)
+    string test_msg = "Benchmark test message for digital signature verification";
+    results.push_back(run_benchmark("ECC_JACOBIAN", "sign", params, sec,
+        [&]() { ecdsa_sign(test_msg, alice.private_key, curve, rng, true); },
+        iters, verbose));
+
+    // ECDSA Verify (Jacobian)
+    // Sign with Jacobian for consistency; the signature (r,s) is identical
+    // regardless of coordinate system used internally
+    ECDSASignature sig = ecdsa_sign(test_msg, alice.private_key, curve, rng, true);
+    results.push_back(run_benchmark("ECC_JACOBIAN", "verify", params, sec,
+        [&]() { ecdsa_verify(test_msg, sig, alice.public_key, curve, true); },
+        iters, verbose));
+
+    return results;
+}
+
+// ============================================================================
+// ECC BENCHMARKS (BINARY FIELD GF(2^m))
+// ============================================================================
+
+int binary_ecc_security_bits(BinaryCurveType type) {
+    switch (type) {
+        case BinaryCurveType::SECT163K1: return 80;
+        case BinaryCurveType::SECT233K1: return 112;
+        case BinaryCurveType::SECT283K1: return 128;
+        case BinaryCurveType::SECT233R1: return 112;
+        case BinaryCurveType::SECT283R1: return 128;
+        default: return 0;
+    }
+}
+
+BinaryCurveType parse_binary_curve(const string& name) {
+    if (name == "sect163k1") return BinaryCurveType::SECT163K1;
+    if (name == "sect233k1") return BinaryCurveType::SECT233K1;
+    if (name == "sect283k1") return BinaryCurveType::SECT283K1;
+    if (name == "sect233r1") return BinaryCurveType::SECT233R1;
+    if (name == "sect283r1") return BinaryCurveType::SECT283R1;
+    throw runtime_error("Unknown binary curve: " + name);
+}
+
+string csv_binary_curve_name(BinaryCurveType type) {
+    switch (type) {
+        case BinaryCurveType::SECT163K1: return "sect163k1";
+        case BinaryCurveType::SECT233K1: return "sect233k1";
+        case BinaryCurveType::SECT283K1: return "sect283k1";
+        case BinaryCurveType::SECT233R1: return "sect233r1";
+        case BinaryCurveType::SECT283R1: return "sect283r1";
+        default: return "custom_binary";
+    }
+}
+
+/**
+ * Benchmarks elliptic curve operations over binary fields GF(2^m).
+ *
+ * Operations benchmarked:
+ * - Key generation (scalar multiplication of generator)
+ * - Scalar multiplication (core operation)
+ * - ECDH shared secret computation
+ *
+ * Note: ECDSA over binary fields is not benchmarked here because our
+ * implementation focuses on the field arithmetic and point operations.
+ * The ECDSA algorithm itself is identical to prime fields; the difference
+ * lies entirely in the underlying field arithmetic.
+ */
+vector<BenchmarkResult> benchmark_ecc_binary(RNG& rng, BinaryCurveType curve_type,
+                                              int iters, bool verbose) {
+    vector<BenchmarkResult> results;
+    BinaryCurveParams curve = get_binary_curve_params(curve_type);
+    int sec = binary_ecc_security_bits(curve_type);
+    string params = csv_binary_curve_name(curve_type);
+
+    if (verbose) cerr << "\n[ECC-Binary " << params << " GF(2^" << curve.m << ")]\n";
+
+    // Initialize the binary field once
+    curve.init_field();
+
+    // Key generation
+    results.push_back(run_benchmark("ECC_BINARY", "keygen", params, sec,
+        [&]() { binary_generate_keypair(curve, rng); }, iters, verbose));
+
+    // Generate keys for remaining benchmarks
+    BinaryECKeyPair alice = binary_generate_keypair(curve, rng);
+    BinaryECKeyPair bob   = binary_generate_keypair(curve, rng);
+
+    // Scalar multiplication
+    GF2E Gx = curve.hex_to_gf2e(curve.Gx_hex);
+    GF2E Gy = curve.hex_to_gf2e(curve.Gy_hex);
+    BinaryECPoint G(Gx, Gy, &curve);
+    BigInt k = rng.random_range(to_ZZ(1), curve.n - 1);
+    results.push_back(run_benchmark("ECC_BINARY", "scalar_mult", params, sec,
+        [&]() { binary_ec_scalar_mult(k, G, curve.n); }, iters, verbose));
+
+    // ECDH shared secret
+    results.push_back(run_benchmark("ECC_BINARY", "ecdh", params, sec,
+        [&]() { binary_ecdh_shared_secret(alice.private_key, bob.public_key, curve.n); },
+        iters, verbose));
+
+    return results;
+}
+
+// ============================================================================
 // FULL COMPARISON MODE
 // ============================================================================
 
+/**
+ * Runs the complete comparative benchmark across all three dimensions:
+ *
+ * 1. RSA vs ECC (algorithm comparison)
+ *    - RSA: 1024, 2048, 3072, 4096 bits
+ *    - ECC: secp256k1, P-256, P-384 (affine coordinates)
+ *
+ * 2. Affine vs Jacobian (coordinate system comparison)
+ *    - Same curves benchmarked with both coordinate systems
+ *    - Allows direct measurement of Jacobian speedup
+ *
+ * 3. Prime field vs Binary field (field arithmetic comparison)
+ *    - Prime: P-256 (~128 bits), P-384 (~192 bits)
+ *    - Binary: sect283k1 (~128 bits), sect233k1 (~112 bits)
+ *    - Compared at equivalent security levels
+ */
 vector<BenchmarkResult> benchmark_comparison(RNG& rng, int iters, bool verbose) {
     vector<BenchmarkResult> all_results;
 
     if (verbose) {
-        cerr << "\n========================================\n"
+        cerr << "\n============================================================\n"
              << "FULL RSA vs ECC COMPARATIVE BENCHMARK\n"
-             << "========================================\n";
+             << "Dimensions: RSA vs ECC | Affine vs Jacobian | Fp vs GF(2^m)\n"
+             << "============================================================\n";
     }
 
-    // RSA key sizes
+    // --- Dimension 1: RSA key sizes ---
+    if (verbose) cerr << "\n--- RSA benchmarks ---\n";
     vector<int> rsa_sizes = {1024, 2048, 3072, 4096};
     for (int bits : rsa_sizes) {
         auto results = benchmark_rsa(rng, bits, iters, verbose);
         all_results.insert(all_results.end(), results.begin(), results.end());
     }
 
-    // ECC curves
-    vector<CurveType> curves = {
+    // --- Dimension 2a: ECC prime field (affine) ---
+    if (verbose) cerr << "\n--- ECC prime field (affine coordinates) ---\n";
+    vector<CurveType> prime_curves = {
         CurveType::SECP256K1,
         CurveType::NIST_P256,
         CurveType::NIST_P384
     };
-    for (auto ct : curves) {
+    for (auto ct : prime_curves) {
         auto results = benchmark_ecc(rng, ct, iters, verbose);
+        all_results.insert(all_results.end(), results.begin(), results.end());
+    }
+
+    // --- Dimension 2b: ECC prime field (Jacobian) ---
+    if (verbose) cerr << "\n--- ECC prime field (Jacobian coordinates) ---\n";
+    for (auto ct : prime_curves) {
+        auto results = benchmark_ecc_jacobian(rng, ct, iters, verbose);
+        all_results.insert(all_results.end(), results.begin(), results.end());
+    }
+
+    // --- Dimension 3: ECC binary field GF(2^m) ---
+    if (verbose) cerr << "\n--- ECC binary field GF(2^m) ---\n";
+    vector<BinaryCurveType> binary_curves = {
+        BinaryCurveType::SECT163K1,
+        BinaryCurveType::SECT233K1,
+        BinaryCurveType::SECT283K1,
+        BinaryCurveType::SECT233R1,
+        BinaryCurveType::SECT283R1
+    };
+    for (auto bt : binary_curves) {
+        auto results = benchmark_ecc_binary(rng, bt, iters, verbose);
         all_results.insert(all_results.end(), results.begin(), results.end());
     }
 
@@ -348,12 +531,17 @@ void print_usage(const char* prog) {
          << "\n"
          << "Modes:\n"
          << "  -a RSA         Benchmark RSA only\n"
-         << "  -a ECC         Benchmark ECC only\n"
-         << "  -a CMP         Full RSA vs ECC comparison (all sizes/curves)\n"
+         << "  -a ECC         Benchmark ECC (affine coordinates, prime field)\n"
+         << "  -a ECCJ        Benchmark ECC (Jacobian coordinates, prime field)\n"
+         << "  -a BIN         Benchmark ECC (binary field GF(2^m))\n"
+         << "  -a CMP         Full comparison (all algorithms, all coordinates)\n"
          << "\n"
          << "Parameters:\n"
          << "  -b BITS        RSA key size (default: 2048)\n"
-         << "  -c CURVE       ECC curve: secp256k1, P-256, P-384 (default: secp256k1)\n"
+         << "  -c CURVE       Curve name (default: secp256k1)\n"
+         << "                 Prime: secp256k1, P-256, P-384\n"
+         << "                 Binary: sect163k1, sect233k1, sect283k1,\n"
+         << "                         sect233r1, sect283r1\n"
          << "  -i ITERS       Iterations per benchmark (default: 10)\n"
          << "  -s MODE        Seed mode: fixed or random (default: fixed)\n"
          << "  -r FILE        Output raw per-iteration CSV to FILE\n"
@@ -367,7 +555,9 @@ void print_usage(const char* prog) {
          << "Examples:\n"
          << "  " << prog << " -a CMP -i 20 -v > results/summary.csv\n"
          << "  " << prog << " -a RSA -b 4096 -i 50 -r raw.csv > summary.csv\n"
-         << "  " << prog << " -a ECC -c P-384 -i 30 -v > ecc_p384.csv\n";
+         << "  " << prog << " -a ECC -c P-384 -i 30 -v > ecc_p384.csv\n"
+         << "  " << prog << " -a ECCJ -c P-256 -i 30 -v > ecc_jacobian.csv\n"
+         << "  " << prog << " -a BIN -c sect283k1 -i 10 -v > binary.csv\n";
 }
 
 int main(int argc, char** argv) {
@@ -396,8 +586,9 @@ int main(int argc, char** argv) {
         }
     }
 
-    if (algo != "RSA" && algo != "ECC" && algo != "CMP") {
-        cerr << "Error: Algorithm must be RSA, ECC, or CMP\n";
+    if (algo != "RSA" && algo != "ECC" && algo != "ECCJ"
+        && algo != "BIN" && algo != "CMP") {
+        cerr << "Error: Algorithm must be RSA, ECC, ECCJ, BIN, or CMP\n";
         return 1;
     }
 
@@ -420,6 +611,12 @@ int main(int argc, char** argv) {
         } else if (algo == "ECC") {
             CurveType ct = parse_curve(curve_name);
             results = benchmark_ecc(rng, ct, iterations, verbose);
+        } else if (algo == "ECCJ") {
+            CurveType ct = parse_curve(curve_name);
+            results = benchmark_ecc_jacobian(rng, ct, iterations, verbose);
+        } else if (algo == "BIN") {
+            BinaryCurveType bt = parse_binary_curve(curve_name);
+            results = benchmark_ecc_binary(rng, bt, iterations, verbose);
         } else {
             results = benchmark_comparison(rng, iterations, verbose);
         }

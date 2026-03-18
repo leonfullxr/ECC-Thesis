@@ -615,6 +615,15 @@ make test-rsa-2k ITERS=10
 
 # secp256k1 (Bitcoin)
 ./bin/bench -a ECC -c secp256k1 -i 10
+
+# Jacobian P-256
+./bin/bench -a ECCJ -c P-256 -i 20 -v > jacobian.csv
+
+# Binary field sect283k1
+./bin/bench -a BIN -c sect283k1 -i 10 -v > binary.csv
+
+# 3 dimensional comparison (RSA-3072 vs P-256 vs secp256k1)
+./bin/bench -a CMP -i 20 -v > results/summary.csv
 ```
 
 #### RNG analysis tests
