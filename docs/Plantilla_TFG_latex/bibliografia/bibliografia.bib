@@ -341,15 +341,6 @@ abstract="This paper explains the design and implementation of a high-security e
 isbn="978-3-540-33852-9"
 }
 
-@techreport{nist186-4,
-  author       = {{National Institute of Standards and Technology (NIST)}},
-  title        = {{Digital Signature Standard} (DSS)},
-  institution  = {NIST},
-  number       = {FIPS PUB 186-4},
-  year         = {2013},
-  url          = {https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf},
-}
-
 @incollection{hankerson2004,
   author    = {Darrel Hankerson and Scott Vanstone and Alfred Menezes},
   title     = {Guide to Elliptic Curve Cryptography},
@@ -364,4 +355,361 @@ isbn="978-3-540-33852-9"
   title  = {OpenSSL Benchmarking},
   year   = {2021},
   url    = {https://www.openssl.org/docs/manmaster/man1/openssl-speed.html},
+}
+
+
+% ------------------------------------------------------------------------------
+% Bibliografía genérica para el Capítulo 4 y 5
+% ------------------------------------------------------------------------------
+
+@article{Miller1986,
+  author    = {Miller, Victor S.},
+  title     = {Use of elliptic curves in cryptography},
+  journal   = {Advances in Cryptology—CRYPTO ’85 Proceedings},
+  year      = {1986},
+  pages     = {417--426},
+}
+@article{Koblitz1987,
+  author    = {Koblitz, Neal},
+  title     = {Elliptic curve cryptosystems},
+  journal   = {Mathematics of Computation},
+  volume    = {48},
+  number    = {177},
+  year      = {1987},
+  pages     = {203--209},
+}
+@misc{Rickard2016,
+  author    = {Rickard, Matt},
+  title     = {Elliptic Curve Cryptography for Beginners},
+  howpublished = {\url{https://mattrickard.com/elliptic-curve-cryptography}},
+  note      = {Accedido 2025-05-XX},
+}
+@article{Lenstra2000,
+  author    = {Lenstra, Arjen K. and Verheul, Eric R.},
+  title     = {Selecting Cryptographic Key Sizes},
+  journal   = {Journal of Cryptology},
+  volume    = {14},
+  number    = {4},
+  pages     = {255--293},
+  year      = {2001},
+}
+@book{ANSI_X9_62,
+  title     = {Public Key Cryptography for the Financial Services Industry},
+  author    = {{American National Standards Institute}},
+  year      = {1998},
+  publisher = {ANSI},
+}
+@misc{SEC2RFC5639,
+  author    = {{SECG}},
+  title     = {SEC 2: Recommended Elliptic Curve Domain Parameters},
+  howpublished = {\url{https://www.secg.org/sec2-v2.pdf}},
+  note      = {Accedido 2025-05-XX},
+}
+@misc{CFRC_Curves,
+  author    = {{CFRG}},
+  title     = {Recommended Curves for use in Internet Applications},
+  howpublished = {\url{https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-curves}},
+  note      = {Accedido 2025-05-XX},
+}
+@report{NIST-SP800-57rev4,
+  author    = {{NIST}},
+  title     = {Recommendation for Key Management Part 1},
+  institution = {National Institute of Standards and Technology},
+  number    = {SP 800-57 Rev. 4},
+  year      = {2016},
+}
+
+@inproceedings{gaudry2007breaking,
+  author       = {Gaudry, Pierrick and Thom{\'e}, Enge and Robert, Odette},
+  title        = {Breaking ECC2K-130: Discrete Logarithm Records over Large Fields},
+  booktitle    = {Advances in Cryptology – ASIACRYPT 2007},
+  series       = {LNCS},
+  volume       = {4833},
+  pages        = {109–128},
+  year         = {2007},
+  publisher    = {Springer},
+  doi          = {10.1007/978-3-540-76840-1\_7}
+}
+
+@standard{ansi_x962_1998,
+  title        = {Public Key Cryptography for the Financial Services Industry: The Elliptic Curve Digital Signature Algorithm (ECDSA)},
+  organization = {ANSI X9},
+  number       = {X9.62-1998},
+  year         = {1998}
+}
+
+@misc{nist_fips186_2,
+  author       = {{National Institute of Standards and Technology (NIST)}},
+  title        = {FIPS 186–2: Digital Signature Standard},
+  howpublished = {\url{https://csrc.nist.gov/publications/detail/fips/186/2/final}},
+  year         = {2000}
+}
+
+@misc{rfc5430,
+  author       = {{IETF}},
+  title        = {Suite B Profile for Transport Layer Security (TLS)},
+  howpublished = {RFC 5430},
+  year         = {2009},
+  url          = {https://tools.ietf.org/html/rfc5430}
+}
+
+@misc{rfc8422,
+  author       = {{IETF}},
+  title        = {Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS)},
+  howpublished = {RFC 8422},
+  year         = {2018},
+  url          = {https://tools.ietf.org/html/rfc8422}
+}
+
+@book{hankerson2004guide,
+  author    = {Hankerson, Darrel and Menezes, Alfred and Vanstone, Scott},
+  title     = {Guide to Elliptic Curve Cryptography},
+  publisher = {Springer},
+  year      = {2004},
+  address   = {New York, NY}
+}
+
+@misc{rfc4492,
+  author       = {{IETF}},
+  title        = {Elliptic Curve Cipher Suites for Transport Layer Security (TLS)},
+  howpublished = {RFC 4492},
+  year         = {2006},
+  url          = {https://tools.ietf.org/html/rfc4492}
+}
+
+@misc{rfc5656,
+  author       = {{IETF}},
+  title        = {Elliptic Curve Algorithm for Secure Shell (SSH)},
+  howpublished = {RFC 5656},
+  year         = {2009},
+  url          = {https://tools.ietf.org/html/rfc5656}
+}
+
+@inproceedings{wuille2017secp256k1,
+  author    = {Wuille, Pieter and Maxwell, Gregory},
+  title     = {{secp256k1}: A high-speed Elliptic Curve library},
+  booktitle = {Proceedings of the 1st Bitcoin Core Developer Conference},
+  year      = {2017},
+  url       = {https://github.com/bitcoin-core/secp256k1}
+}
+
+@inproceedings{hodges2001implementing,
+  author    = {Hodges, Daniel and Lee, Richard and Paar, Christof},
+  title     = {Efficient Elliptic Curve Exponentiation with Precomputation on Smart Cards},
+  booktitle = {Cryptographic Hardware and Embedded Systems (CHES 2001)},
+  series    = {LNCS},
+  volume    = {2162},
+  pages     = {129--143},
+  year      = {2001},
+  publisher = {Springer}
+}
+
+@article{boneh2001identity,
+  author  = {Boneh, Dan and Franklin, Matt},
+  title   = {Identity-Based Encryption from the Weil Pairing},
+  journal = {SIAM Journal on Computing},
+  volume  = {32},
+  number  = {3},
+  pages   = {586--615},
+  year    = {2003},
+  doi     = {10.1137/S0097539701398295}
+}
+
+@book{SilvermanAEC,
+  author    = {Joseph H. Silverman},
+  title     = {The Arithmetic of Elliptic Curves},
+  series    = {Graduate Texts in Mathematics},
+  volume    = {106},
+  year      = {1986},
+  publisher = {Springer},
+}
+
+@book{NIST-SP-800-186,
+  author    = {{NIST}},
+  title     = {Recommendation for Pair-Wise Key Establishment Schemes Using Discrete Logarithm Cryptography},
+  series    = {Special Publication 800-186},
+  year      = {2019},
+  publisher = {National Institute of Standards and Technology},
+}
+
+@article{KoblitzBinary,
+  author  = {Neal Koblitz},
+  title   = {Elliptic curve cryptosystems},
+  journal = {Mathematics of Computation},
+  volume  = {48},
+  number  = {177},
+  pages   = {203--209},
+  year    = {1987},
+}
+
+@article{Waterhouse1969,
+  author  = {William C. Waterhouse},
+  title   = {Abelian varieties over finite fields},
+  journal = {Annales scientifiques de l'{\'E}cole Normale Sup{\'e}rieure},
+  year    = {1969},
+  volume  = {2},
+  number  = {4},
+  pages   = {521--560},
+}
+
+
+@techreport{nist-sp800-57,
+  author       = {{National Institute of Standards and Technology (NIST)}},
+  title        = {{SP 800-57 Part 1 Rev. 5: Recommendation for Key Management}},
+  institution  = {NIST},
+  year         = {2020},
+  url          = {https://csrc.nist.gov/publications/detail/sp/800-57-part-1/rev-5/final},
+  note         = {Accessed: May 2025}
+}
+
+@techreport{nist-fips180-4,
+  author       = {{National Institute of Standards and Technology (NIST)}},
+  title        = {{FIPS PUB 180-4: Secure Hash Standard (SHS)}},
+  institution  = {NIST},
+  year         = {2015},
+  url          = {https://csrc.nist.gov/publications/detail/fips/180/4/final},
+  note         = {Accessed: May 2025}
+}
+
+@techreport{nist-sp800-56a,
+  author       = {{National Institute of Standards and Technology (NIST)}},
+  title        = {{SP 800-56A Rev. 3: Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography}},
+  institution  = {NIST},
+  year         = {2018},
+  url          = {https://csrc.nist.gov/publications/detail/sp/800-56a/rev-3/final},
+  note         = {Accessed: May 2025}
+}
+
+@misc{rfc8446,
+  author       = {Eric Rescorla},
+  title        = {{The Transport Layer Security (TLS) Protocol Version 1.3}},
+  howpublished = {RFC 8446},
+  year         = {2018},
+  url          = {https://tools.ietf.org/html/rfc8446}
+}
+
+@misc{rfc6979,
+  author       = {Thomas Pornin},
+  title        = {{Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)}},
+  howpublished = {RFC 6979},
+  year         = {2013},
+  url          = {https://tools.ietf.org/html/rfc6979}
+}
+
+@inproceedings{smart1999anomalous,
+  author       = {Nigel P. Smart},
+  title        = {The Discrete Logarithm Problem on Elliptic Curves of Trace One},
+  booktitle    = {Journal of Cryptology},
+  volume       = {12},
+  number       = {3},
+  pages        = {193--196},
+  year         = {1999},
+  doi          = {10.1007/s001459900052}
+}
+
+@inproceedings{menezes1993reducing,
+  author       = {Alfred J. Menezes and Tatsuaki Okamoto and Scott A. Vanstone},
+  title        = {Reducing Elliptic Curve Logarithms to Logarithms in a Finite Field},
+  booktitle    = {IEEE Transactions on Information Theory},
+  volume       = {39},
+  number       = {5},
+  pages        = {1639--1646},
+  year         = {1993},
+  doi          = {10.1109/18.259647}
+}
+
+@misc{ps3-ecdsa-fail,
+  author       = {fail0verflow},
+  title        = {Console Hacking 2010: {PS3} Epic Fail},
+  howpublished = {27th Chaos Communication Congress (27C3)},
+  year         = {2010},
+  url          = {https://events.ccc.de/congress/2010/Fahrplan/events/4087.en.html},
+  note         = {Accessed: May 2025}
+}
+
+@inproceedings{howgrave2001lattice,
+  author       = {Nick Howgrave-Graham and Nigel P. Smart},
+  title        = {Lattice Attacks on Digital Signature Schemes},
+  booktitle    = {Designs, Codes and Cryptography},
+  volume       = {23},
+  number       = {3},
+  pages        = {283--290},
+  year         = {2001},
+  doi          = {10.1023/A:1011214926272}
+}
+
+@inproceedings{shumow2007dual-ec,
+  author       = {Dan Shumow and Niels Ferguson},
+  title        = {On the Possibility of a Back Door in the {NIST SP800-90} {Dual Ec Prng}},
+  booktitle    = {CRYPTO 2007 Rump Session},
+  year         = {2007},
+  url          = {http://rump2007.cr.yp.to/15-shumow.pdf}
+}
+
+% referencias_cap5_suplemento_extra.bib
+% Referencias adicionales para las secciones suplementarias
+% (Pollard's rho y generacion de parametros)
+
+@article{pollard1978monte,
+  author  = {John M. Pollard},
+  title   = {Monte Carlo Methods for Index Computation (mod $p$)},
+  journal = {Mathematics of Computation},
+  volume  = {32},
+  number  = {143},
+  pages   = {918--924},
+  year    = {1978},
+  doi     = {10.1090/S0025-5718-1978-0491431-9}
+}
+
+@article{schoof1985elliptic,
+  author  = {Ren\'{e} Schoof},
+  title   = {Elliptic Curves Over Finite Fields and the Computation of Square Roots mod $p$},
+  journal = {Mathematics of Computation},
+  volume  = {44},
+  number  = {170},
+  pages   = {483--494},
+  year    = {1985},
+  doi     = {10.1090/S0025-5718-1985-0777280-6}
+}
+
+@techreport{sec1-v2,
+  author       = {{Standards for Efficient Cryptography Group (SECG)}},
+  title        = {{SEC 1: Elliptic Curve Cryptography}},
+  institution  = {SECG},
+  year         = {2009},
+  url          = {https://www.secg.org/sec1-v2.pdf},
+  note         = {Version 2.0}
+}
+
+% (Pollard's rho y generacion de parametros)
+
+@article{pollard1978monte,
+  author  = {John M. Pollard},
+  title   = {Monte Carlo Methods for Index Computation (mod $p$)},
+  journal = {Mathematics of Computation},
+  volume  = {32},
+  number  = {143},
+  pages   = {918--924},
+  year    = {1978},
+  doi     = {10.1090/S0025-5718-1978-0491431-9}
+}
+
+@article{schoof1985elliptic,
+  author  = {Ren\'{e} Schoof},
+  title   = {Elliptic Curves Over Finite Fields and the Computation of Square Roots mod $p$},
+  journal = {Mathematics of Computation},
+  volume  = {44},
+  number  = {170},
+  pages   = {483--494},
+  year    = {1985},
+  doi     = {10.1090/S0025-5718-1985-0777280-6}
+}
+
+@techreport{sec1-v2,
+  author       = {{Standards for Efficient Cryptography Group (SECG)}},
+  title        = {{SEC 1: Elliptic Curve Cryptography}},
+  institution  = {SECG},
+  year         = {2009},
+  url          = {https://www.secg.org/sec1-v2.pdf},
+  note         = {Version 2.0}
 }
