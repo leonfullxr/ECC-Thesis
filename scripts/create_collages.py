@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
 create_collages.py
-Combines individual benchmark charts into 2 collage images for README.
+Combines individual benchmark charts into 3 collage images for README.
 Author: Leon Elliott Fuller
-Date: 2026-02-28
+Date: 2026-03-18
 
 Usage:
     python3 create_collages.py <charts_dir> <output_dir>
@@ -71,9 +71,7 @@ def main():
 
     # ================================================================
     # Collage 1: RSA vs ECC Comparative Overview
-    #   Top row:    Summary table (full width)
-    #   Middle row: Keygen comparison + Speedup ratios
-    #   Bottom row: Sign/Verify comparison (full width)
+    #   Summary table + Keygen comparison + Speedup ratios + Sign/Verify
     # ================================================================
     print('Creating collage 1: Comparative Overview...')
 
@@ -89,8 +87,7 @@ def main():
 
     # ================================================================
     # Collage 2: Detailed Analysis
-    #   Top row:    RSA scaling + ECC curves
-    #   Bottom row: Distribution sign + Distribution verify
+    #   RSA scaling + ECC curves + Distribution sign + Distribution verify
     # ================================================================
     print('Creating collage 2: Detailed Analysis...')
 
@@ -102,6 +99,22 @@ def main():
     imgs_2 = [img for img in [rsa_scale, ecc_curve, dist_sign, dist_ver] if img is not None]
     if imgs_2:
         create_collage(imgs_2, os.path.join(output_dir, 'collage_detailed.png'),
+                        cols=2, padding=15)
+
+    # ================================================================
+    # Collage 3: Coordinate Systems & Field Arithmetic (NEW)
+    #   Affine vs Jacobian + Jacobian speedup + Binary curves + Prime vs Binary
+    # ================================================================
+    print('Creating collage 3: Coordinates & Fields...')
+
+    aff_jac    = load('chart_affine_vs_jacobian.png')
+    jac_speed  = load('chart_jacobian_speedup.png')
+    bin_curves = load('chart_binary_curves.png')
+    prime_bin  = load('chart_prime_vs_binary.png')
+
+    imgs_3 = [img for img in [aff_jac, jac_speed, bin_curves, prime_bin] if img is not None]
+    if imgs_3:
+        create_collage(imgs_3, os.path.join(output_dir, 'collage_coordinates_fields.png'),
                         cols=2, padding=15)
 
     print('Done.')
