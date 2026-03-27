@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # run_benchmarks.sh
 # Master script for RSA vs ECC comparative benchmarking
-# Compiles the project, runs all benchmarks, generates visualizations
+# Supports: RSA, ECC (affine), ECC (Jacobian), ECC (binary fields)
 # Author: Leon Elliott Fuller
-# Date: 2026-02-28
+# Date: 2026-03-18
 set -euo pipefail
 
 # ============================================================================
@@ -14,7 +14,7 @@ ITERATIONS=${1:-10}
 SEED_MODE="fixed"
 RESULTS_DIR="results"
 BIN="./bin/bench"
-SRC_FILES="main.cpp rng.cpp rsa.cpp ecc.cpp sha256.cpp"
+SRC_FILES="main.cpp rng.cpp rsa.cpp ecc.cpp ecc_binary.cpp sha256.cpp"
 CXX_FLAGS="-std=c++17 -O2"
 LIBS="-lntl -lgmp -lpthread"
 
@@ -24,6 +24,7 @@ LIBS="-lntl -lgmp -lpthread"
 
 echo "============================================================"
 echo "  RSA vs ECC Comparative Benchmark Suite"
+echo "  Dimensions: RSA vs ECC | Affine vs Jacobian | Fp vs GF(2^m)"
 echo "============================================================"
 echo ""
 echo "  Iterations per test:  $ITERATIONS"
@@ -98,11 +99,15 @@ echo "[3/4] Verifying benchmark data..."
 ROW_COUNT=$(tail -n +2 "$SUMMARY" | wc -l)
 echo "  $ROW_COUNT benchmark results collected."
 
-# Quick sanity check
+# Per-algorithm counts
 RSA_COUNT=$(grep -c "^RSA," "$SUMMARY" || true)
 ECC_COUNT=$(grep -c "^ECC," "$SUMMARY" || true)
-echo "  RSA benchmarks: $RSA_COUNT"
-echo "  ECC benchmarks: $ECC_COUNT"
+ECCJ_COUNT=$(grep -c "^ECC_JACOBIAN," "$SUMMARY" || true)
+BIN_COUNT=$(grep -c "^ECC_BINARY," "$SUMMARY" || true)
+echo "  RSA benchmarks:          $RSA_COUNT"
+echo "  ECC (affine) benchmarks: $ECC_COUNT"
+echo "  ECC (Jacobian):          $ECCJ_COUNT"
+echo "  ECC (binary field):      $BIN_COUNT"
 echo ""
 
 # ============================================================================
