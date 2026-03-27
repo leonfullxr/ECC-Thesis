@@ -4,6 +4,10 @@
    <img src="docs/Plantilla_TFG_latex/imagenes/torus.png" alt="Cypher Logo" width="100%">
 </p>
 
+<p align="center">
+   <img src="results/collage_comparison.png" alt="RSA vs ECC Comparative Overview" width="100%">
+</p>
+
 ---
 
 ## Table of Contents
