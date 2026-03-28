@@ -210,6 +210,7 @@ En efecto, \(11 \times 13 = 143\), y hemos usado solo tres multiplicaciones de 2
 La eficiencia de la multiplicación en campos finitos es crucial en esquemas de curvas elípticas, ya que, las limitaciones de los multiplicadores enteros y el coste del acarreo pueden convertirse en cuellos de botella en implementaciones directas.
 
 \section{Aritmética en \texorpdfstring{$\mathbb{F}_{2^m}$}{F2m}}
+\label{sec:aritmetica-f2m}
 Los campos finitos de orden $2^m$, también llamados \emph{campos binarios}, se construyen como extensiones de polinomios:
 \[
   \mathbb{F}_{2^m}\cong\mathbb{F}_2[x]/(f(x)),
@@ -286,12 +287,12 @@ La suma de elementos de \(\mathbb{F}_{2^m}\) se realiza bit a bit (XOR) en cada 
 \caption{Suma en \(\mathbb{F}_{2^m}\)}
 \label{alg:add_f2m}
 \begin{algorithmic}[1]
-\REQUIRE Arreglos \(A[0..t-1]\) y \(B[0..t-1]\) que representan los coeficientes de \(a(z)\) y \(b(z)\).
-\ENSURE Arreglo \(C[0..t-1]\) que representa \(c(z)=a(z)+b(z)\).
-\FOR{\(i = 0\) \TO \(t-1\)}
-  \STATE \(C[i] \leftarrow A[i]\;\oplus\;B[i]\)
-\ENDFOR
-\RETURN \(C\)
+\Require Arreglos \(A[0..t-1]\) y \(B[0..t-1]\) que representan los coeficientes de \(a(z)\) y \(b(z)\).
+\Ensure Arreglo \(C[0..t-1]\) que representa \(c(z)=a(z)+b(z)\).
+\For{\(i = 0\) \textbf{ to } \(t-1\)}
+  \State \(C[i] \leftarrow A[i]\;\oplus\;B[i]\)
+\EndFor
+\State \Return \(C\)
 \end{algorithmic}
 \end{algorithm}
 
@@ -340,16 +341,22 @@ En la iteración \(i\), se calcula
 \caption{Multiplicación "shift-and-add" en \(\mathbb{F}_{2^m}\)}
 \label{alg:mul_f2m}
 \begin{algorithmic}[1]
-\REQUIRE Polinomios binarios \(A[0..t-1]\) y \(B[0..t-1]\) que representan \(a(z)\) y \(b(z)\).
-\ENSURE Polinomio \(C[0..t-1]\) que representa \(c(z)=a(z)\,\cdot\,b(z)\bmod f(z)\).
-\STATE \(C \gets 0\)
-\IF{\(a_0 = 1\)} \STATE \(C \gets B\) \ENDIF
-\FOR{\(i = 1\) \TO \(m-1\)}
-  \STATE Desplazar \(B\) un bit a la izquierda
-  \IF{el bit desplazado era \(1\)} \STATE \(B \gets B \oplus R\) \ENDIF
-  \IF{\(a_i = 1\)} \STATE \(C \gets C \oplus B\) \ENDIF
-\ENDFOR
-\RETURN \(C\)
+\Require Polinomios binarios \(A[0..t-1]\) y \(B[0..t-1]\) que representan \(a(z)\) y \(b(z)\).
+\Ensure Polinomio \(C[0..t-1]\) que representa \(c(z)=a(z)\,\cdot\,b(z)\bmod f(z)\).
+\State \(C \gets 0\)
+\If{\(a_0 = 1\)}
+  \State \(C \gets B\)
+\EndIf
+\For{\(i = 1\) \textbf{ to } \(m-1\)}
+  \State Desplazar \(B\) un bit a la izquierda
+  \If{el bit desplazado era \(1\)}
+    \State \(B \gets B \oplus R\)
+  \EndIf
+  \If{\(a_i = 1\)}
+    \State \(C \gets C \oplus B\)
+  \EndIf
+\EndFor
+\State \Return \(C\)
 \end{algorithmic}
 \end{algorithm}
 
@@ -463,31 +470,31 @@ Como se ha mencionado anteriormente, la elección del campo finito sobre el que 
 \begin{itemize}
   \item \textbf{Campos primos \(\mathbb{F}_p\):}  
     \begin{itemize}
-      \item Muy usados en estándares (p.ej. NIST P-256, SECP256k1)~\citep{nist186-4}.
-      \item Operaciones de multiplicación y reducción pueden aprovechar multiplicadores de enteros en hardware~\citep{hankerson2004}.  
-      \item Más sencillos de proteger frente a canales laterales (menos ramificaciones en tiempo de reducción)~\citep{kocher-sca}.
+      \item Muy usados en estándares (p.ej. NIST P-256, SECP256k1)~\citep{nist-fips186-4}.
+      \item Operaciones de multiplicación y reducción pueden aprovechar multiplicadores de enteros en hardware~\citep{hankerson2004guide}.  
+      \item Más sencillos de proteger frente a canales laterales (menos ramificaciones en tiempo de reducción)~\citep{kocher1999dpa}.
     \end{itemize}
   \item \textbf{Campos binarios \(\mathbb{F}_{2^m}\):}  
     \begin{itemize}
-      \item Ventajosos en hardware ligero (solo desplazamientos y XOR)~\citep{secg2}.
-      \item Menos populares en software general-propósito porque requieren multiplicación bit-a-bit~\citep{hankerson2004}.  
-      \item Históricamente usados en tarjetas inteligentes y estándares ISO/IEC~\citep{secg2}.  
+      \item Ventajosos en hardware ligero (solo desplazamientos y XOR)~\citep{sec2-v2}.
+      \item Menos populares en software general-propósito porque requieren multiplicación bit-a-bit~\citep{hankerson2004guide}.  
+      \item Históricamente usados en tarjetas inteligentes y estándares ISO/IEC~\citep{sec2-v2}.  
     \end{itemize}
   \item \textbf{Campos de extensión óptima (OEF):}  
     \begin{itemize}
       \item Diseñados para casar la longitud de palabra del procesador con la aritmética de \(\mathbb{F}_p\).  
       \item Permiten reducir costes de acarreo y de reducción polinómica.  
-      \item Para aplicaciones de alto rendimiento, se emplean de Tipo I o II cuyas operaciones en \(\mathbb{F}_p\) caben en una palabra de máquina y el polinomio de reducción es un binomio simple \((z^m-\omega)\)~\citep{militzer-oef,barreto-oef}. Ejemplos concretos se recogen en la Tabla \ref{tab:oef_params}.
+      \item Para aplicaciones de alto rendimiento, se emplean de Tipo I o II cuyas operaciones en \(\mathbb{F}_p\) caben en una palabra de máquina y el polinomio de reducción es un binomio simple \((z^m-\omega)\)~\citep{militzer2004oef,barreto2003oef}. Ejemplos concretos se recogen en la Tabla \ref{tab:oef_params}.
     \end{itemize}
 \end{itemize}
 
 \subsection*{Criterios de selección}
 Al diseñar un sistema ECC, se ha de considerar lo siguiente:
 \begin{enumerate}
-  \item \emph{Rendimiento}: mediante tiempos de multiplicación e inversión. En CPU modernas, usar primos especiales (Mersenne, pseudo-Mersenne) acelera la reducción\citep{10.1007/11745853_14}.
-  \item \emph{Resistencia a canales laterales}: operaciones condicionales mínimas, tiempo de ejecución constante y operaciones atómicas~\citep{kocher-sca}.
-  \item \emph{Compatibilidad y estandarización}: preferir curvas en \(\mathbb{F}_p\) ampliamente auditadas (p.ej. curvas NIST, Brainpool, Curve25519)~\citep{cfrg-curves}.
-  \item \emph{Constrain hardware}: en dispositivos con ALU reducida puede convenir \(\mathbb{F}_{2^m}\) o OEF para evitar multiplicadores de enteros avanzados~\citep{militzer-oef}.
+  \item \emph{Rendimiento}: mediante tiempos de multiplicación e inversión. En CPU modernas, usar primos especiales (Mersenne, pseudo-Mersenne) acelera la reducción\citep{bernstein2006curve25519}.
+  \item \emph{Resistencia a canales laterales}: operaciones condicionales mínimas, tiempo de ejecución constante y operaciones atómicas~\citep{kocher1999dpa}.
+  \item \emph{Compatibilidad y estandarización}: preferir curvas en \(\mathbb{F}_p\) ampliamente auditadas (p.ej. curvas NIST, Brainpool, Curve25519)~\citep{ietf-cfrg}.
+  \item \emph{Constrain hardware}: en dispositivos con ALU reducida puede convenir \(\mathbb{F}_{2^m}\) o OEF para evitar multiplicadores de enteros avanzados~\citep{militzer2004oef}.
 \end{enumerate}
 
 \subsection*{Ejemplo de comparativa de costes}
@@ -507,4 +514,4 @@ Al diseñar un sistema ECC, se ha de considerar lo siguiente:
   \label{tab:comparativa_campos}
 \end{table}
 
-Los tiempos de la Tabla~\ref{tab:comparativa_campos} se basan en benchmarks de OpenSSL y estudios de referencia en la literatura~\citep{openssl-bench,hankerson2004}. Veremos y comprobaremos todo esto en la práctica, donde analizaremos la eficiencia en tiempo de cómputo de los distintos campos, junto con parámetros específicos recomendados por el NIST.
+Los tiempos de la Tabla~\ref{tab:comparativa_campos} se basan en benchmarks de OpenSSL y estudios de referencia en la literatura~\citep{openssl-bench,hankerson2004guide}. Veremos y comprobaremos todo esto en la práctica, donde analizaremos la eficiencia en tiempo de cómputo de los distintos campos, junto con parámetros específicos recomendados por el NIST.

@@ -66,6 +66,7 @@ siendo \(k'\) la clave de descifrado asociada a la clave de cifrado \(k\).
 \end{figure}
 
 \section{Criptografía sin clave o Funciones hash}
+\label{sec:hash-funciones}
 Las funciones hash son funciones unidireccionales de cálculo sencillo y eficiente, utilizadas para garantizar la integridad de los datos. Se aplican a un mensaje \(M\) produciendo un valor de longitud fija:
 \[
   M \;\longmapsto\; H(M),
@@ -85,15 +86,15 @@ Para su uso en criptografía, \(H\) debe satisfacer al menos:
 Cuando \(H\) es público y sin clave, se le llama \emph{código de detección de modificaciones} (MDC). Si se añade una clave secreta al cómputo de hash, obtenemos un \emph{código de autenticación de mensaje} (MAC), que ofrece además autenticación del origen junto con integridad.
 
 \subsection{MD5}
-El MD5 (Message-Digest Algorithm 5) procesa el mensaje de entrada en bloques sucesivos de 512 bits y produce un resumen (digest) de 128 bits~\citep{IETF1321}.  
-Su diseño sigue la construcción de Merkle–Damgard, inicializando cuatro registros de 32 bits y aplicando cuatro rondas de 16 operaciones cada una por bloque~\citep{Wang04_MD5}.  
-En 2004 se demostró que MD5 ya no es resistente a colisiones: dos entradas diferentes pueden colisionar y producir el mismo digest en tiempo práctico~\citep{Wang04_MD5}.  
-Por ejemplo, en 2009, Marc Stevens, Arjen Lenstra y Benne de Weger, un grupo de investigadores, construyeron colisiones con prefijos elegidos y generaron un certificado CA malicioso~\citep{Stevens09_MD5_CA}.  
-Actualmente se desaconseja MD5 para cualquier uso criptográfico y se recomienda SHA-2 o SHA-3 como alternativas seguras~\citep{NIST_SP800131A}.
+El MD5 (Message-Digest Algorithm 5) procesa el mensaje de entrada en bloques sucesivos de 512 bits y produce un resumen (digest) de 128 bits~\citep{rivest1992md5}.  
+Su diseño sigue la construcción de Merkle–Damgard, inicializando cuatro registros de 32 bits y aplicando cuatro rondas de 16 operaciones cada una por bloque~\citep{wang2004md5}.  
+En 2004 se demostró que MD5 ya no es resistente a colisiones: dos entradas diferentes pueden colisionar y producir el mismo digest en tiempo práctico~\citep{wang2004md5}.  
+Por ejemplo, en 2009, Marc Stevens, Arjen Lenstra y Benne de Weger, un grupo de investigadores, construyeron colisiones con prefijos elegidos y generaron un certificado CA malicioso~\citep{stevens2009md5-ca}.  
+Actualmente se desaconseja MD5 para cualquier uso criptográfico y se recomienda SHA-2 o SHA-3 como alternativas seguras~\citep{nist-sp800-131a}.
 
 
 \subsection{SHA-1}
-El SHA (Secure Hash Algorithm 1), fue publicado en 1995 como FIPS 180-1 por el NIST~\citep{FIPS1801}. Procesa los datos de entrada en bloques de 512 bits al igual que MD5, pero produce un digest de 160 bits con cinco registros de 32 bits y 80 rondas de mezcla~\citep{FIPS1801}. Su algoritmo es el siguiente:
+El SHA (Secure Hash Algorithm 1), fue publicado en 1995 como FIPS 180-1 por el NIST~\citep{nist-fips180-1}. Procesa los datos de entrada en bloques de 512 bits al igual que MD5, pero produce un digest de 160 bits con cinco registros de 32 bits y 80 rondas de mezcla~\citep{nist-fips180-1}. Su algoritmo es el siguiente:
 \begin{enumerate}
     \item Se toma el mensaje original y se rellena hasta alcanzar una longitud de $448 \mod 512$ bits. Es decir, al dividir la longitud total entre 512, el resto debe ser 448.
     \item Se añade un campo de 64 bits que indica la longitud del mensaje original (incluyendo el propio relleno). Así, la longitud total del mensaje resultante, denotado $P'$, será un múltiplo de 512 bits.
@@ -103,7 +104,7 @@ El SHA (Secure Hash Algorithm 1), fue publicado en 1995 como FIPS 180-1 por el N
 
 Una vez terminado el cálculo, el buffer de 160 bits contiene el valor del compendio de mensaje. El SHA es $2^{32}$ veces más seguro que el MD5, pero su cálculo es más lento.
 
-En 2005 Xiaoyun Wang y colaboradores redujeron la complejidad para hallar colisiones de \(2^{80}\) a \(2^{63}\) operaciones~\citep{Wang05_SHA1}, y en 2017 Google y CWI demostraron la primera colisión real de SHA-1 en el experimento \emph{SHAttered}~\citep{GoogleShattered}. El NIST anunció en 2011 la deprecación de SHA-1 y ha planificado retirarla completamente para fines de 2030~\citep{NIST_SP800131A}. Chrome dejó de aceptar certificados TLS firmados con SHA-1 en enero de 2017~\citep{ChromeDeprecateSHA1}, Mozilla Firefox siguió en febrero de 2017~\citep{MozillaDeprecateSHA1} y Microsoft finalizó el soporte para contenidos firmados con SHA-1 en 2021~\citep{MicrosoftSHA1Deprecation}.
+En 2005 Xiaoyun Wang y colaboradores redujeron la complejidad para hallar colisiones de \(2^{80}\) a \(2^{63}\) operaciones~\citep{wang2005sha1}, y en 2017 Google y CWI demostraron la primera colisión real de SHA-1 en el experimento \emph{SHAttered}~\citep{google-shattered}. El NIST anunció en 2011 la deprecación de SHA-1 y ha planificado retirarla completamente para fines de 2030~\citep{nist-sp800-131a}. Chrome dejó de aceptar certificados TLS firmados con SHA-1 en enero de 2017~\citep{chrome-sha1}, Mozilla Firefox siguió en febrero de 2017~\citep{mozilla-sha1} y Microsoft finalizó el soporte para contenidos firmados con SHA-1 en 2021~\citep{microsoft-sha1}.
 
 \section{Criptografía de clave privada o simétrica}
 Un cifrado simétrico utiliza una clave $k$ elegida de un espacio (conjunto) de claves posibles $K$ para cifrar un mensaje $m$ perteneciente al conjunto de mensajes posibles $M$, generando un texto cifrado $c \in C$.
@@ -194,7 +195,7 @@ Este ataque se conoce como ataque de búsqueda exhaustiva (o ataque de fuerza br
 Para muchos criptosistemas, existen refinamientos al ataque de búsqueda exhaustiva que sustituyen efectivamente el tamaño del espacio por su raíz cuadrada. Estos métodos se basan en el principio de que es más fácil encontrar objetos coincidentes (colisiones) en un conjunto que localizar un objeto en particular. Describimos algunos de estos ataques de "man-in-the-middle" o de colisiones en la sección 2.6. Si están disponibles ataques de este tipo, se deberá de escoger \(B_k \ge 160\).
 
 
-Existen distintos modos de funcionamiento para los cifrados de bloques. El \emph{Electronic CodeBook} (ECB) y el \emph{Cipher-Block Chanining} (CBC) son dos de los modos más antiguos. Entre los sistemas de cifrado por bloques más conocidos están el Data Encryption Standard, Triple DES (3DES)\citep{tdes-techtarget}, Advanced Encryption Standard (AES)\citep{aes-nist} y Twofish\citep{Block_Cipher}\citep{twofish-schneier}.
+Existen distintos modos de funcionamiento para los cifrados de bloques. El \emph{Electronic CodeBook} (ECB) y el \emph{Cipher-Block Chanining} (CBC) son dos de los modos más antiguos. Entre los sistemas de cifrado por bloques más conocidos están el Data Encryption Standard, Triple DES (3DES)\citep{techtarget-3des}, Advanced Encryption Standard (AES)\citep{nist-fips197} y Twofish\citep{binaryterms-block}\citep{schneier-twofish}.
 
 
 \subsubsection{ECB}
@@ -248,7 +249,7 @@ En la figura se muestra un ejemplo de funcionamiento del mismo~\ref{fig:CBC_bloc
     \label{fig:CBC_block_cypher}
 \end{figure}
 
-Una desventaja del mismo es que si se reutiliza el mismo IV para dos mensajes idénticos, se obtendrán los mismos bloques $C_1$, lo que compromete seguridad\cite{Block_Cipher}.
+Una desventaja del mismo es que si se reutiliza el mismo IV para dos mensajes idénticos, se obtendrán los mismos bloques $C_1$, lo que compromete seguridad\cite{binaryterms-block}.
 
 \subsection{Cifrado de flujo}
 Los cifrados de flujo son ciertamente cifrados de bloque con una longitud de bloque igual a uno. Lo que los hace útiles es que la transformación de cifrado puede cambiar para cada símbolo del texto plano que se cifra.También pueden usarse cuando los datos deben procesarse símbolo por símbolo (por ejemplo, si el equipo no dispone de memoria o el almacenamiento intermedio es limitado).
@@ -269,7 +270,7 @@ D_{d_i}(c_i) = m_i
 
 Este tipo de criptografía se basa en hacer un cifrado bit a bit, esto se logra usando la operación XOR. Se utiliza un algoritmo determinístico que genera una secuencia pseudoaletoria de bits que junto con los bits del mensaje se van cifrando utilizando la operación XOR.
 
-Un ejemplo de ello es el cifrado de vernam~\citep{vernam}, definido sobre $A = \{0, 1\}$. Dado un mensaje binario $m_1m_2\ldots m_t$ y una clave binaria $k_1k_2\ldots k_t$ de la misma longitud, el texto cifrado es:
+Un ejemplo de ello es el cifrado de vernam~\citep{cryptomuseum-vernam}, definido sobre $A = \{0, 1\}$. Dado un mensaje binario $m_1m_2\ldots m_t$ y una clave binaria $k_1k_2\ldots k_t$ de la misma longitud, el texto cifrado es:
 
 \[
 c_i = m_i \oplus k_i, \quad 1 \leq i \leq t
@@ -285,8 +286,8 @@ Si la clave es aleatoria y no se reutiliza, se denomina \textbf{one-time pad}.
 
 El flujo de claves determina cuál se aplica a cada símbolo.
 
-Algunos ejemplos de cifrado de flujo son RC4 (usado en redes inalámbricas)\cite{rc4-ietf,rc4-gfg} y A5 (usado en
-telefonía celular)\cite{a5-nop,a5-ucsb}.
+Algunos ejemplos de cifrado de flujo son RC4 (usado en redes inalámbricas)\cite{rfc6229,gfg-rc4} y A5 (usado en
+telefonía celular)\cite{stockinger2005a5,jensen2017a5}.
 
 \section{Criptografía de clave pública o asimétrica}
 Si Alice y Bob quieren intercambiar mensajes usando un cifrado simétrico, deben primero acordar mutuamente una clave secreta \(k\). Esto es factible si tienen la oportunidad de reunirse en secreto o si pueden comunicarse una vez por un canal seguro. Pero ¿qué ocurre si no disponen de esa oportunidad y cada comunicación entre ellos es vigilada por su adversaria Eva? ¿Es posible que Alice y Bob intercambien una clave secreta en estas condiciones?
@@ -323,7 +324,7 @@ Resulta fascinante que Diffie y Hellman concibieran este concepto sin contar con
 \end{figure}
 
 \subsection{Intercambio de claves Diffie–Hellman}\label{sec:diffie_hellman}
-Como hemos mencionado anteriormente, el protocolo de Diffie-Hellman, publicado en 1976 \cite{diffie-hellman}, resuelve el problema de dos entidades que desean compartir una clave secreta para usar en un cifrado simétrico, pero su único canal de comunicación es inseguro y todo lo que intercambian lo observa el intruso. ¿Cómo pueden establecer una clave que el intruso no pueda deducir? La brillante idea de Diffie y Hellman fue aprovechar la dificultad del problema del logaritmo discreto en \(\mathbb{F}_p^*\). A continuación, se muestra el procedimiento del mismo:
+Como hemos mencionado anteriormente, el protocolo de Diffie-Hellman, publicado en 1976 \cite{diffie1976new}, resuelve el problema de dos entidades que desean compartir una clave secreta para usar en un cifrado simétrico, pero su único canal de comunicación es inseguro y todo lo que intercambian lo observa el intruso. ¿Cómo pueden establecer una clave que el intruso no pueda deducir? La brillante idea de Diffie y Hellman fue aprovechar la dificultad del problema del logaritmo discreto en \(\mathbb{F}_p^*\). A continuación, se muestra el procedimiento del mismo:
 
 \begin{enumerate}
   \item Alice y Bob acuerdan públicamente un primo grande \(p\) y un generador \(g\) de \(\mathbb{F}_p^*\).  
@@ -395,11 +396,11 @@ Hasta la fecha, la encriptación de clave pública es sustancialmente más lenta
 \end{enumerate}
 
 \paragraph{Observación (tamaños de clave)}  
-Para lograr un nivel de seguridad equivalente, las claves privadas en sistemas de clave pública (por ejemplo, 2048 o 3072 bits en RSA) deben ser mucho más largas que las secretas en sistemas simétricos (por ejemplo, 128 bits en AES). Esto se debe a que, mientras que el ataque más eficiente contra la simétrica es la búsqueda exhaustiva, los sistemas de clave pública conocidos admiten algoritmos \emph{atajo} (por ejemplo, factorización) más eficientes que el barrido completo del espacio de claves. Por tanto, para igualar los 128 bits simétricos, se requieren claves RSA de unos 3072 bits, es decir, más de 24 veces más largas, aunque valores del orden de 10 veces mayores se citan frecuentemente en la literatura~\citep{SecurityStrengthRSA}.
+Para lograr un nivel de seguridad equivalente, las claves privadas en sistemas de clave pública (por ejemplo, 2048 o 3072 bits en RSA) deben ser mucho más largas que las secretas en sistemas simétricos (por ejemplo, 128 bits en AES). Esto se debe a que, mientras que el ataque más eficiente contra la simétrica es la búsqueda exhaustiva, los sistemas de clave pública conocidos admiten algoritmos \emph{atajo} (por ejemplo, factorización) más eficientes que el barrido completo del espacio de claves. Por tanto, para igualar los 128 bits simétricos, se requieren claves RSA de unos 3072 bits, es decir, más de 24 veces más largas, aunque valores del orden de 10 veces mayores se citan frecuentemente en la literatura~\citep{stackexchange-rsa-strength}.
 
 \section{Principios de diseño criptográfico}
 
-En 1883, Auguste Kerckhoffs~\cite{Petitcolas2011Kerckhoffs} formuló seis principios esenciales para el diseño de sistemas criptográficos:
+En 1883, Auguste Kerckhoffs~\cite{petitcolas2011kerckhoffs} formuló seis principios esenciales para el diseño de sistemas criptográficos:
 
 \begin{enumerate}
   \item \textbf{Indescifrabilidad práctica:} El sistema debe ser, cuanto menos, imposible de romper en la práctica.
@@ -416,15 +417,15 @@ La seguridad de un sistema criptográfico se evalúa frente a distintos modelos 
 \subsection{Ataques pasivos y activos}
 
 \begin{description}
-  \item[Ataques pasivos:] El atacante únicamente observa el tráfico cifrado (o el sistema) sin modificarlo. Incluyen la intercepción de mensajes y el análisis de tráfico, en los que se extrae información de patrones de comunicación \cite{different_types_cryptography_attacks}\cite{active_and_passive_attacks_in_information_security}.
-  \item[Ataques activos:] El atacante altera, inyecta o interfiere el flujo de datos. Ejemplos típicos son el man-in-the-middle (interposición entre emisor y receptor) y la modificación de mensajes en tránsito \cite{what_are_cryptographic_attacks}.
+  \item[Ataques pasivos:] El atacante únicamente observa el tráfico cifrado (o el sistema) sin modificarlo. Incluyen la intercepción de mensajes y el análisis de tráfico, en los que se extrae información de patrones de comunicación \cite{infosectrain-attacks}\cite{gfg-active-passive}.
+  \item[Ataques activos:] El atacante altera, inyecta o interfiere el flujo de datos. Ejemplos típicos son el man-in-the-middle (interposición entre emisor y receptor) y la modificación de mensajes en tránsito \cite{goallsecure-attacks}.
 \end{description}
 
 \subsection{Modelos clásicos de criptoanálisis}
 
 \begin{itemize}
   \item \emph{Ataque por texto cifrado únicamente (COA):} El atacante dispone solo del texto cifrado. Es el caso más habitual porque en la práctica los atacantes a menudo solo logran capturar mensajes cifrados sin más información.
-  \item \emph{Fuerza bruta (exhaustiva):} Se calculan y prueban todas las claves posibles hasta dar con la correcta. Su dificultad depende únicamente del tamaño de la clave \cite{cryptography_attacks_6_types_and_prevention}\cite{types_of_cryptographic_attacks_to_know}.
+  \item \emph{Fuerza bruta (exhaustiva):} Se calculan y prueban todas las claves posibles hasta dar con la correcta. Su dificultad depende únicamente del tamaño de la clave \cite{packetlabs-attacks}\cite{fiveable-attacks}.
   \item \emph{Ataque con texto plano conocido (KPA):} El atacante dispone de algún texto original junto con su versión cifrada. Por ejemplo, sabe que un correo empieza con "Estimado cliente:" y ve esa misma parte cifrada. Con esas parejas (texto claro, texto cifrado) puede acortar la búsqueda de la clave.
   \item \emph{Ataque por texto plano elegido (CPA):} El atacante elige ciertos textos para cifrar y obtiene sus correspondientes cifrados. Es como pedirle al dueño de la caja fuerte que te abra cosas que tú le entregas. Con los pares que él devuelve, puedes analizar el comportamiento del sistema y encontrar debilidades.
   \item \emph{Ataque adaptativo por texto plano elegido (CPA2):} Variante de CPA donde el atacante en tiempo real elige un mensaje, ve su cifrado, y luego, basándose en lo que aprendió, decide el siguiente mensaje a cifrar. Y así sucesivamente, mejorando su estrategia con cada consulta.
@@ -435,8 +436,8 @@ La seguridad de un sistema criptográfico se evalúa frente a distintos modelos 
 \subsection{Ataques avanzados}
 
 \begin{itemize}
-  \item \emph{Ataques de canal lateral (side-channel):} No atacan el cifrado matemático, sino que, se explota información derivada de la implementación (tiempos, consumo eléctrico, emisiones electromagnéticas) para reconstruir las claves sin romper directamente el algoritmo \cite{cryptanalysis_and_types_of_attacks}.
+  \item \emph{Ataques de canal lateral (side-channel):} No atacan el cifrado matemático, sino que, se explota información derivada de la implementación (tiempos, consumo eléctrico, emisiones electromagnéticas) para reconstruir las claves sin romper directamente el algoritmo \cite{gfg-cryptanalysis}.
   \item \emph{Ataque de clave relacionada (related-key):} El atacante conoce cifrados de textos planos bajo claves que guardan alguna relación matemática con la clave objetivo (por ejemplo, variantes que difieren solo en unos bits). Si conoce cómo varía el cifrado al pasar de una clave a otra, puede deducir la clave original más rápido que con fuerza bruta.
-  \item \emph{Ataque por sesgo estadístico (bias attacks):} Se buscan patrones no aleatorios en la generación de claves o estados intermedios para acotar posibles valores \cite{modern_cryptographic_attacks_guide_for_perplexed}. Si el generador de claves o el proceso intermedio tiende a preferir ciertos valores, se reduce drásticamente el número de opciones a probar.
+  \item \emph{Ataque por sesgo estadístico (bias attacks):} Se buscan patrones no aleatorios en la generación de claves o estados intermedios para acotar posibles valores \cite{checkpoint-modern-attacks}. Si el generador de claves o el proceso intermedio tiende a preferir ciertos valores, se reduce drásticamente el número de opciones a probar.
   \item Ataque \emph{Evil Maid}: Consiste en acceso físico al dispositivo para instalar malware o keyloggers y robar claves cuando el usuario no está presente.
 \end{itemize}
