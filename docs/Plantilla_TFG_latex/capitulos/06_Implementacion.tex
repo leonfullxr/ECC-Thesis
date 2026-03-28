@@ -1,0 +1,416 @@
+% capitulo6_implementacion.tex
+% Capitulo 6: Implementacion y entorno experimental
+%
+% Autor: Leon Elliott Fuller
+% Fecha: Mayo 2025
+
+\chapter{Implementacion y entorno experimental}
+\label{ch:implementacion}
+
+\section{Vision general}
+\label{sec:impl-vision}
+
+El objetivo de la parte practica de este trabajo es construir una suite de benchmarking que permita comparar, de forma reproducible y cuantificable, el rendimiento de RSA y ECC a lo largo de tres ejes ortogonales:
+
+\begin{enumerate}
+    \item \textbf{RSA frente a ECC}, a niveles de seguridad equivalentes segun NIST SP~800-57~\cite{nist-sp800-57}.
+    \item \textbf{Coordenadas afines frente a Jacobianas}, midiendo el impacto real de eliminar inversiones modulares.
+    \item \textbf{Campo primo $\mathbb{F}_p$ frente a campo binario $\mathbb{F}_{2^m}$}, comparando la aritmetica subyacente.
+\end{enumerate}
+
+La implementacion se ha desarrollado integramente en C++17, utilizando la biblioteca NTL~\cite{shoup-ntl} para aritmetica de precision arbitraria y GMP~\cite{granlund-gmp} como motor de calculo subyacente. Todo el entorno se ejecuta dentro de un contenedor Docker para garantizar la reproducibilidad de los resultados.
+
+En las secciones siguientes se describe la arquitectura del software, las decisiones de diseno tomadas, el entorno de ejecucion, y los procedimientos de validacion aplicados al generador de numeros aleatorios.
+
+
+% ============================================================================
+\section{Arquitectura del software}
+\label{sec:impl-arquitectura}
+
+\subsection{Estructura modular}
+\label{subsec:impl-modulos}
+
+El proyecto sigue una arquitectura modular en la que cada componente criptografico reside en un par de ficheros (cabecera \texttt{.hpp} e implementacion \texttt{.cpp}). La figura~\ref{fig:arquitectura} muestra el diagrama de dependencias.
+
+\begin{figure}[htbp]
+\centering
+% NOTA: Sustituir por un diagrama real (TikZ o imagen)
+% El diagrama muestra:
+% main.cpp -> rsa.hpp/cpp, ecc.hpp/cpp, ecc_binary.hpp/cpp, sha256.hpp/cpp, rng.hpp/cpp
+% ecc.hpp -> common.hpp, rng.hpp
+% rsa.hpp -> common.hpp, rng.hpp
+% Todas las flechas apuntan hacia common.hpp (tipos base) y rng.hpp (generador)
+\fbox{\parbox{0.85\textwidth}{\centering\textit{[Diagrama de arquitectura modular --- ver descripcion en texto]}}}
+\caption{Diagrama de dependencias entre modulos del proyecto.}
+\label{fig:arquitectura}
+\end{figure}
+
+Los modulos del proyecto son los siguientes:
+
+\begin{description}
+    \item[\texttt{common.hpp}] Define los tipos base compartidos por todos los modulos. El alias \texttt{BigInt = NTL::ZZ} proporciona enteros de precision arbitraria. Incluye constantes globales (tamanos de clave RSA por defecto, numero de iteraciones Miller-Rabin, curva ECC por defecto) y una excepcion personalizada \texttt{CryptoException}.
+    
+    \item[\texttt{rng.hpp / rng.cpp}] Implementa el generador de numeros aleatorios. Define una interfaz abstracta \texttt{RNG} con metodos \texttt{random\_bnd}, \texttt{random\_range}, \texttt{random\_len}, \texttt{random\_bits} y \texttt{random\_prime}. La implementacion concreta \texttt{NTLRNG} delega en las funciones criptograficas de NTL y soporta semillas fijas para reproducibilidad.
+    
+    \item[\texttt{rsa.hpp / rsa.cpp}] Implementa RSA completo: generacion de claves (con parametros CRT precalculados), cifrado, descifrado (con y sin optimizacion CRT), firma y verificacion. La estructura \texttt{RSAPrivateKey} almacena $p$, $q$, $d_p = d \bmod (p-1)$, $d_q = d \bmod (q-1)$ y $q^{-1} \bmod p$ para descifrado CRT.
+    
+    \item[\texttt{ecc.hpp / ecc.cpp}] Implementa la criptografia de curvas elipticas sobre campos primos. Incluye dos representaciones de puntos: coordenadas afines (\texttt{ECPoint}) y coordenadas Jacobianas (\texttt{JacobianPoint}). Soporta tres curvas estandar: NIST P-256, NIST P-384 y secp256k1. Implementa generacion de claves, ECDH, y ECDSA (firma y verificacion). Todas las operaciones aceptan un parametro \texttt{use\_jacobian} que permite seleccionar la representacion en tiempo de ejecucion.
+    
+    \item[\texttt{ecc\_binary.hpp / ecc\_binary.cpp}] Implementa curvas elipticas sobre campos binarios $\mathbb{F}_{2^m}$ utilizando \texttt{NTL::GF2E} para la aritmetica de polinomios. Soporta cinco curvas estandar SEC~2: sect163k1, sect233k1, sect283k1, sect233r1 y sect283r1. Incluye generacion de claves y ECDH sobre campos binarios.
+    
+    \item[\texttt{sha256.hpp / sha256.cpp}] Implementacion completa de SHA-256 siguiendo FIPS~PUB~180-4~\cite{nist-fips180-4}. Se implemento desde cero (sin delegar en OpenSSL) por dos razones: integridad academica (comprender y documentar cada paso del algoritmo) y control total sobre el benchmarking (evitar que variaciones en la version de OpenSSL afecten las mediciones).
+    
+    \item[\texttt{main.cpp}] Motor de benchmarking con cinco modos de ejecucion, parseo de argumentos CLI mediante \texttt{getopt}, y generacion de resultados en formato CSV.
+\end{description}
+
+
+\subsection{Interfaz de linea de comandos}
+\label{subsec:impl-cli}
+
+El binario compilado acepta los siguientes parametros:
+
+\begin{verbatim}
+./bin/bench [opciones]
+  -a ALGO    RSA | ECC | ECCJ | BIN | CMP   (default: RSA)
+  -b BITS    Tamano de clave RSA              (default: 2048)
+  -c CURVE   Nombre de curva ECC              (default: secp256k1)
+  -i ITERS   Numero de iteraciones            (default: 50)
+  -s SEED    fixed | random                   (default: fixed)
+  -r FILE    Fichero CSV de datos brutos
+  -v         Modo verboso (progreso a stderr)
+\end{verbatim}
+
+Los cinco modos de algoritmo corresponden a los tres ejes de comparacion:
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lll}
+\hline
+\textbf{Modo} & \textbf{Descripcion} & \textbf{Etiqueta CSV} \\
+\hline
+\texttt{RSA}  & RSA con tamanos 1024--4096 bits        & \texttt{RSA} \\
+\texttt{ECC}  & ECC sobre $\mathbb{F}_p$ (coordenadas afines)   & \texttt{ECC} \\
+\texttt{ECCJ} & ECC sobre $\mathbb{F}_p$ (coordenadas Jacobianas) & \texttt{ECC\_JACOBIAN} \\
+\texttt{BIN}  & ECC sobre $\mathbb{F}_{2^m}$            & \texttt{ECC\_BINARY} \\
+\texttt{CMP}  & Comparacion completa (los cuatro anteriores) & Todas \\
+\hline
+\end{tabular}
+\caption{Modos de ejecucion del motor de benchmarking.}
+\label{tab:cli-modes}
+\end{table}
+
+El modo \texttt{CMP} ejecuta automaticamente los cuatro modos restantes y genera aproximadamente 72 benchmarks individuales: 4 tamanos RSA $\times$ 6 operaciones, 3 curvas primas $\times$ 6 operaciones (afines), 3 curvas primas $\times$ 5 operaciones (Jacobianas), y 5 curvas binarias $\times$ 3 operaciones.
+
+
+% ============================================================================
+\section{Decisiones de diseno}
+\label{sec:impl-decisiones}
+
+\subsection{Progresion pedagogica: afines, despues Jacobianas}
+\label{subsec:impl-progresion}
+
+Una decision fundamental del proyecto fue implementar primero la aritmetica de curvas en coordenadas afines y, solo despues de validar su correccion, anadir las coordenadas Jacobianas como optimizacion explicita. Esta decision responde a un principio de ingenieria de software y a un criterio academico:
+
+\begin{description}
+    \item[Claridad matematica.] La ecuacion de Weierstrass $y^2 = x^3 + ax + b$ se verifica directamente sustituyendo $(x, y)$. En coordenadas Jacobianas, el mismo punto tiene infinitas representaciones equivalentes $(X, Y, Z) \sim (\lambda^2 X, \lambda^3 Y, \lambda Z)$ para cualquier $\lambda \neq 0$, lo que dificulta la comprobacion visual.
+    
+    \item[Verificabilidad.] Despues de cada operacion (suma, duplicacion), el resultado se puede comprobar con \texttt{is\_on\_curve()}. En coordenadas Jacobianas hay que convertir a afines antes de comparar con vectores de test conocidos.
+    
+    \item[Correccion primero.] El principio seguido fue ``primero que funcione correctamente, luego optimizar''. Las coordenadas afines proporcionan la base de referencia contra la que validar cualquier optimizacion.
+    
+    \item[Valor academico.] La progresion afines $\to$ Jacobianas es en si misma un resultado medible del TFG: el speedup observado (3--5$\times$ en la practica, frente al teorico 8.3$\times$) constituye un dato experimental propio.
+\end{description}
+
+
+\subsection{SHA-256 desde cero}
+\label{subsec:impl-sha256}
+
+La implementacion de SHA-256 se realizo siguiendo paso a paso el estandar FIPS~PUB~180-4, sin utilizar la implementacion de OpenSSL. Las razones son:
+
+\begin{itemize}
+    \item \textbf{Integridad academica:} En un TFG sobre criptografia, es importante demostrar la comprension de los algoritmos, no solo invocar bibliotecas de terceros.
+    \item \textbf{Control del benchmarking:} Al implementar SHA-256 nosotros mismos, el hash no introduce una variable externa que pueda variar entre versiones de OpenSSL o configuraciones de compilacion.
+    \item \textbf{Coherencia:} El mismo principio se aplico a RSA, ECC y el RNG: toda la criptografia del proyecto esta implementada sobre una unica base (NTL/GMP), sin dependencias externas salvo las aritmeticas.
+\end{itemize}
+
+
+\subsection{Uso de curvas estandarizadas}
+\label{subsec:impl-curvas-estandar}
+
+En lugar de generar curvas elipticas propias, el proyecto utiliza exclusivamente curvas estandarizadas publicadas por el NIST~\cite{nist-fips186-4} y SECG~\cite{sec2-v2}. Los parametros del dominio $(p, a, b, G, n, h)$ estan codificados directamente en \texttt{get\_curve\_params()} y \texttt{get\_binary\_curve\_params()}.
+
+Esta decision se justifica por:
+\begin{itemize}
+    \item La generacion de curvas seguras requiere algoritmos de conteo de puntos (Schoof--Elkies--Atkin) que estan fuera del alcance de este trabajo.
+    \item Las curvas NIST y SEC~2 han sido auditadas extensamente por la comunidad criptografica.
+    \item Usar curvas estandar permite comparar nuestros resultados con benchmarks de referencia (por ejemplo, OpenSSL).
+\end{itemize}
+
+No obstante, se implementa una validacion parcial de los parametros (seccion~\ref{subsec:impl-validacion-params}) para verificar las propiedades que son computacionalmente viables.
+
+
+\subsection{Validacion de parametros del dominio}
+\label{subsec:impl-validacion-params}
+
+La funcion \texttt{CurveParams::validate()} implementa las siguientes comprobaciones para curvas sobre $\mathbb{F}_p$:
+
+\begin{enumerate}
+    \item $p > 3$.
+    \item Discriminante no nulo: $4a^3 + 27b^2 \not\equiv 0 \pmod{p}$.
+    \item El punto generador $G$ pertenece a la curva: $G_y^2 \equiv G_x^3 + aG_x + b \pmod{p}$.
+    \item $n > 0$ y $h > 0$.
+\end{enumerate}
+
+De forma analoga, \texttt{BinaryCurveParams::validate()} comprueba que $\deg(f) = m$, que $b \neq 0$ (discriminante en caracteristica~2), y que $n, h > 0$.
+
+Las verificaciones que \emph{no} se implementan ---primalidad de $n$, $nG = \varnothing$, curva no anomala, grado de inmersion alto--- se describen como requisitos teoricos en la seccion~\ref{subsec:ecc-parametros-dominio}. Su omision esta justificada por el uso exclusivo de curvas pre-auditadas (vease la discusion en la seccion~\ref{subsubsec:verificacion-params}).
+
+
+% ============================================================================
+\section{Herramientas y entorno de ejecucion}
+\label{sec:impl-entorno}
+
+\subsection{Lenguaje y bibliotecas}
+\label{subsec:impl-lenguaje}
+
+El cuadro~\ref{tab:herramientas} resume las herramientas principales del proyecto.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lll}
+\hline
+\textbf{Herramienta} & \textbf{Version} & \textbf{Funcion} \\
+\hline
+C++ & C++17 (ISO/IEC 14882:2017) & Lenguaje de implementacion \\
+NTL & $\geq$ 11.5 & Aritmetica de precision arbitraria, $\mathbb{F}_p$, $\mathbb{F}_{2^m}$ \\
+GMP & $\geq$ 6.2 & Motor aritmetico subyacente de NTL \\
+g++ & $\geq$ 9.0 & Compilador (flags: \texttt{-std=c++17 -O2}) \\
+Docker & $\geq$ 20.0 & Contenedorizacion del entorno \\
+Python 3 & $\geq$ 3.8 & Visualizacion y analisis estadistico \\
+matplotlib & $\geq$ 3.5 & Generacion de graficas \\
+Pillow & $\geq$ 9.0 & Composicion de collages \\
+\hline
+\end{tabular}
+\caption{Herramientas y bibliotecas del proyecto.}
+\label{tab:herramientas}
+\end{table}
+
+\paragraph{Eleccion de NTL.}
+Se eligio NTL (Number Theory Library) de Victor Shoup~\cite{shoup-ntl} como base aritmetica por varias razones: proporciona tipos nativos para enteros de precision arbitraria (\texttt{ZZ}), aritmetica modular (\texttt{ZZ\_p}), y campos binarios de extension (\texttt{GF2E}); ofrece funciones criptograficas de bajo nivel (exponenciacion modular, test de primalidad Miller-Rabin, generacion de primos); y se construye sobre GMP, heredando sus optimizaciones a nivel de ensamblador para las operaciones aritmeticas basicas.
+
+\paragraph{Nivel de optimizacion.}
+Se compila con \texttt{-O2} en lugar de \texttt{-O3} para mantener un equilibrio entre rendimiento y predictibilidad de los tiempos de ejecucion. El nivel \texttt{-O3} puede activar vectorizacion y desenrollado de bucles que introduzcan variabilidad en las mediciones.
+
+
+\subsection{Contenedorizacion con Docker}
+\label{subsec:impl-docker}
+
+Para garantizar la reproducibilidad de los resultados, el proyecto incluye un \texttt{Dockerfile} que define un entorno de compilacion y ejecucion completo basado en Ubuntu~24.04. El contenedor instala NTL, GMP, Python~3 con las bibliotecas de visualizacion, compila el proyecto, y permite ejecutar los benchmarks en un entorno controlado.
+
+El flujo de trabajo tipico es:
+\begin{verbatim}
+docker build -t ecc-thesis .
+docker run -it ecc-thesis /bin/bash
+# Dentro del contenedor:
+bash run_benchmarks.sh 20
+\end{verbatim}
+
+Esto asegura que dos ejecuciones en la misma maquina produzcan resultados comparables, independientemente de las bibliotecas instaladas en el sistema anfitrion.
+
+
+% ============================================================================
+\section{Generador de numeros aleatorios}
+\label{sec:impl-rng}
+
+\subsection{Diseno del RNG}
+\label{subsec:impl-rng-diseno}
+
+El generador de numeros aleatorios se implementa siguiendo el patron de diseno \textit{Strategy}: la interfaz abstracta \texttt{RNG} define los metodos que todo generador debe ofrecer, y la implementacion concreta \texttt{NTLRNG} delega en las funciones de NTL (\texttt{SetSeed}, \texttt{RandomBnd}, \texttt{GenPrime}, etc.).
+
+La caracteristica clave del diseno es el soporte para \emph{semillas fijas}: al inicializar \texttt{NTLRNG} con un valor de semilla concreto (por ejemplo, \texttt{seed = 0}), toda la secuencia de numeros aleatorios generados es identica en cualquier ejecucion. Esto permite:
+
+\begin{itemize}
+    \item Reproducir exactamente los resultados de un benchmark.
+    \item Comparar el rendimiento de dos algoritmos con \emph{los mismos} valores aleatorios.
+    \item Depurar errores en operaciones criptograficas con datos predecibles.
+\end{itemize}
+
+En modo ``aleatorio'' (\texttt{-s random}), la semilla se deriva del timestamp del sistema, proporcionando aleatoriedad real para cada ejecucion.
+
+
+\subsection{Validacion estadistica}
+\label{subsec:impl-rng-validacion}
+
+Para verificar que el RNG produce secuencias con propiedades estadisticas adecuadas para uso criptografico, se implemento un programa de analisis dedicado (\texttt{rng\_analysis.cpp}) y un conjunto de tests estadisticos en Python (\texttt{analyze\_randomness.py}). Los tests realizados fueron:
+
+\begin{description}
+    \item[Test de uniformidad (Chi-cuadrado):] Verifica que la distribucion de los valores generados se ajusta a una distribucion uniforme.
+    \item[Test de Kolmogorov-Smirnov:] Compara la distribucion empirica con la teorica uniforme en $[0, 1]$.
+    \item[Test de rachas (\textit{runs}):] Verifica que las secuencias de bits consecutivos iguales tienen la longitud esperada bajo aleatoriedad.
+    \item[Autocorrelacion:] Mide la correlacion entre valores consecutivos (debe ser cercana a cero).
+    \item[Analisis de entropia:] Calcula la entropia de Shannon de la distribucion y la compara con el maximo teorico.
+\end{description}
+
+Los resultados de la validacion, incluyendo histogramas, graficas de autocorrelacion y resumenes estadisticos, se generan automaticamente mediante el script \texttt{run\_rng\_analysis.sh}. Todos los tests pasaron satisfactoriamente con $p$-values superiores a 0.05, confirmando que el RNG de NTL produce secuencias estadisticamente indistinguibles de secuencias verdaderamente aleatorias bajo los criterios evaluados.
+
+
+% ============================================================================
+\section{Motor de benchmarking}
+\label{sec:impl-benchmark}
+
+\subsection{Metodologia de medicion}
+\label{subsec:impl-metodologia}
+
+Cada benchmark sigue un protocolo estandarizado:
+
+\begin{enumerate}
+    \item Se ejecutan 3 iteraciones de calentamiento (\textit{warm-up}) que se descartan, para asegurar que las caches de CPU esten pobladas y que cualquier inicializacion perezosa de NTL se haya completado.
+    \item Se ejecutan $N$ iteraciones medidas (configurable con \texttt{-i}).
+    \item Para cada iteracion, se mide el tiempo transcurrido con \texttt{std::chrono::high\_resolution\_clock} con precision de microsegundos.
+    \item Se calculan las siguientes estadisticas: media, mediana, desviacion estandar, minimo, maximo, y percentiles P5 y P95.
+\end{enumerate}
+
+El nucleo del sistema de medicion es la funcion generica \texttt{run\_benchmark}, implementada como un template de C++ que acepta cualquier operacion como argumento lambda:
+
+\begin{verbatim}
+template<typename Func>
+BenchmarkResult run_benchmark(
+    const string& label, Func operation, int iterations);
+\end{verbatim}
+
+Esta abstraccion permite medir cualquier operacion criptografica (generacion de claves, cifrado, firma, etc.) con la misma infraestructura de medicion, eliminando la posibilidad de inconsistencias entre benchmarks.
+
+
+\subsection{Operaciones medidas}
+\label{subsec:impl-operaciones}
+
+El cuadro~\ref{tab:operaciones} resume las operaciones medidas para cada algoritmo.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{llp{6.5cm}}
+\hline
+\textbf{Algoritmo} & \textbf{Operacion} & \textbf{Descripcion} \\
+\hline
+\multirow{6}{*}{RSA} & Keygen & Generacion de claves (1024, 2048, 3072, 4096 bits) \\
+ & Encrypt & Cifrado $c = m^e \bmod n$ \\
+ & Decrypt & Descifrado directo $m = c^d \bmod n$ \\
+ & Decrypt CRT & Descifrado con Teorema Chino del Resto \\
+ & Sign & Firma $s = h^d \bmod n$ \\
+ & Verify & Verificacion $h = s^e \bmod n$ \\
+\hline
+\multirow{6}{*}{ECC (afin)} & Keygen & Generacion $Q = dG$ (P-256, P-384, secp256k1) \\
+ & Scalar mult & Multiplicacion escalar $kP$ \\
+ & ECDH & Secreto compartido $S = d_A Q_B$ \\
+ & ECDSA sign & Firma con nonce $k$ \\
+ & ECDSA verify & Verificacion $u_1G + u_2Q$ \\
+ & Point add/double & Operaciones elementales de grupo \\
+\hline
+\multirow{3}{*}{ECC (Jacobiano)} & Keygen & Igual que afin, con \texttt{use\_jacobian=true} \\
+ & ECDH & Secreto compartido con aritmetica Jacobiana \\
+ & ECDSA sign/verify & Firma y verificacion con aritmetica Jacobiana \\
+\hline
+\multirow{3}{*}{ECC (binario)} & Keygen & Generacion sobre $\mathbb{F}_{2^m}$ (5 curvas SEC~2) \\
+ & Scalar mult & Multiplicacion escalar en campo binario \\
+ & ECDH & Secreto compartido sobre $\mathbb{F}_{2^m}$ \\
+\hline
+\end{tabular}
+\caption{Operaciones criptograficas medidas en el benchmark.}
+\label{tab:operaciones}
+\end{table}
+
+Todas las comparaciones RSA-ECC se realizan a niveles de seguridad equivalentes segun NIST SP~800-57: RSA-3072 frente a P-256/secp256k1 (128 bits de seguridad) y RSA-7680 frente a P-384 (192 bits).
+
+
+\subsection{Pipeline de visualizacion}
+\label{subsec:impl-visualizacion}
+
+Los resultados del benchmark se procesan mediante dos scripts de Python:
+
+\begin{description}
+    \item[\texttt{visualize\_benchmarks.py}] Lee los ficheros CSV generados por el motor de benchmarking y produce 11 graficas individuales: comparaciones de generacion de claves, operaciones de firma y verificacion, speedup de ECDH, escalado por tamano de clave, comparacion afin vs.\ Jacobiano, y rendimiento en campos binarios. Utiliza una paleta de cuatro colores consistente (azul/rojo/verde/morado) para distinguir los tipos de algoritmo.
+    
+    \item[\texttt{create\_collages.py}] Combina las graficas individuales en 3 collages tematicos correspondientes a los tres ejes de comparacion, facilitando su inclusion en la memoria y en presentaciones. Utiliza PIL (Pillow) para la composicion de imagenes.
+\end{description}
+
+El pipeline completo se orquesta mediante \texttt{run\_benchmarks.sh}, que automatiza la compilacion, ejecucion de benchmarks, verificacion de datos y generacion de visualizaciones en un unico comando:
+
+\begin{verbatim}
+bash run_benchmarks.sh 20   # 20 iteraciones por benchmark
+\end{verbatim}
+
+El script genera ficheros con timestamp (evitando sobreescrituras) y crea enlaces simbolicos \texttt{summary\_latest.csv} y \texttt{raw\_latest.csv} para facilitar el acceso a los resultados mas recientes.
+
+
+% ============================================================================
+\section{Curvas implementadas}
+\label{sec:impl-curvas}
+
+\subsection{Curvas sobre campos primos $\mathbb{F}_p$}
+\label{subsec:impl-curvas-primas}
+
+Se implementaron tres curvas estandar, con parametros tomados directamente de FIPS~186-4 y SEC~2:
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcccc}
+\hline
+\textbf{Curva} & \textbf{Bits} & \textbf{$a$} & \textbf{$h$} & \textbf{Seguridad} \\
+\hline
+NIST P-256 (secp256r1) & 256 & $-3$ & 1 & $\sim$128 bits \\
+NIST P-384             & 384 & $-3$ & 1 & $\sim$192 bits \\
+secp256k1 (Bitcoin)    & 256 & $0$  & 1 & $\sim$128 bits \\
+\hline
+\end{tabular}
+\caption{Curvas sobre campos primos implementadas.}
+\label{tab:curvas-primas-impl}
+\end{table}
+
+Las curvas NIST utilizan $a = -3$, lo que permite una optimizacion en la formula de duplicacion Jacobiana: el termino $3X_1^2 + aZ_1^4$ se simplifica a $3(X_1 - Z_1^2)(X_1 + Z_1^2)$, ahorrando una multiplicacion. La curva secp256k1 utiliza $a = 0$, lo que elimina completamente el termino $aZ_1^4$.
+
+
+\subsection{Curvas sobre campos binarios $\mathbb{F}_{2^m}$}
+\label{subsec:impl-curvas-binarias}
+
+Se implementaron cinco curvas del estandar SEC~2~\cite{sec2-v2}:
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcccl}
+\hline
+\textbf{Curva} & \textbf{$m$} & \textbf{$h$} & \textbf{Seguridad} & \textbf{Polinomio irreducible} \\
+\hline
+sect163k1 & 163 & 2 & $\sim$80 bits  & $x^{163} + x^7 + x^6 + x^3 + 1$ \\
+sect233k1 & 233 & 4 & $\sim$112 bits & $x^{233} + x^{74} + 1$ \\
+sect283k1 & 283 & 4 & $\sim$128 bits & $x^{283} + x^{12} + x^7 + x^5 + 1$ \\
+sect233r1 & 233 & 2 & $\sim$112 bits & $x^{233} + x^{74} + 1$ \\
+sect283r1 & 283 & 2 & $\sim$128 bits & $x^{283} + x^{12} + x^7 + x^5 + 1$ \\
+\hline
+\end{tabular}
+\caption{Curvas sobre campos binarios implementadas (SEC~2).}
+\label{tab:curvas-binarias-impl}
+\end{table}
+
+Las curvas con sufijo ``k'' (Koblitz) tienen $a \in \{0, 1\}$, lo que permite optimizaciones basadas en el endomorfismo de Frobenius. Las curvas con sufijo ``r'' (random) utilizan coeficientes pseudoaleatorios verificables. En ambos casos, la aritmetica del campo se realiza integramente con \texttt{NTL::GF2E}, donde la suma es la operacion XOR y la multiplicacion es el producto de polinomios modulo el polinomio irreducible correspondiente.
+
+
+% ============================================================================
+\section{Limitaciones del prototipo}
+\label{sec:impl-limitaciones}
+
+Es importante senalar que esta implementacion es un prototipo educativo y de benchmarking, \emph{no} un sistema criptografico de produccion. Las principales limitaciones son:
+
+\begin{enumerate}
+    \item \textbf{Resistencia a canales laterales.} El algoritmo \textit{double-and-add} tiene un flujo de ejecucion que depende de los bits de la clave privada, lo que lo hace vulnerable a ataques de tiempo, consumo electrico y emision electromagnetica. Una implementacion de produccion utilizaria la escalera de Montgomery o algoritmos de tiempo constante.
+    
+    \item \textbf{Nonces ECDSA.} Los nonces $k$ se generan de forma aleatoria. Una implementacion robusta utilizaria nonces deterministicos segun RFC~6979~\cite{rfc6979} para evitar los riesgos descritos en la seccion~\ref{subsec:ecdsa-problemas}.
+    
+    \item \textbf{Derivacion de clave (KDF).} El secreto compartido ECDH se deriva truncando la coordenada~$x$ del punto compartido, en lugar de usar un KDF estandar como HKDF (RFC~5869).
+    
+    \item \textbf{Esquemas de padding.} RSA se implementa sin padding (textbook RSA). Una implementacion segura requeriria OAEP para cifrado y PSS para firmas.
+    
+    \item \textbf{Validacion incompleta de parametros.} Como se detalla en la seccion~\ref{subsec:impl-validacion-params}, no se verifica la primalidad de~$n$, $nG = \varnothing$, ni las condiciones de inmersion y anomalia, confiando en los parametros estandarizados.
+\end{enumerate}
+
+Estas limitaciones no afectan la validez de las comparaciones de rendimiento, que es el objetivo principal del proyecto, pero deben tenerse en cuenta si se considerase reutilizar el codigo en un contexto de seguridad real.
