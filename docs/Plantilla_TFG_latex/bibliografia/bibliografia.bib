@@ -1,540 +1,386 @@
-@incollection{Petitcolas2011Kerckhoffs,
-  author       = {Petitcolas, Fabien A. P. and Smals},
-  title        = {Kerckhoffs Principle},
-  booktitle    = {Encyclopedia of Cryptography and Security},
-  edition      = {2nd},
-  editor       = {van Tilborg, Henk C. A. and Jajodia, Sushil},
-  publisher    = {Springer},
-  year         = {2011},
-  month        = {January},
-  doi          = {10.1007/978-1-4419-5906-5},
-  url          = {https://www.researchgate.net/publication/264273789_Kerckhoffs_Principle},
-}
+% =============================================================================
+% referencias.bib
+% Bibliografia unificada del TFG
+% Autor: Leon Elliott Fuller
+% Fecha: Mayo 2025
+%
+% CONVENCIONES DE CLAVES:
+%   - Articulos: apellido1AnoTopic (e.g., wang2004md5)
+%   - Estandares NIST: nist-tipo-numero (e.g., nist-fips186-4)
+%   - RFCs: rfcNNNN (e.g., rfc8422)
+%   - Libros: apellido1AnoKeyword (e.g., hankerson2004guide)
+%   - Webs: dominio-tema (e.g., gfg-rc4)
+%
+% NOTA: Al refactorizar se han unificado claves duplicadas.
+%       Revisar los \cite{} en todos los capitulos .tex.
+%       Al final del archivo hay una tabla de mapeo old->new.
+% =============================================================================
 
-@misc{different_types_cryptography_attacks,
-  title        = {Different Types of Cryptography Attacks},
-  howpublished = {\url{https://www.infosectrain.com/blog/different-types-of-cryptography-attacks/}},
-  note         = {Accessed: May 2025},
-}
 
-@misc{active_and_passive_attacks_in_information_security,
-  title        = {Active and Passive Attacks in Information Security},
-  howpublished = {\url{https://www.geeksforgeeks.org/active-and-passive-attacks-in-information-security/}},
-  note         = {Accessed: May 2025},
-}
+% #############################################################################
+% CAPITULO 1: INTRODUCCION
+% #############################################################################
 
-@misc{what_are_cryptographic_attacks,
-  title        = {What Are Cryptographic Attacks?},
-  howpublished = {\url{https://www.goallsecure.com/blog/cryptographic-attacks-complete-guide/}},
-  note         = {Accessed: May 2025},
-}
-
-@misc{cryptography_attacks_6_types_and_prevention,
-  title        = {Cryptography Attacks: 6 Types \& Prevention},
-  howpublished = {\url{https://www.packetlabs.net/posts/cryptography-attacks/}},
-  note         = {Accessed: May 2025},
-}
-
-@misc{types_of_cryptographic_attacks_to_know,
-  title        = {Types of Cryptographic Attacks to Know},
-  howpublished = {\url{https://fiveable.me/lists/types-of-cryptographic-attacks}},
-  note         = {Accessed: May 2025},
-}
-
-@misc{cryptanalysis_and_types_of_attacks,
-  title        = {Cryptanalysis and Types of Attacks},
-  howpublished = {\url{https://www.geeksforgeeks.org/cryptanalysis-and-types-of-attacks/}},
-  note         = {Accessed: May 2025},
-}
-
-@misc{modern_cryptographic_attacks_guide_for_perplexed,
-  title        = {Modern Cryptographic Attacks: A Guide for the Perplexed},
-  howpublished = {\url{https://research.checkpoint.com/2024/modern-cryptographic-attacks-a-guide-for-the-perplexed/}},
-  note         = {Accessed: May 2025},
-}
-
-@misc{shors_algorithm_a_quantum_threat_to_modern_cryptography,
-  title        = {Shor’s Algorithm: A Quantum Threat to Modern Cryptography},
+@misc{shor-quantum-threat,
+  title        = {Shor's Algorithm: A Quantum Threat to Modern Cryptography},
   howpublished = {\url{https://postquantum.com/post-quantum/shors-algorithm-a-quantum-threat/}},
   note         = {Accessed: May 2025},
 }
 
-@misc{the_quantum_computing_threat,
+@misc{paloalto-quantum-threat,
   title        = {The Quantum Computing Threat},
   howpublished = {\url{https://docs.paloaltonetworks.com/network-security/quantum-security/administration/quantum-security-concepts/the-quantum-computing-threat}},
   note         = {Accessed: May 2025},
 }
 
-@misc{IETF1321,
+
+% #############################################################################
+% CAPITULO 2: INTRODUCCION A LA CRIPTOGRAFIA
+% #############################################################################
+
+% --- Funciones hash ---
+
+@misc{rivest1992md5,
   author       = {Rivest, Ronald},
-  title        = {RFC 1321: MD5 Message-Digest Algorithm},
+  title        = {{RFC 1321}: {MD5} Message-Digest Algorithm},
   howpublished = {IETF RFC 1321},
   year         = {1992},
   url          = {https://www.rfc-editor.org/rfc/rfc1321.html},
 }
 
-@misc{Wang04_MD5,
+@misc{wang2004md5,
   author       = {Wang, Xiaoyun and Feng, Dengguo and Lai, Xuejia and Yu, Hongbo},
-  title        = {Collisions for Hash Functions MD4, MD5, HAVAL-128 and RIPEMD},
+  title        = {Collisions for Hash Functions {MD4}, {MD5}, {HAVAL-128} and {RIPEMD}},
   howpublished = {Cryptology ePrint Archive, Paper 2004/199},
   year         = {2004},
   url          = {https://eprint.iacr.org/2004/199},
 }
 
-@inproceedings{Stevens09_MD5_CA,
+@inproceedings{stevens2009md5-ca,
   author    = {Stevens, Marc and Lenstra, Arjen K. and de Weger, Benne},
-  title     = {Chosen-Prefix Collisions for MD5 and the Creation of a Rogue Certification Authority Certificate},
+  title     = {Chosen-Prefix Collisions for {MD5} and the Creation of a Rogue {CA} Certificate},
   booktitle = {Advances in Cryptology -- EUROCRYPT 2009},
-  series    = {Lecture Notes in Computer Science},
+  series    = {LNCS},
   volume    = {5479},
   pages     = {55--72},
   year      = {2009},
   publisher = {Springer},
-  url       = {https://link.springer.com/chapter/10.1007/978-3-642-01001-9_4},
 }
 
-@misc{NIST_SP800131A,
+@techreport{nist-sp800-131a,
   author       = {{National Institute of Standards and Technology (NIST)}},
-  title        = {{SP 800-131A Rev. 2}: Transitions: Recommendation for Transitioning the Use of Cryptographic Algorithms and Key Lengths},
-  howpublished = {NIST},
+  title        = {{SP 800-131A Rev.~2}: Transitions: Recommendation for Transitioning the Use of Cryptographic Algorithms and Key Lengths},
+  institution  = {NIST},
   year         = {2019},
   url          = {https://csrc.nist.gov/publications/detail/sp/800-131a/rev-2/final},
 }
 
-@misc{FIPS1801,
+@techreport{nist-fips180-1,
   author       = {{National Institute of Standards and Technology (NIST)}},
   title        = {{FIPS PUB 180-1}: Secure Hash Standard},
-  howpublished = {NIST},
+  institution  = {NIST},
   year         = {1995},
   url          = {https://csrc.nist.gov/publications/detail/fips/180/1/final},
 }
 
-@inproceedings{Wang05_SHA1,
+@inproceedings{wang2005sha1,
   author    = {Wang, Xiaoyun and Yin, Yiqun and Yu, Hongbo},
-  title     = {Finding Collisions in the Full SHA-1},
+  title     = {Finding Collisions in the Full {SHA-1}},
   booktitle = {Advances in Cryptology -- CRYPTO 2005},
   pages     = {17--36},
   year      = {2005},
-  url       = {https://www.iacr.org/archive/crypto2005/36210017/36210017.pdf},
 }
 
-@misc{GoogleShattered,
-  author       = {Google Security Blog and CWI Amsterdam},
-  title        = {Announcing the first SHA-1 collision},
+@misc{google-shattered,
+  author       = {{Google Security Blog} and {CWI Amsterdam}},
+  title        = {Announcing the first {SHA-1} collision},
   howpublished = {Google Online Security Blog},
   year         = {2017},
   url          = {https://security.googleblog.com/2017/02/announcing-first-sha1-collision.html},
 }
 
-@misc{ChromeDeprecateSHA1,
-  author       = {The Chromium Project},
-  title        = {A further update on SHA-1 certificates in Chrome},
+@misc{chrome-sha1,
+  author       = {{The Chromium Project}},
+  title        = {A further update on {SHA-1} certificates in {Chrome}},
   howpublished = {Chromium Security},
   year         = {2016},
   url          = {https://www.chromium.org/Home/chromium-security/education/tls/sha-1/},
 }
 
-@misc{MozillaDeprecateSHA1,
-  author       = {Mozilla Security Blog},
-  title        = {The end of SHA-1 on the Public Web},
+@misc{mozilla-sha1,
+  author       = {{Mozilla Security Blog}},
+  title        = {The end of {SHA-1} on the Public Web},
   howpublished = {Mozilla Security Blog},
   year         = {2017},
   url          = {https://blog.mozilla.org/security/2017/02/23/the-end-of-sha-1-on-the-public-web/},
 }
 
-@misc{MicrosoftSHA1Deprecation,
+@misc{microsoft-sha1,
   author       = {Microsoft},
-  title        = {Microsoft security advisory: SHA-1 deprecation for SSL/TLS certificates},
+  title        = {Microsoft security advisory: {SHA-1} deprecation for {SSL/TLS} certificates},
   howpublished = {Microsoft Support},
   year         = {2017},
-  url          = {https://support.microsoft.com/en-us/topic/microsoft-security-advisory-sha-1-deprecation-for-ssl-tls-certificates-may-9-2017-62a5b409-ef15-f9c5-facf-bb455a7b3fef},
 }
 
+% --- Cifrado simetrico ---
 
-@online{vernam,
-  author    = {Crypto Museum},
-  title     = {The Vernam Cipher},
-  year      = {2012},
-  url       = {https://www.cryptomuseum.com/crypto/vernam.htm},
-  note      = {© Crypto Museum. Creado: Sábado 11 de agosto de 2012. Última modificación: Sábado, 21 de diciembre de 2024 - 21:40 CET},
-  howpublished = {\url{https://www.cryptomuseum.com/crypto/vernam.htm}}
-}
-
-@online{Block_Cipher,
-  author    = {Binary Terms},
-  title     = {Block Cipher},
-  url       = {https://binaryterms.com/block-cipher.html},
-  howpublished = {\url{https://binaryterms.com/block-cipher.html}}
-}
-
-@misc{tdes-techtarget,
-  author       = {TechTarget},
-  title        = {Expert advice: Encryption 101 – Triple DES explained},
+@misc{techtarget-3des,
+  title        = {Expert advice: Encryption 101 -- Triple {DES} explained},
   howpublished = {\url{https://www.techtarget.com/searchsecurity/tip/Expert-advice-Encryption-101-Triple-DES-explained}},
-  note         = {Accessed: 6 May 2025}
+  note         = {Accessed: May 2025},
 }
 
-@misc{aes-nist,
+@techreport{nist-fips197,
   author       = {{National Institute of Standards and Technology (NIST)}},
-  title        = {{FIPS 197}: Advanced Encryption Standard (AES)},
-  howpublished = {\url{https://csrc.nist.gov/pubs/fips/197/final}},
+  title        = {{FIPS 197}: Advanced Encryption Standard ({AES})},
+  institution  = {NIST},
   year         = {2001},
-  note         = {Accessed: 6 May 2025}
+  url          = {https://csrc.nist.gov/pubs/fips/197/final},
 }
 
-@misc{twofish-schneier,
+@misc{binaryterms-block,
+  author       = {{Binary Terms}},
+  title        = {Block Cipher},
+  howpublished = {\url{https://binaryterms.com/block-cipher.html}},
+}
+
+@misc{schneier-twofish,
   author       = {Bruce Schneier},
   title        = {Twofish},
   howpublished = {\url{https://www.schneier.com/academic/twofish/}},
-  note         = {Accessed: 6 May 2025}
+  note         = {Accessed: May 2025},
 }
 
-@techreport{rc4-ietf,
-  title        = {Test Vectors for the Stream Cipher RC4},
+% --- Cifrado de flujo ---
+
+@misc{cryptomuseum-vernam,
+  author       = {{Crypto Museum}},
+  title        = {The Vernam Cipher},
+  year         = {2012},
+  howpublished = {\url{https://www.cryptomuseum.com/crypto/vernam.htm}},
+}
+
+@techreport{rfc6229,
   author       = {Strombergson, Joachim and Josefsson, Simon},
-  institution  = {Internet Engineering Task Force (IETF)},
-  number       = {RFC 6229},
-  type         = {Informational},
-  month        = may,
+  title        = {Test Vectors for the Stream Cipher {RC4}},
+  type         = {Informational RFC},
+  number       = {6229},
+  institution  = {IETF},
   year         = {2011},
   url          = {https://www.rfc-editor.org/rfc/rfc6229.html},
 }
 
-@misc{rc4-gfg,
-  author       = {{GeeksforGeeks contributors}},
-  title        = {What is RC4 Encryption?},
+@misc{gfg-rc4,
+  author       = {{GeeksforGeeks}},
+  title        = {What is {RC4} Encryption?},
   howpublished = {\url{https://www.geeksforgeeks.org/what-is-rc4-encryption/}},
-  note         = {Accessed: 6 May 2025},
+  note         = {Accessed: May 2025},
 }
 
-@techreport{a5-nop,
-  title        = {GSM network and its privacy – the A5 stream cipher},
+@techreport{stockinger2005a5,
   author       = {Stockinger, Thomas},
+  title        = {{GSM} network and its privacy -- the {A5} stream cipher},
   institution  = {nop.at},
-  month        = nov,
   year         = {2005},
   url          = {https://www.nop.at/gsm_a5/GSM_A5.pdf},
 }
 
-@techreport{a5-ucsb,
-  title        = {A5 Encryption In GSM},
+@techreport{jensen2017a5,
   author       = {Jensen, Oliver Damsgaard and Andersen, Kristoffer Alvern},
+  title        = {{A5} Encryption In {GSM}},
   institution  = {University of California, Santa Barbara},
-  month        = jun,
   year         = {2017},
-  url          = {https://sites.cs.ucsb.edu/~koclab/teaching/cren/project/2017/jensen%2Bandersen.pdf},
+  url          = {https://sites.cs.ucsb.edu/~koclab/teaching/cren/project/2017/jensen\%2Bandersen.pdf},
 }
 
-@ARTICLE{diffie-hellman,
-  author={Diffie, W. and Hellman, M.},
-  journal={IEEE Transactions on Information Theory}, 
-  title={New directions in cryptography}, 
-  year={1976},
-  volume={22},
-  number={6},
-  pages={644-654},
-  abstract={Two kinds of contemporary developments in cryptography are examined. Widening applications of teleprocessing have given rise to a need for new types of cryptographic systems, which minimize the need for secure key distribution channels and supply the equivalent of a written signature. This paper suggests ways to solve these currently open problems. It also discusses how the theories of communication and computation are beginning to provide the tools to solve cryptographic problems of long standing.},
-  keywords={Cryptography;Receivers;Authentication;Eavesdropping;Costs;Business;Public key cryptography},
-  doi={10.1109/TIT.1976.1055638},
-  url={https://ieeexplore.ieee.org/document/1055638/},
-  ISSN={1557-9654},
-  month={November},}
+% --- Criptografia asimetrica ---
 
-@misc{SecurityStrengthRSA,
+@article{diffie1976new,
+  author  = {Diffie, W. and Hellman, M.},
+  title   = {New directions in cryptography},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {22},
+  number  = {6},
+  pages   = {644--654},
+  year    = {1976},
+  doi     = {10.1109/TIT.1976.1055638},
+}
+
+@misc{stackexchange-rsa-strength,
   author       = {{NIST}},
-  title        = {Security strength of RSA in relation with the modulus size},
-  howpublished = {Crypto StackExchange, respuesta destacada},
+  title        = {Security strength of {RSA} in relation with the modulus size},
+  howpublished = {Crypto StackExchange},
   year         = {2012},
   url          = {https://crypto.stackexchange.com/questions/8687/security-strength-of-rsa-in-relation-with-the-modulus-size},
 }
 
-@article{Koblitz85,
-  author  = {Koblitz, Neal},
-  title   = {Elliptic Curve Cryptosystems},
-  journal = {Math. Comp.},
-  volume  = {48},
-  number  = {177},
-  pages   = {203--209},
-  year    = {1987},
-}
+% --- Principios y ataques ---
 
-@inproceedings{Miller85,
-  author    = {Miller, Victor S.},
-  title     = {Use of Elliptic Curves in Cryptography},
-  booktitle = {Advances in Cryptology -- CRYPTO ’85},
-  pages     = {417--426},
-  year      = {1986},
+@incollection{petitcolas2011kerckhoffs,
+  author    = {Petitcolas, Fabien A. P.},
+  title     = {Kerckhoffs Principle},
+  booktitle = {Encyclopedia of Cryptography and Security},
+  editor    = {van Tilborg, Henk C. A. and Jajodia, Sushil},
   publisher = {Springer},
+  edition   = {2nd},
+  year      = {2011},
+  doi       = {10.1007/978-1-4419-5906-5},
 }
 
-@inproceedings{Johnson01_ECDSA,
-  author    = {Johnson, Don and Menezes, Alfred and Vanstone, Scott},
-  title     = {The Elliptic Curve Digital Signature Algorithm (ECDSA)},
-  booktitle = {IEEE International Workshop on Theory and Practice in Public Key Cryptography},
-  year      = {2001},
+@misc{infosectrain-attacks,
+  title        = {Different Types of Cryptography Attacks},
+  howpublished = {\url{https://www.infosectrain.com/blog/different-types-of-cryptography-attacks/}},
+  note         = {Accessed: May 2025},
 }
 
-@inproceedings{Shor94,
-  author    = {Shor, Peter W.},
-  title     = {Algorithms for Quantum Computation: Discrete Logarithms and Factoring},
-  booktitle = {Proc. 35th Annual Symposium on Foundations of Computer Science},
-  pages     = {124--134},
-  year      = {1994},
+@misc{gfg-active-passive,
+  title        = {Active and Passive Attacks in Information Security},
+  howpublished = {\url{https://www.geeksforgeeks.org/active-and-passive-attacks-in-information-security/}},
+  note         = {Accessed: May 2025},
 }
 
-@techreport{nist186-4,
-  author       = {{NIST}},
-  title        = {{FIPS} 186-4: Digital Signature Standard (DSS)},
-  institution  = {National Institute of Standards and Technology},
+@misc{goallsecure-attacks,
+  title        = {What Are Cryptographic Attacks?},
+  howpublished = {\url{https://www.goallsecure.com/blog/cryptographic-attacks-complete-guide/}},
+  note         = {Accessed: May 2025},
+}
+
+@misc{packetlabs-attacks,
+  title        = {Cryptography Attacks: 6 Types \& Prevention},
+  howpublished = {\url{https://www.packetlabs.net/posts/cryptography-attacks/}},
+  note         = {Accessed: May 2025},
+}
+
+@misc{fiveable-attacks,
+  title        = {Types of Cryptographic Attacks to Know},
+  howpublished = {\url{https://fiveable.me/lists/types-of-cryptographic-attacks}},
+  note         = {Accessed: May 2025},
+}
+
+@misc{gfg-cryptanalysis,
+  title        = {Cryptanalysis and Types of Attacks},
+  howpublished = {\url{https://www.geeksforgeeks.org/cryptanalysis-and-types-of-attacks/}},
+  note         = {Accessed: May 2025},
+}
+
+@misc{checkpoint-modern-attacks,
+  title        = {Modern Cryptographic Attacks: A Guide for the Perplexed},
+  howpublished = {\url{https://research.checkpoint.com/2024/modern-cryptographic-attacks-a-guide-for-the-perplexed/}},
+  note         = {Accessed: May 2025},
+}
+
+
+% #############################################################################
+% CAPITULO 3: CAMPOS FINITOS
+% #############################################################################
+
+@techreport{nist-fips186-4,
+  author       = {{National Institute of Standards and Technology (NIST)}},
+  title        = {{FIPS 186-4}: Digital Signature Standard ({DSS})},
+  institution  = {NIST},
   year         = {2013},
-  url          = {https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf}
+  url          = {https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf},
 }
 
-@misc{secg2,
-  author       = {{SECG}},
-  title        = {{SEC} 2: Recommended Elliptic Curve Domain Parameters},
-  howpublished = {\url{https://www.secg.org/sec2-v2.pdf}},
-  note         = {Version 2.0, May 2000}
+@techreport{sec2-v2,
+  author       = {{Standards for Efficient Cryptography Group (SECG)}},
+  title        = {{SEC 2}: Recommended Elliptic Curve Domain Parameters},
+  institution  = {SECG},
+  year         = {2010},
+  url          = {https://www.secg.org/sec2-v2.pdf},
+  note         = {Version 2.0},
 }
 
-@article{militzer-oef,
-  author    = {Militzer, Hermann and Paar, Christof},
-  title     = {Efficient Implementation of OEF Arithmetic for ECC},
-  journal   = {Cryptographic Hardware and Embedded Systems},
-  year      = {2004},
-  pages     = {123–134}
+@article{militzer2004oef,
+  author  = {Militzer, Hermann and Paar, Christof},
+  title   = {Efficient Implementation of {OEF} Arithmetic for {ECC}},
+  journal = {Cryptographic Hardware and Embedded Systems},
+  year    = {2004},
+  pages   = {123--134},
 }
 
-@inproceedings{barreto-oef,
+@inproceedings{barreto2003oef,
   author    = {Barreto, Paulo and Dahab, Reinaldo},
-  title     = {Efficient Multiplication on F$_{2^n}$ and F$_{p}$ via OEF},
+  title     = {Efficient Multiplication on $\mathbb{F}_{2^n}$ and $\mathbb{F}_p$ via {OEF}},
   booktitle = {Selected Areas in Cryptography (SAC)},
   year      = {2003},
-  pages     = {1–13}
+  pages     = {1--13},
 }
 
-@misc{cfrg-curves,
+@inproceedings{bernstein2006curve25519,
+  author    = {Bernstein, Daniel J.},
+  title     = {{Curve25519}: New {Diffie-Hellman} Speed Records},
+  booktitle = {Public Key Cryptography -- PKC 2006},
+  publisher = {Springer},
+  pages     = {207--228},
+  year      = {2006},
+  isbn      = {978-3-540-33852-9},
+}
+
+@misc{ietf-cfrg,
   author       = {{IETF CFRG}},
-  title        = {Elliptic Curve Cryptography (ECC) and Curve Generation},
+  title        = {Elliptic Curve Cryptography ({ECC}) and Curve Generation},
   howpublished = {\url{https://datatracker.ietf.org/wg/cfrg/documents/}},
-  note         = {IETF Internet-Draft}
+  note         = {IETF Internet-Draft},
 }
 
-@inproceedings{kocher-sca,
+@inproceedings{kocher1999dpa,
   author    = {Kocher, Paul C. and Jaffe, Joshua and Jun, Benjamin},
   title     = {Differential Power Analysis},
-  booktitle = {Advances in Cryptology (CRYPTO)},
+  booktitle = {Advances in Cryptology -- CRYPTO '99},
   year      = {1999},
-  pages     = {388–397}
-}
-
-@InProceedings{10.1007/11745853_14,
-author="Bernstein, Daniel J.",
-editor="Yung, Moti and Dodis, Yevgeniy and Kiayias, Aggelos and Malkin, Tal",
-title="Curve25519: New Diffie-Hellman Speed Records",
-booktitle="Public Key Cryptography - PKC 2006",
-year="2006",
-publisher="Springer Berlin Heidelberg",
-address="Berlin, Heidelberg",
-pages="207--228",
-abstract="This paper explains the design and implementation of a high-security elliptic-curve-Diffie-Hellman function achieving record-setting speeds: e.g., 832457 Pentium III cycles (with several side benefits: free key compression, free key validation, and state-of-the-art timing-attack protection), more than twice as fast as other authors' results at the same conjectured security level (with or without the side benefits).",
-isbn="978-3-540-33852-9"
-}
-
-@incollection{hankerson2004,
-  author    = {Darrel Hankerson and Scott Vanstone and Alfred Menezes},
-  title     = {Guide to Elliptic Curve Cryptography},
-  publisher = {Springer},
-  year      = {2004},
-  isbn      = {978-0-387-95276-8},
-  doi       = {10.1007/11745853_14},
+  pages     = {388--397},
 }
 
 @misc{openssl-bench,
-  author = {{OpenSSL Project}},
-  title  = {OpenSSL Benchmarking},
-  year   = {2021},
-  url    = {https://www.openssl.org/docs/manmaster/man1/openssl-speed.html},
+  author       = {{OpenSSL Project}},
+  title        = {OpenSSL Benchmarking},
+  year         = {2021},
+  url          = {https://www.openssl.org/docs/manmaster/man1/openssl-speed.html},
 }
 
 
-% ------------------------------------------------------------------------------
-% Bibliografía genérica para el Capítulo 4 y 5
-% ------------------------------------------------------------------------------
+% #############################################################################
+% CAPITULO 4: TEORIA DE LAS CURVAS ELIPTICAS
+% #############################################################################
 
-@article{Miller1986,
-  author    = {Miller, Victor S.},
-  title     = {Use of elliptic curves in cryptography},
-  journal   = {Advances in Cryptology—CRYPTO ’85 Proceedings},
-  year      = {1986},
-  pages     = {417--426},
-}
-@article{Koblitz1987,
-  author    = {Koblitz, Neal},
-  title     = {Elliptic curve cryptosystems},
-  journal   = {Mathematics of Computation},
-  volume    = {48},
-  number    = {177},
-  year      = {1987},
-  pages     = {203--209},
-}
-@misc{Rickard2016,
-  author    = {Rickard, Matt},
-  title     = {Elliptic Curve Cryptography for Beginners},
-  howpublished = {\url{https://mattrickard.com/elliptic-curve-cryptography}},
-  note      = {Accedido 2025-05-XX},
-}
-@article{Lenstra2000,
-  author    = {Lenstra, Arjen K. and Verheul, Eric R.},
-  title     = {Selecting Cryptographic Key Sizes},
-  journal   = {Journal of Cryptology},
-  volume    = {14},
-  number    = {4},
-  pages     = {255--293},
-  year      = {2001},
-}
-@book{ANSI_X9_62,
-  title     = {Public Key Cryptography for the Financial Services Industry},
-  author    = {{American National Standards Institute}},
-  year      = {1998},
-  publisher = {ANSI},
-}
-@misc{SEC2RFC5639,
-  author    = {{SECG}},
-  title     = {SEC 2: Recommended Elliptic Curve Domain Parameters},
-  howpublished = {\url{https://www.secg.org/sec2-v2.pdf}},
-  note      = {Accedido 2025-05-XX},
-}
-@misc{CFRC_Curves,
-  author    = {{CFRG}},
-  title     = {Recommended Curves for use in Internet Applications},
-  howpublished = {\url{https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-curves}},
-  note      = {Accedido 2025-05-XX},
-}
-@report{NIST-SP800-57rev4,
-  author    = {{NIST}},
-  title     = {Recommendation for Key Management Part 1},
-  institution = {National Institute of Standards and Technology},
-  number    = {SP 800-57 Rev. 4},
-  year      = {2016},
-}
-
-@inproceedings{gaudry2007breaking,
-  author       = {Gaudry, Pierrick and Thom{\'e}, Enge and Robert, Odette},
-  title        = {Breaking ECC2K-130: Discrete Logarithm Records over Large Fields},
-  booktitle    = {Advances in Cryptology – ASIACRYPT 2007},
-  series       = {LNCS},
-  volume       = {4833},
-  pages        = {109–128},
-  year         = {2007},
-  publisher    = {Springer},
-  doi          = {10.1007/978-3-540-76840-1\_7}
-}
-
-@standard{ansi_x962_1998,
-  title        = {Public Key Cryptography for the Financial Services Industry: The Elliptic Curve Digital Signature Algorithm (ECDSA)},
-  organization = {ANSI X9},
-  number       = {X9.62-1998},
-  year         = {1998}
-}
-
-@misc{nist_fips186_2,
-  author       = {{National Institute of Standards and Technology (NIST)}},
-  title        = {FIPS 186–2: Digital Signature Standard},
-  howpublished = {\url{https://csrc.nist.gov/publications/detail/fips/186/2/final}},
-  year         = {2000}
-}
-
-@misc{rfc5430,
-  author       = {{IETF}},
-  title        = {Suite B Profile for Transport Layer Security (TLS)},
-  howpublished = {RFC 5430},
-  year         = {2009},
-  url          = {https://tools.ietf.org/html/rfc5430}
-}
-
-@misc{rfc8422,
-  author       = {{IETF}},
-  title        = {Elliptic Curve Cryptography (ECC) Cipher Suites for Transport Layer Security (TLS)},
-  howpublished = {RFC 8422},
-  year         = {2018},
-  url          = {https://tools.ietf.org/html/rfc8422}
-}
-
-@book{hankerson2004guide,
-  author    = {Hankerson, Darrel and Menezes, Alfred and Vanstone, Scott},
-  title     = {Guide to Elliptic Curve Cryptography},
-  publisher = {Springer},
-  year      = {2004},
-  address   = {New York, NY}
-}
-
-@misc{rfc4492,
-  author       = {{IETF}},
-  title        = {Elliptic Curve Cipher Suites for Transport Layer Security (TLS)},
-  howpublished = {RFC 4492},
-  year         = {2006},
-  url          = {https://tools.ietf.org/html/rfc4492}
-}
-
-@misc{rfc5656,
-  author       = {{IETF}},
-  title        = {Elliptic Curve Algorithm for Secure Shell (SSH)},
-  howpublished = {RFC 5656},
-  year         = {2009},
-  url          = {https://tools.ietf.org/html/rfc5656}
-}
-
-@inproceedings{wuille2017secp256k1,
-  author    = {Wuille, Pieter and Maxwell, Gregory},
-  title     = {{secp256k1}: A high-speed Elliptic Curve library},
-  booktitle = {Proceedings of the 1st Bitcoin Core Developer Conference},
-  year      = {2017},
-  url       = {https://github.com/bitcoin-core/secp256k1}
-}
-
-@inproceedings{hodges2001implementing,
-  author    = {Hodges, Daniel and Lee, Richard and Paar, Christof},
-  title     = {Efficient Elliptic Curve Exponentiation with Precomputation on Smart Cards},
-  booktitle = {Cryptographic Hardware and Embedded Systems (CHES 2001)},
-  series    = {LNCS},
-  volume    = {2162},
-  pages     = {129--143},
-  year      = {2001},
-  publisher = {Springer}
-}
-
-@article{boneh2001identity,
-  author  = {Boneh, Dan and Franklin, Matt},
-  title   = {Identity-Based Encryption from the Weil Pairing},
-  journal = {SIAM Journal on Computing},
-  volume  = {32},
-  number  = {3},
-  pages   = {586--615},
-  year    = {2003},
-  doi     = {10.1137/S0097539701398295}
-}
-
-@book{SilvermanAEC,
-  author    = {Joseph H. Silverman},
+@book{silverman1986aec,
+  author    = {Silverman, Joseph H.},
   title     = {The Arithmetic of Elliptic Curves},
   series    = {Graduate Texts in Mathematics},
   volume    = {106},
-  year      = {1986},
   publisher = {Springer},
+  year      = {1986},
 }
 
-@book{NIST-SP-800-186,
-  author    = {{NIST}},
-  title     = {Recommendation for Pair-Wise Key Establishment Schemes Using Discrete Logarithm Cryptography},
-  series    = {Special Publication 800-186},
-  year      = {2019},
-  publisher = {National Institute of Standards and Technology},
+@techreport{nist-sp800-186,
+  author       = {{National Institute of Standards and Technology (NIST)}},
+  title        = {{SP 800-186}: Recommendations for Discrete Logarithm-Based Cryptography: Elliptic Curve Domain Parameters},
+  institution  = {NIST},
+  year         = {2023},
+  url          = {https://csrc.nist.gov/publications/detail/sp/800-186/final},
 }
 
-@article{KoblitzBinary,
-  author  = {Neal Koblitz},
-  title   = {Elliptic curve cryptosystems},
+@article{waterhouse1969,
+  author  = {Waterhouse, William C.},
+  title   = {Abelian varieties over finite fields},
+  journal = {Annales scientifiques de l'{\'E}cole Normale Sup{\'e}rieure},
+  volume  = {2},
+  number  = {4},
+  pages   = {521--560},
+  year    = {1969},
+}
+
+
+% #############################################################################
+% CAPITULO 5: CRIPTOGRAFIA DE CURVAS ELIPTICAS (ECC)
+% #############################################################################
+
+% --- Fundamentos ---
+
+@article{koblitz1987,
+  author  = {Koblitz, Neal},
+  title   = {Elliptic Curve Cryptosystems},
   journal = {Mathematics of Computation},
   volume  = {48},
   number  = {177},
@@ -542,80 +388,206 @@ isbn="978-3-540-33852-9"
   year    = {1987},
 }
 
-@article{Waterhouse1969,
-  author  = {William C. Waterhouse},
-  title   = {Abelian varieties over finite fields},
-  journal = {Annales scientifiques de l'{\'E}cole Normale Sup{\'e}rieure},
-  year    = {1969},
-  volume  = {2},
-  number  = {4},
-  pages   = {521--560},
+@inproceedings{miller1986,
+  author    = {Miller, Victor S.},
+  title     = {Use of Elliptic Curves in Cryptography},
+  booktitle = {Advances in Cryptology -- CRYPTO '85},
+  pages     = {417--426},
+  year      = {1986},
+  publisher = {Springer},
 }
 
+@book{hankerson2004guide,
+  author    = {Hankerson, Darrel and Menezes, Alfred and Vanstone, Scott},
+  title     = {Guide to Elliptic Curve Cryptography},
+  publisher = {Springer},
+  address   = {New York, NY},
+  year      = {2004},
+}
+
+@misc{rickard-ecc,
+  author       = {Rickard, Matt},
+  title        = {Elliptic Curve Cryptography for Beginners},
+  howpublished = {\url{https://mattrickard.com/elliptic-curve-cryptography}},
+  note         = {Accessed: May 2025},
+}
+
+@article{lenstra2001selecting,
+  author  = {Lenstra, Arjen K. and Verheul, Eric R.},
+  title   = {Selecting Cryptographic Key Sizes},
+  journal = {Journal of Cryptology},
+  volume  = {14},
+  number  = {4},
+  pages   = {255--293},
+  year    = {2001},
+}
 
 @techreport{nist-sp800-57,
   author       = {{National Institute of Standards and Technology (NIST)}},
-  title        = {{SP 800-57 Part 1 Rev. 5: Recommendation for Key Management}},
+  title        = {{SP 800-57 Part 1 Rev.~5}: Recommendation for Key Management},
   institution  = {NIST},
   year         = {2020},
   url          = {https://csrc.nist.gov/publications/detail/sp/800-57-part-1/rev-5/final},
-  note         = {Accessed: May 2025}
 }
+
+% --- Historia y estandarizacion ---
+
+@inproceedings{gaudry2007breaking,
+  author    = {Gaudry, Pierrick and Thom{\'e}, Emmanuel and Videau, Marion},
+  title     = {Breaking {ECC2K-130}: Discrete Logarithm Records over Large Fields},
+  booktitle = {Advances in Cryptology -- ASIACRYPT 2009},
+  series    = {LNCS},
+  volume    = {5912},
+  pages     = {109--128},
+  year      = {2009},
+  publisher = {Springer},
+}
+
+@standard{ansi-x962,
+  title        = {Public Key Cryptography for the Financial Services Industry: {ECDSA}},
+  organization = {ANSI X9},
+  number       = {X9.62},
+  year         = {1998},
+}
+
+@misc{nist-fips186-2,
+  author       = {{National Institute of Standards and Technology (NIST)}},
+  title        = {{FIPS 186--2}: Digital Signature Standard},
+  howpublished = {\url{https://csrc.nist.gov/publications/detail/fips/186/2/final}},
+  year         = {2000},
+}
+
+@misc{rfc5430,
+  author       = {{IETF}},
+  title        = {Suite {B} Profile for Transport Layer Security ({TLS})},
+  howpublished = {RFC 5430},
+  year         = {2009},
+  url          = {https://tools.ietf.org/html/rfc5430},
+}
+
+@misc{rfc8422,
+  author       = {{IETF}},
+  title        = {Elliptic Curve Cryptography ({ECC}) Cipher Suites for {TLS}},
+  howpublished = {RFC 8422},
+  year         = {2018},
+  url          = {https://tools.ietf.org/html/rfc8422},
+}
+
+@misc{rfc8446,
+  author       = {Rescorla, Eric},
+  title        = {The Transport Layer Security ({TLS}) Protocol Version 1.3},
+  howpublished = {RFC 8446},
+  year         = {2018},
+  url          = {https://tools.ietf.org/html/rfc8446},
+}
+
+% --- Aplicaciones ---
+
+@inproceedings{secp256k1-bitcoin,
+  author    = {Wuille, Pieter and Maxwell, Gregory},
+  title     = {{secp256k1}: A high-speed Elliptic Curve library},
+  booktitle = {Proceedings of the 1st Bitcoin Core Developer Conference},
+  year      = {2017},
+  url       = {https://github.com/bitcoin-core/secp256k1},
+}
+
+@misc{rfc4492,
+  author       = {{IETF}},
+  title        = {Elliptic Curve Cipher Suites for {TLS}},
+  howpublished = {RFC 4492},
+  year         = {2006},
+  url          = {https://tools.ietf.org/html/rfc4492},
+}
+
+@misc{rfc5656,
+  author       = {{IETF}},
+  title        = {Elliptic Curve Algorithm for Secure Shell ({SSH})},
+  howpublished = {RFC 5656},
+  year         = {2009},
+  url          = {https://tools.ietf.org/html/rfc5656},
+}
+
+@inproceedings{hodges2001ecc,
+  author    = {Hodges, Daniel and Lee, Richard and Paar, Christof},
+  title     = {Efficient Elliptic Curve Exponentiation with Precomputation on Smart Cards},
+  booktitle = {Cryptographic Hardware and Embedded Systems (CHES 2001)},
+  series    = {LNCS},
+  volume    = {2162},
+  pages     = {129--143},
+  year      = {2001},
+  publisher = {Springer},
+}
+
+@article{boneh2003ibe,
+  author  = {Boneh, Dan and Franklin, Matt},
+  title   = {Identity-Based Encryption from the {Weil} Pairing},
+  journal = {SIAM Journal on Computing},
+  volume  = {32},
+  number  = {3},
+  pages   = {586--615},
+  year    = {2003},
+  doi     = {10.1137/S0097539701398295},
+}
+
+% --- ECDLP y ataques ---
+
+@article{pollard1978monte,
+  author  = {Pollard, John M.},
+  title   = {Monte Carlo Methods for Index Computation $\pmod{p}$},
+  journal = {Mathematics of Computation},
+  volume  = {32},
+  number  = {143},
+  pages   = {918--924},
+  year    = {1978},
+  doi     = {10.1090/S0025-5718-1978-0491431-9},
+}
+
+@inproceedings{smart1999anomalous,
+  author    = {Smart, Nigel P.},
+  title     = {The Discrete Logarithm Problem on Elliptic Curves of Trace One},
+  journal   = {Journal of Cryptology},
+  volume    = {12},
+  number    = {3},
+  pages     = {193--196},
+  year      = {1999},
+  doi       = {10.1007/s001459900052},
+}
+
+@article{menezes1993reducing,
+  author  = {Menezes, Alfred J. and Okamoto, Tatsuaki and Vanstone, Scott A.},
+  title   = {Reducing Elliptic Curve Logarithms to Logarithms in a Finite Field},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {39},
+  number  = {5},
+  pages   = {1639--1646},
+  year    = {1993},
+  doi     = {10.1109/18.259647},
+}
+
+% --- ECDSA ---
 
 @techreport{nist-fips180-4,
   author       = {{National Institute of Standards and Technology (NIST)}},
-  title        = {{FIPS PUB 180-4: Secure Hash Standard (SHS)}},
+  title        = {{FIPS PUB 180-4}: Secure Hash Standard ({SHS})},
   institution  = {NIST},
   year         = {2015},
   url          = {https://csrc.nist.gov/publications/detail/fips/180/4/final},
-  note         = {Accessed: May 2025}
 }
 
 @techreport{nist-sp800-56a,
   author       = {{National Institute of Standards and Technology (NIST)}},
-  title        = {{SP 800-56A Rev. 3: Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography}},
+  title        = {{SP 800-56A Rev.~3}: Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography},
   institution  = {NIST},
   year         = {2018},
   url          = {https://csrc.nist.gov/publications/detail/sp/800-56a/rev-3/final},
-  note         = {Accessed: May 2025}
-}
-
-@misc{rfc8446,
-  author       = {Eric Rescorla},
-  title        = {{The Transport Layer Security (TLS) Protocol Version 1.3}},
-  howpublished = {RFC 8446},
-  year         = {2018},
-  url          = {https://tools.ietf.org/html/rfc8446}
 }
 
 @misc{rfc6979,
-  author       = {Thomas Pornin},
-  title        = {{Deterministic Usage of the Digital Signature Algorithm (DSA) and Elliptic Curve Digital Signature Algorithm (ECDSA)}},
+  author       = {Pornin, Thomas},
+  title        = {Deterministic Usage of {DSA} and {ECDSA}},
   howpublished = {RFC 6979},
   year         = {2013},
-  url          = {https://tools.ietf.org/html/rfc6979}
-}
-
-@inproceedings{smart1999anomalous,
-  author       = {Nigel P. Smart},
-  title        = {The Discrete Logarithm Problem on Elliptic Curves of Trace One},
-  booktitle    = {Journal of Cryptology},
-  volume       = {12},
-  number       = {3},
-  pages        = {193--196},
-  year         = {1999},
-  doi          = {10.1007/s001459900052}
-}
-
-@inproceedings{menezes1993reducing,
-  author       = {Alfred J. Menezes and Tatsuaki Okamoto and Scott A. Vanstone},
-  title        = {Reducing Elliptic Curve Logarithms to Logarithms in a Finite Field},
-  booktitle    = {IEEE Transactions on Information Theory},
-  volume       = {39},
-  number       = {5},
-  pages        = {1639--1646},
-  year         = {1993},
-  doi          = {10.1109/18.259647}
+  url          = {https://tools.ietf.org/html/rfc6979},
 }
 
 @misc{ps3-ecdsa-fail,
@@ -624,92 +596,132 @@ isbn="978-3-540-33852-9"
   howpublished = {27th Chaos Communication Congress (27C3)},
   year         = {2010},
   url          = {https://events.ccc.de/congress/2010/Fahrplan/events/4087.en.html},
-  note         = {Accessed: May 2025}
 }
 
-@inproceedings{howgrave2001lattice,
-  author       = {Nick Howgrave-Graham and Nigel P. Smart},
-  title        = {Lattice Attacks on Digital Signature Schemes},
-  booktitle    = {Designs, Codes and Cryptography},
-  volume       = {23},
-  number       = {3},
-  pages        = {283--290},
-  year         = {2001},
-  doi          = {10.1023/A:1011214926272}
+@article{howgrave2001lattice,
+  author  = {Howgrave-Graham, Nick and Smart, Nigel P.},
+  title   = {Lattice Attacks on Digital Signature Schemes},
+  journal = {Designs, Codes and Cryptography},
+  volume  = {23},
+  number  = {3},
+  pages   = {283--290},
+  year    = {2001},
+  doi     = {10.1023/A:1011214926272},
 }
+
+% --- Controversias ---
 
 @inproceedings{shumow2007dual-ec,
-  author       = {Dan Shumow and Niels Ferguson},
-  title        = {On the Possibility of a Back Door in the {NIST SP800-90} {Dual Ec Prng}},
-  booktitle    = {CRYPTO 2007 Rump Session},
-  year         = {2007},
-  url          = {http://rump2007.cr.yp.to/15-shumow.pdf}
+  author    = {Shumow, Dan and Ferguson, Niels},
+  title     = {On the Possibility of a Back Door in the {NIST SP800-90} {Dual Ec Prng}},
+  booktitle = {CRYPTO 2007 Rump Session},
+  year      = {2007},
+  url       = {http://rump2007.cr.yp.to/15-shumow.pdf},
 }
 
-% referencias_cap5_suplemento_extra.bib
-% Referencias adicionales para las secciones suplementarias
-% (Pollard's rho y generacion de parametros)
-
-@article{pollard1978monte,
-  author  = {John M. Pollard},
-  title   = {Monte Carlo Methods for Index Computation (mod $p$)},
-  journal = {Mathematics of Computation},
-  volume  = {32},
-  number  = {143},
-  pages   = {918--924},
-  year    = {1978},
-  doi     = {10.1090/S0025-5718-1978-0491431-9}
-}
+% --- Generacion de parametros ---
 
 @article{schoof1985elliptic,
-  author  = {Ren\'{e} Schoof},
+  author  = {Schoof, Ren{\'e}},
   title   = {Elliptic Curves Over Finite Fields and the Computation of Square Roots mod $p$},
   journal = {Mathematics of Computation},
   volume  = {44},
   number  = {170},
   pages   = {483--494},
   year    = {1985},
-  doi     = {10.1090/S0025-5718-1985-0777280-6}
+  doi     = {10.1090/S0025-5718-1985-0777280-6},
 }
 
 @techreport{sec1-v2,
   author       = {{Standards for Efficient Cryptography Group (SECG)}},
-  title        = {{SEC 1: Elliptic Curve Cryptography}},
+  title        = {{SEC 1}: Elliptic Curve Cryptography},
   institution  = {SECG},
   year         = {2009},
   url          = {https://www.secg.org/sec1-v2.pdf},
-  note         = {Version 2.0}
+  note         = {Version 2.0},
 }
 
-% (Pollard's rho y generacion de parametros)
 
-@article{pollard1978monte,
-  author  = {John M. Pollard},
-  title   = {Monte Carlo Methods for Index Computation (mod $p$)},
-  journal = {Mathematics of Computation},
-  volume  = {32},
-  number  = {143},
-  pages   = {918--924},
-  year    = {1978},
-  doi     = {10.1090/S0025-5718-1978-0491431-9}
+% #############################################################################
+% CAPITULO 6: IMPLEMENTACION Y ENTORNO EXPERIMENTAL
+% #############################################################################
+
+@misc{shoup-ntl,
+  author       = {Shoup, Victor},
+  title        = {{NTL}: A Library for doing Number Theory},
+  howpublished = {\url{https://libntl.org/}},
+  year         = {2024},
+  note         = {Accessed: May 2025},
 }
 
-@article{schoof1985elliptic,
-  author  = {Ren\'{e} Schoof},
-  title   = {Elliptic Curves Over Finite Fields and the Computation of Square Roots mod $p$},
-  journal = {Mathematics of Computation},
-  volume  = {44},
-  number  = {170},
-  pages   = {483--494},
-  year    = {1985},
-  doi     = {10.1090/S0025-5718-1985-0777280-6}
+@misc{granlund-gmp,
+  author       = {Granlund, Torbj{\"o}rn and {the GMP development team}},
+  title        = {{GNU MP}: The {GNU} Multiple Precision Arithmetic Library},
+  howpublished = {\url{https://gmplib.org/}},
+  year         = {2024},
+  note         = {Accessed: May 2025},
 }
 
-@techreport{sec1-v2,
-  author       = {{Standards for Efficient Cryptography Group (SECG)}},
-  title        = {{SEC 1: Elliptic Curve Cryptography}},
-  institution  = {SECG},
-  year         = {2009},
-  url          = {https://www.secg.org/sec1-v2.pdf},
-  note         = {Version 2.0}
-}
+
+% #############################################################################
+% MAPEO DE CLAVES ANTIGUAS -> NUEVAS
+% (Para referencia al actualizar los .tex de capitulos 1-4)
+%
+% ANTIGUO                                -> NUEVO
+% -------                                   -----
+% shors_algorithm_a_quantum_threat...    -> shor-quantum-threat
+% the_quantum_computing_threat           -> paloalto-quantum-threat
+% IETF1321                               -> rivest1992md5
+% Wang04_MD5                             -> wang2004md5
+% Stevens09_MD5_CA                       -> stevens2009md5-ca
+% NIST_SP800131A                         -> nist-sp800-131a
+% FIPS1801                               -> nist-fips180-1
+% Wang05_SHA1                            -> wang2005sha1
+% GoogleShattered                        -> google-shattered
+% ChromeDeprecateSHA1                    -> chrome-sha1
+% MozillaDeprecateSHA1                   -> mozilla-sha1
+% MicrosoftSHA1Deprecation              -> microsoft-sha1
+% tdes-techtarget                        -> techtarget-3des
+% aes-nist                               -> nist-fips197
+% Block_Cipher                           -> binaryterms-block
+% twofish-schneier                       -> schneier-twofish
+% vernam                                 -> cryptomuseum-vernam
+% rc4-ietf                               -> rfc6229
+% rc4-gfg                                -> gfg-rc4
+% a5-nop                                 -> stockinger2005a5
+% a5-ucsb                                -> jensen2017a5
+% diffie-hellman                         -> diffie1976new
+% SecurityStrengthRSA                    -> stackexchange-rsa-strength
+% Petitcolas2011Kerckhoffs               -> petitcolas2011kerckhoffs
+% different_types_cryptography_attacks   -> infosectrain-attacks
+% active_and_passive_attacks...          -> gfg-active-passive
+% what_are_cryptographic_attacks         -> goallsecure-attacks
+% cryptography_attacks_6_types...        -> packetlabs-attacks
+% types_of_cryptographic_attacks_to_know -> fiveable-attacks
+% cryptanalysis_and_types_of_attacks     -> gfg-cryptanalysis
+% modern_cryptographic_attacks...        -> checkpoint-modern-attacks
+% nist186-4                              -> nist-fips186-4
+% secg2 / SEC2RFC5639                    -> sec2-v2
+% hankerson2004                          -> hankerson2004guide
+% Koblitz85 / Koblitz1987 / KoblitzBinary -> koblitz1987
+% Miller85 / Miller1986                  -> miller1986
+% Rickard2016                            -> rickard-ecc
+% Lenstra2000                            -> lenstra2001selecting
+% ANSI_X9_62 / ansi_x962_1998           -> ansi-x962
+% nist_fips186_2                         -> nist-fips186-2
+% wuille2017secp256k1                    -> secp256k1-bitcoin
+% hodges2001implementing                 -> hodges2001ecc
+% boneh2001identity                      -> boneh2003ibe
+% 10.1007/11745853_14                    -> bernstein2006curve25519
+% kocher-sca                             -> kocher1999dpa
+% cfrg-curves / CFRC_Curves             -> ietf-cfrg
+% NIST-SP800-57rev4                      -> nist-sp800-57
+% NIST-SP-800-186                        -> nist-sp800-186
+% militzer-oef                           -> militzer2004oef
+% barreto-oef                            -> barreto2003oef
+% SilvermanAEC                           -> silverman1986aec
+% Waterhouse1969                         -> waterhouse1969
+% openssl-bench                          -> openssl-bench (sin cambio)
+% Johnson01_ECDSA                        -> (eliminado, no citado)
+% Shor94                                 -> (eliminado, no citado directamente)
+% #############################################################################

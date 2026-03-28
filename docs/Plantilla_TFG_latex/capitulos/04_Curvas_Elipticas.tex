@@ -280,7 +280,7 @@ La razón de distinguir tres familias de ecuaciones simplificadas responde a la 
     \[
       y^2 = x^3 + ax + b.
     \]
-    Es la forma \emph{short} más habitual en criptografía de curva elíptica sobre primos grandes, ya que minimiza el número de parámetros y simplifica las fórmulas de suma y duplicación~\cite{SilvermanAEC}. Todas las curvas estándar de NIST y SECG usan este modelo~\cite{NIST-SP-800-186}.
+    Es la forma \emph{short} más habitual en criptografía de curva elíptica sobre primos grandes, ya que minimiza el número de parámetros y simplifica las fórmulas de suma y duplicación~\cite{silverman1986aec}. Todas las curvas estándar de NIST y SECG usan este modelo~\cite{nist-sp800-186}.
   \item \textbf{Característica \(2\) (campos binarios)}  
     \begin{align*}
       y^2 + x y &= x^3 + A x^2 + B
@@ -288,18 +288,18 @@ La razón de distinguir tres familias de ecuaciones simplificadas responde a la 
       y^2 + C y &= x^3 + A x + B
       &&\text{(supersingular)}.
     \end{align*}
-    En hardware ligero y tarjetas inteligentes, trabajar en \(\mathbb{F}_{2^m}\) sólo requiere desplazamientos y XOR, sin multiplicaciones completas de enteros~\cite{KoblitzBinary}. Las curvas no supersingulares se eligen para evitar vulnerabilidades a ataques basados en endomorfismos especiales.
+    En hardware ligero y tarjetas inteligentes, trabajar en \(\mathbb{F}_{2^m}\) sólo requiere desplazamientos y XOR, sin multiplicaciones completas de enteros~\cite{koblitz1987}. Las curvas no supersingulares se eligen para evitar vulnerabilidades a ataques basados en endomorfismos especiales.
   \item \textbf{Característica \(3\)}  
     \[
       y^2 = x^3 + A x^2 + B
       \quad\text{o}\quad
       y^2 = x^3 + A x + B,
     \]
-    con distinción similar entre casos \emph{supersingular} y \emph{ordinarios}~\cite{SilvermanAEC}. Aunque menos comunes en criptografía práctica, estas curvas sirven en estudios teóricos y en construcciones avanzadas de pares bilineales.
+    con distinción similar entre casos \emph{supersingular} y \emph{ordinarios}~\cite{silverman1986aec}. Aunque menos comunes en criptografía práctica, estas curvas sirven en estudios teóricos y en construcciones avanzadas de pares bilineales.
 \end{itemize}
 
 \paragraph{Curvas ordinarias vs.\ supersingulares}  
-La condición de \emph{supersingularidad} (discriminante especial, ver cada caso) refleja que el grupo de puntos de la curva tiene un anillo de endomorfismos más grande. Si bien ciertas construcciones pairing‐based usan curvas supersingulares (por sus endomorfismos explícitos), para ECC estándar se prefieren curvas \emph{ordinarias} (no supersingulares) para evitar ataques que explotan ese extra de simetría~\cite{Waterhouse1969}.  
+La condición de \emph{supersingularidad} (discriminante especial, ver cada caso) refleja que el grupo de puntos de la curva tiene un anillo de endomorfismos más grande. Si bien ciertas construcciones pairing‐based usan curvas supersingulares (por sus endomorfismos explícitos), para ECC estándar se prefieren curvas \emph{ordinarias} (no supersingulares) para evitar ataques que explotan ese extra de simetría~\cite{waterhouse1969}.  
 
 \subsection{Ley de Grupo}\label{sec:ley_de_grupo}
 Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\O\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}, basado en dos construcciones geométricas distintas, según si sumamos dos puntos distintos o duplicamos un mismo punto.
@@ -559,6 +559,7 @@ podemos listar todos los \(x\in\{0,1,\dots,96\}\), calcular \(x^3+2x+3\pmod{97}\
 En \S\ref{sec:ley_de_grupo} presentamos la ley de grupo para puntos en curvas elípticas en coordenadas afines. Sin embargo, las operaciones de suma y duplicación requieren invertir en el cuerpo base, lo cual puede ser costoso si la inversión es mucho más lenta que la multiplicación. Para reducir el número de inversiones es útil emplear \emph{coordenadas proyectivas}, que representan cada punto por un triple \((X:Y:Z)\) en lugar de \((x,y)\). A continuación describimos esta representación de forma general y sus variantes más utilizadas en \(\mathbb{F}_p\) y \(\mathbb{F}_{2^m}\).
 
 \subsection{Coordenadas proyectivas: definición general}
+\label{sec:coord-proyectivas}
 
 Sea \(K\) un cuerpo, y fijos \(c,d\ge1\). Definimos una relación de equivalencia en
 \[
