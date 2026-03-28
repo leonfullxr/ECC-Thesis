@@ -20,8 +20,9 @@
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{algorithm}
-\usepackage{algorithmic}
 \usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{positioning,decorations.pathreplacing,arrows,babel}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{graphicx}
@@ -112,6 +113,7 @@ Telecomunicación\xspace}
 \newtheorem{ejemplo}{Ejemplo}[chapter]
 \newtheorem{definicion}{Definición}[chapter]
 \newtheorem{remark}{Observación}[chapter]
+\newtheorem{observacion}{Observación}[chapter]
 \newtheorem{corollary}{Corolario}[chapter]
 
 \definecolor{gray97}{gray}{.97}
@@ -200,7 +202,13 @@ Telecomunicación\xspace}
 \input{prefacios/prefacio}
 \frontmatter
 \tableofcontents
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listfigurename}
 \listoffigures
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{\listtablename}
 \listoftables
 \mainmatter
 %\setlength{\parskip}{5pt}

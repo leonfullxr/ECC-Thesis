@@ -87,52 +87,278 @@ En curvas elípticas, no se conoce una analogía del \textit{index calculus}. Lo
 
 Ambos son de complejidad \emph{exponencial completa} respecto al tamaño de la entrada ($\log n$ bits). Es decir, para una curva de $k$ bits de seguridad, el mejor ataque conocido requiere $O(2^{k/2})$ operaciones. Esto implica que una curva de 256 bits ofrece aproximadamente 128 bits de seguridad, mientras que un RSA de 3072 bits es necesario para alcanzar ese mismo nivel~\cite{hankerson2004guide,nist-sp800-57}.
 
+\subsubsection{Baby-step / Giant-step (Shanks)}
+\label{subsubsec:bsgs}
+ 
+El algoritmo de Shanks~\cite{hankerson2004guide} se basa en una idea elegante: descomponer el escalar desconocido $d$ en dos mitades y buscar una colisi\'on entre dos conjuntos precalculados.
+ 
+\paragraph{Idea.}
+Si escribimos $d = j \cdot m + i$ donde $m = \lceil \sqrt{n} \rceil$, con $0 \leq i < m$ y $0 \leq j < m$, entonces
+\[
+    Q = dP = (jm + i)P = jmP + iP
+    \quad\Longrightarrow\quad
+    Q - j(mP) = iP.
+\]
+El lado izquierdo depende solo de $j$ (``giant steps'') y el derecho solo de $i$ (``baby steps''). Si precalculamos todos los valores $iP$ y los almacenamos en una tabla hash, basta recorrer los giant steps hasta encontrar una coincidencia.
+ 
+\begin{algorithm}[htbp]
+\caption{Baby-step / Giant-step para el ECDLP}
+\label{alg:bsgs}
+\begin{algorithmic}[1]
+\Require Puntos $P$, $Q \in E(\mathbb{F}_q)$ con $Q = dP$, orden $n = |P|$
+\Ensure Entero $d$ tal que $Q = dP$
+\State $m \leftarrow \lceil \sqrt{n} \rceil$
+\State \Comment{\textbf{Baby steps}: precalcular $iP$ para $i = 0, 1, \ldots, m-1$}
+\For{$i = 0$ \textbf{to} $m-1$}
+    \State Almacenar $(iP, i)$ en tabla hash
+\EndFor
+\State \Comment{\textbf{Giant steps}: buscar colisi\'on}
+\State $S \leftarrow Q$
+\For{$j = 0$ \textbf{to} $m-1$}
+    \If{$S$ est\'a en la tabla hash con valor $i$}
+        \State \Return $d = jm + i \bmod n$
+    \EndIf
+    \State $S \leftarrow S - mP$ \Comment{Equivalente a $Q - (j+1)mP$}
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+ 
+\paragraph{Complejidad.}
+La fase de baby steps realiza $m$ multiplicaciones escalares y requiere $O(m)$ espacio para la tabla hash. La fase de giant steps realiza como m\'aximo $m$ sumas de puntos. El coste total es $O(m) = O(\sqrt{n})$ tanto en tiempo como en espacio. Para una curva de 256 bits, esto supone almacenar $\sim 2^{128}$ puntos, lo que es inviable con la tecnolog\'ia actual.
+ 
+\begin{ejemplo}
+\label{ej:bsgs}
+Sea la curva $E: y^2 = x^3 + 2x + 3$ sobre $\mathbb{F}_{97}$, con generador $P = (0, 10)$ de orden $n = 50$ y objetivo $Q = (92, 81) = 16P$.
+ 
+Calculamos $m = \lceil\sqrt{50}\rceil = 8$. Los baby steps son:
+\begin{center}
+\begin{small}
+\begin{tabular}{cl}
+$i$ & $iP$ \\
+\hline
+0 & $\mathcal{O}$ \\
+1 & $(0, 10)$ \\
+2 & $(69, 22)$ \\
+3 & $(19, 91)$ \\
+\multicolumn{2}{c}{$\vdots$}
+\end{tabular}
+\end{small}
+\end{center}
+ 
+Para los giant steps, calculamos $8P = (53, 13)$ y recorremos $Q - j \cdot 8P$ hasta encontrar una coincidencia con la tabla de baby steps. La colisi\'on se produce para $j = 2$, $i = 0$, dando $d = 2 \cdot 8 + 0 = 16$. La figura~\ref{fig:bsgs-visual} muestra la visualizaci\'on de este proceso.
+\end{ejemplo}
 
-\paragraph{El método rho de Pollard para el ECDLP.}
+\subsubsection{M\'etodo rho de Pollard}
+\label{subsubsec:pollard-rho}
 
-De los dos algoritmos genéricos mencionados, el \emph{rho de Pollard}~\cite{pollard1978monte} es el más utilizado en la práctica contra el ECDLP, pues tiene la misma complejidad temporal que baby-step/giant-step ($O(\sqrt{n})$) pero con requerimiento de memoria constante~$O(1)$, lo que lo hace viable para atacar curvas de tamaños criptográficos.
+El rho de Pollard~\cite{pollard1978monte} alcanza la misma complejidad temporal que BSGS ($O(\sqrt{n})$) pero con requerimiento de memoria constante~$O(1)$, lo que lo convierte en el ataque m\'as pr\'actico contra el ECDLP~\cite{hankerson2004guide}. Su nombre proviene de la forma de la letra griega~$\rho$ que adopta la secuencia de puntos generada por el algoritmo, como se ilustra en la figura~\ref{fig:rho-shape}.
 
-\subparagraph{Idea intuitiva.}
-El método se basa en la \emph{paradoja del cumpleaños}: si elegimos elementos al azar de un conjunto de~$N$ elementos, esperamos encontrar una colisión (dos elementos iguales) tras aproximadamente~$\sqrt{\pi N/2}$ elecciones. Pollard aplica este principio al grupo de puntos de la curva: en lugar de elegir puntos al azar (lo cual requeriría almacenarlos todos), construye una \emph{secuencia pseudoaleatoria} de puntos mediante una función de iteración determinista. Cuando la secuencia produce una colisión ---dos puntos iguales---, se puede extraer el logaritmo discreto.
+\paragraph{Idea intuitiva.}
+El m\'etodo se basa en la \emph{paradoja del cumplea\~nos}: si elegimos elementos al azar de un conjunto de~$N$ elementos, esperamos encontrar una colisi\'on (dos elementos iguales) tras aproximadamente~$\sqrt{\pi N/2}$ intentos. Pollard aplica este principio al grupo $\langle P \rangle$: construye una secuencia pseudoaleatoria de puntos $x_0, x_1, x_2, \ldots$ mediante una funci\'on de iteraci\'on determinista. Dado que el grupo es finito, la secuencia eventualmente entra en un \emph{ciclo}. Cuando se detecta una colisi\'on ---dos \'indices distintos $i \neq j$ con $x_i = x_j$---, se puede extraer el logaritmo discreto.
 
-\subparagraph{Descripción del algoritmo.}
-Sea $P$ el generador de orden~$n$ y $Q = dP$ el punto cuyo logaritmo discreto queremos encontrar. Definimos una función de iteración $f: \langle P \rangle \to \langle P \rangle$ que particiona el grupo en tres subconjuntos $S_1, S_2, S_3$ (por ejemplo, según el valor de~$x \bmod 3$) y actúa como:
+\paragraph{Estructura $\rho$.}
+La secuencia $x_0, x_1, x_2, \ldots$ tiene la estructura de la letra~$\rho$: una \emph{cola} de longitud~$\lambda$ (puntos que se visitan una sola vez) seguida de un \emph{ciclo} de longitud~$\mu$ (puntos que se repiten indefinidamente). Es decir, $x_{\lambda + \mu} = x_\lambda$. La figura~\ref{fig:rho-shape} muestra esta estructura para el ejemplo que desarrollaremos a continuaci\'on.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    node distance=1.2cm,
+    point/.style={circle, draw, fill=blue!20, minimum size=6mm, font=\small},
+    cpoint/.style={circle, draw, fill=red!20, minimum size=6mm, font=\small},
+    arrow/.style={->, >=stealth, thick}
+]
+% Cola (tail) - vertical
+\node[point] (x0) {$x_0$};
+\node[point, below of=x0] (x1) {$x_1$};
+\node[point, below of=x1] (x2) {$x_2$};
+
+% Ciclo (cycle) - circular arrangement
+\node[cpoint, below right=0.8cm and 1.5cm of x2] (x3) {$x_3$};
+\node[cpoint, right=1.2cm of x3] (x4) {$x_4$};
+\node[cpoint, above right=0.8cm and 0.6cm of x4] (x5) {$x_5$};
+\node[cpoint, above=1.2cm of x5] (x6) {$x_6$};
+\node[cpoint, above left=0.8cm and 0.6cm of x6] (x7) {$x_7$};
+\node[cpoint, left=1.2cm of x7] (x8) {$x_8$};
+
+% Arrows - tail
+\draw[arrow, blue!60] (x0) -- (x1);
+\draw[arrow, blue!60] (x1) -- (x2);
+
+% Arrow connecting tail to cycle
+\draw[arrow, blue!60] (x2) -- (x3);
+
+% Arrows - cycle
+\draw[arrow, red!60] (x3) -- (x4);
+\draw[arrow, red!60] (x4) -- (x5);
+\draw[arrow, red!60] (x5) -- (x6);
+\draw[arrow, red!60] (x6) -- (x7);
+\draw[arrow, red!60] (x7) -- (x8);
+\draw[arrow, red!60, bend left=20] (x8) to (x3);
+
+% Labels
+\draw[decorate, decoration={brace, amplitude=8pt, mirror}]
+    ([xshift=-8mm]x0.north) -- ([xshift=-8mm]x2.south)
+    node[midway, left=10pt, font=\small] {Cola $\lambda$};
+
+\node[right=2.5cm of x5, font=\small, text=red!70!black] {Ciclo $\mu$};
+
+% Dots for continuation
+\node[below left=0.3cm and 0cm of x2, font=\small, gray] {$\vdots$};
+
+\end{tikzpicture}
+\caption{Estructura $\rho$ de la secuencia pseudoaleatoria. Los primeros $\lambda$ puntos (azul) forman la cola y no se repiten. A partir de $x_\lambda$, la secuencia entra en un ciclo de longitud~$\mu$ (rojo). Se cumple $x_{\lambda + \mu} = x_\lambda$.}
+\label{fig:rho-shape}
+\end{figure}
+
+
+\paragraph{Funci\'on de iteraci\'on.}
+Se define una funci\'on $f\colon \langle P \rangle \to \langle P \rangle$ que particiona el grupo en tres subconjuntos seg\'un el valor de la coordenada $x$ m\'odulo~3:
 \[
     f(R) = \begin{cases}
-        Q + R & \text{si } R \in S_1, \\
-        2R    & \text{si } R \in S_2, \\
-        P + R & \text{si } R \in S_3.
+        R + Q & \text{si } x_R \equiv 0 \pmod{3}  \quad (R \in S_1), \\
+        2R    & \text{si } x_R \equiv 1 \pmod{3}  \quad (R \in S_2), \\
+        R + P & \text{si } x_R \equiv 2 \pmod{3}  \quad (R \in S_3).
     \end{cases}
-\]
-
-Se mantienen dos secuencias simultáneas partiendo de un punto inicial $R_0 = a_0 P + b_0 Q$ con $a_0, b_0$ conocidos:
+\]1
+La clave es mantener un \emph{invariante}: cada punto de la secuencia se expresa como $x_i = a_i P + b_i Q$ con coeficientes $a_i, b_i$ conocidos. Al aplicar~$f$, los coeficientes se actualizan:
 \begin{itemize}
-    \item La secuencia ``lenta'': $R_i = f(R_{i-1})$.
-    \item La secuencia ``rápida'': $R_i' = f(f(R_{i-1}'))$ (aplica $f$ dos veces por paso).
+    \item $S_1$ ($+Q$): $a_{i+1} = a_i$,\; $b_{i+1} = b_i + 1$.
+    \item $S_2$ ($2R$): $a_{i+1} = 2a_i$,\; $b_{i+1} = 2b_i$.
+    \item $S_3$ ($+P$): $a_{i+1} = a_i + 1$,\; $b_{i+1} = b_i$.
 \end{itemize}
+Todos los c\'alculos de coeficientes se realizan m\'odulo~$n$.
 
-En cada paso se actualizan los coeficientes $a_i, b_i$ tales que $R_i = a_i P + b_i Q \pmod{n}$. Dado que el grupo es finito, eventualmente ambas secuencias coincidirán en un punto: $R_i = R_j'$, lo cual da
+\paragraph{Detecci\'on de ciclos: tortuga y liebre de Floyd.}
+Para detectar una colisi\'on sin almacenar toda la secuencia, se emplean dos iteradores que recorren la misma funci\'on $f$ a velocidades distintas:
+\begin{align*}
+    \text{Tortuga:} \quad & t_i = f(t_{i-1}) = x_i, \\
+    \text{Liebre:}  \quad & \ell_i = f(f(\ell_{i-1})) = x_{2i}.
+\end{align*}
+Es decir, la tortuga avanza un paso por iteraci\'on y la liebre avanza dos. En cada iteraci\'on se comprueba si $t_i = \ell_i$. Puesto que la liebre recorre la secuencia al doble de velocidad, si existe un ciclo de longitud~$\mu$, la liebre ``alcanzar\'a'' a la tortuga dentro del ciclo tras como m\'aximo $\lambda + \mu$ pasos.
+
+\paragraph{Extracci\'on del logaritmo.}
+Cuando se produce la colisi\'on $t_i = \ell_i$, se tiene
 \[
-    a_i P + b_i Q = a_j P + b_j Q
+    a_t P + b_t Q = a_\ell P + b_\ell Q,
+\]
+donde $(a_t, b_t)$ son los coeficientes de la tortuga y $(a_\ell, b_\ell)$ los de la liebre. Sustituyendo $Q = dP$:
+\[
+    (a_t + b_t d)P = (a_\ell + b_\ell d)P
     \quad\Longrightarrow\quad
-    (a_i - a_j) P = (b_j - b_i) Q = (b_j - b_i) d P,
+    (a_t - a_\ell) \equiv (b_\ell - b_t) \cdot d \pmod{n}.
 \]
-y si $\gcd(b_j - b_i,\, n) = 1$, entonces
-\[
-    d = \frac{a_i - a_j}{b_j - b_i} \pmod{n}.
-\]
+Si $\gcd(b_\ell - b_t, n) = 1$ (lo cual es probable cuando $n$ es primo), entonces
+\begin{equation}
+\label{eq:rho-recovery}
+    d = (a_t - a_\ell) \cdot (b_\ell - b_t)^{-1} \bmod n.
+\end{equation}
 
-Este truco de la ``tortuga y la liebre'' (detección de ciclos de Floyd) evita almacenar toda la secuencia: basta con mantener dos puntos en memoria.
 
-\subparagraph{Complejidad y significado práctico.}
-El número esperado de iteraciones hasta encontrar una colisión es $O(\sqrt{n})$, donde cada iteración consiste en una o dos operaciones de grupo (sumas y duplicaciones de puntos). Para una curva de 256~bits con $n \approx 2^{256}$, esto supone $\approx 2^{128}$ operaciones, lo que está fuera del alcance de cualquier capacidad computacional actual o previsible a medio plazo.
+\paragraph{Pseudoc\'odigo.}
+El algoritmo~\ref{alg:pollard-rho} resume el procedimiento completo.
 
-El récord de cómputo para el ECDLP fue establecido por Certicom en el contexto de su \emph{ECC Challenge}: la curva ECC2K-130 (130~bits sobre campo binario) fue resuelta en 2009 tras un esfuerzo computacional masivo equivalente a más de un año de cálculo distribuido~\cite{gaudry2007breaking}. Esto confirma experimentalmente que para curvas de 256~bits, el método rho de Pollard es completamente inviable.
+\begin{algorithm}[htbp]
+\caption{M\'etodo $\rho$ de Pollard para el ECDLP}
+\label{alg:pollard-rho}
+\begin{algorithmic}[1]
+\Require Puntos $P$, $Q \in E(\mathbb{F}_q)$ con $Q = dP$, orden primo $n = |P|$
+\Ensure Entero $d$ tal que $Q = dP$
+\State Inicializar: $t_0 \leftarrow P$,\; $a_t \leftarrow 1$,\; $b_t \leftarrow 0$
+    \Comment{Tortuga: $t_0 = 1 \cdot P + 0 \cdot Q$}
+\State Inicializar: $\ell_0 \leftarrow P$,\; $a_\ell \leftarrow 1$,\; $b_\ell \leftarrow 0$
+    \Comment{Liebre: $\ell_0 = 1 \cdot P + 0 \cdot Q$}
+\For{$i = 1, 2, 3, \ldots$}
+    \State $(t_i, a_t, b_t) \leftarrow f(t_{i-1}, a_t, b_t)$
+        \Comment{Tortuga: un paso}
+    \State $(\ell_i, a_\ell, b_\ell) \leftarrow f(f(\ell_{i-1}, a_\ell, b_\ell))$
+        \Comment{Liebre: dos pasos}
+    \If{$t_i = \ell_i$}
+        \Comment{Colisi\'on detectada}
+        \If{$b_\ell \equiv b_t \pmod{n}$}
+            \State \textbf{Fallo}: reintentar con otra partici\'on
+        \Else
+            \State \Return $d \leftarrow (a_t - a_\ell) \cdot (b_\ell - b_t)^{-1} \bmod n$
+        \EndIf
+    \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+
+\paragraph{Ejemplo num\'erico.}
+\label{par:rho-ejemplo}
+Consideremos la curva $E\colon y^2 = x^3 + 2x + 1$ sobre $\mathbb{F}_{89}$, con punto generador $P = (1, 2)$ de orden primo $n = 47$. Sea $Q = (87, 73) = 15P$ el punto cuyo logaritmo discreto queremos encontrar.
+
+La secuencia pura $x_0, x_1, x_2, \ldots$ generada por la funci\'on de iteraci\'on~$f$ es:
+\begin{center}
+\begin{small}
+\begin{tabular}{rrcccl}
+\hline
+$i$ & $x_i$ & $S$ & $a_i$ & $b_i$ & Verificaci\'on: $a_i P + b_i Q$ \\
+\hline
+0  & $(1, 2)$    & $S_2$ &  1 & 0 & $1P + 0Q = P$ \\
+1  & $(83, 29)$  & $S_3$ &  2 & 0 & $2P$ \\
+2  & $(78, 28)$  & $S_1$ &  3 & 0 & $3P$ \\
+3  & $(38, 83)$  & $S_3$ &  3 & 1 & $3P + Q = 3P + 15P = 18P$ \\
+4  & $(10, 24)$  & $S_2$ &  4 & 1 & $4P + Q = 19P$ \\
+5  & $(80, 77)$  & $S_3$ &  8 & 2 & $8P + 2Q = 38P$ \\
+\multicolumn{6}{c}{$\vdots$} \\
+13 & $(64, 48)$  & $S_2$ & 29 & 29 & $29P + 29Q = 29P + 435P = 464P$ \\
+14 & $(84, 69)$  & $S_1$ & 11 & 11 & \\
+15 & $(78, 28)$  &       & 11 & 12 & $= x_2$ \quad $\Rightarrow$ cola $\lambda = 2$, ciclo $\mu = 13$ \\
+\hline
+\end{tabular}
+\end{small}
+\end{center}
+
+Aplicando el algoritmo con la tortuga ($t_i = x_i$) y la liebre ($\ell_i = x_{2i}$):
+
+\begin{center}
+\begin{small}
+\begin{tabular}{rrrrrrrrl}
+\hline
+$i$ & $t_i$ & $a_t$ & $b_t$ & $\ell_i$ & $a_\ell$ & $b_\ell$ & $t_i = \ell_i$? \\
+\hline
+ 0 & $(1, 2)$    &  1 &  0 & $(1, 2)$    &  1 &  0 & (inicio) \\
+ 1 & $(83, 29)$  &  2 &  0 & $(78, 28)$  &  3 &  0 & No \\
+ 2 & $(78, 28)$  &  3 &  0 & $(10, 24)$  &  4 &  1 & No \\
+ 3 & $(38, 83)$  &  3 &  1 & $(42, 83)$  &  9 &  2 & No \\
+ 4 & $(10, 24)$  &  4 &  1 & $(3, 52)$   & 18 &  6 & No \\
+\multicolumn{8}{c}{$\vdots$} \\
+12 & $(18, 66)$  & 29 & 28 & $(13, 34)$  &  8 & 16 & No \\
+\textbf{13} & $\mathbf{(64, 48)}$ & \textbf{29} & \textbf{29} & $\mathbf{(64, 48)}$ & \textbf{16} & \textbf{33} & \textbf{S\'i} \\
+\hline
+\end{tabular}
+\end{small}
+\end{center}
+
+En el paso $i = 13$ se produce la colisi\'on $t_{13} = \ell_{13} = (64, 48)$. Aplicando la ecuaci\'on~\eqref{eq:rho-recovery}:
+\begin{align*}
+    a_t - a_\ell &= 29 - 16 = 13 \pmod{47}, \\
+    b_\ell - b_t &= 33 - 29 = 4 \pmod{47}, \\
+    4^{-1} &\equiv 12 \pmod{47} \quad (\text{pues } 4 \cdot 12 = 48 \equiv 1), \\
+    d &= 13 \cdot 12 \bmod 47 = 156 \bmod 47 = \mathbf{15}.
+\end{align*}
+Verificamos: $15 \cdot P = 15 \cdot (1, 2) = (87, 73) = Q$. \qed
+
+La figura~\ref{fig:rho-visual} muestra la visualizaci\'on de este proceso generada por nuestro script \texttt{visual\_ecdlp\_attacks.py}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{imagenes/attack_pollard_rho.png}
+    \caption{Visualizaci\'on del rho de Pollard sobre la curva $y^2 = x^3 + 2x + 1$ mod~89. Panel izquierdo: trayectoria pseudoaleatoria de puntos, coloreados por orden de aparici\'on; la estrella marca la colisi\'on en el paso~13. Panel derecho: estructura abstracta de $\rho$ mostrando la cola ($\lambda = 2$) y el ciclo ($\mu = 13$).}
+    \label{fig:rho-visual}
+\end{figure}
+
+
+\paragraph{Complejidad.}
+El n\'umero esperado de iteraciones hasta encontrar una colisi\'on es $O(\sqrt{n})$ por la paradoja del cumplea\~nos, donde cada iteraci\'on consiste en una o dos operaciones de grupo (sumas y duplicaciones de puntos). Crucialmente, el m\'etodo de Floyd solo necesita almacenar dos puntos y sus coeficientes en cada momento, lo que da espacio $O(1)$. Esto es una ventaja decisiva frente a BSGS, que requiere $O(\sqrt{n})$ espacio para la tabla hash.
+
+Para una curva de 256~bits con $n \approx 2^{256}$, el ataque requiere $\approx 2^{128}$ operaciones, completamente fuera del alcance computacional actual. El r\'ecord pr\'actico fue la resoluci\'on de la curva ECC2K-130 (130~bits sobre campo binario) en 2009 tras un esfuerzo de c\'alculo distribuido masivo~\cite{gaudry2007breaking}, confirmando experimentalmente la inviabilidad para curvas de tama\~nos criptogr\'aficos.
 
 \begin{observacion}
-    Es importante destacar que el rho de Pollard es un \emph{algoritmo genérico}: no explota ninguna estructura específica de las curvas elípticas, solo la estructura de grupo finito. Esto significa que, a diferencia de los ataques \textit{index calculus} contra el DLP en~$\mathbb{F}_p^*$, no se conoce forma de ``transferir'' las propiedades aritméticas del campo subyacente para acelerar el ataque en curvas elípticas. Esta es la razón fundamental por la que ECC ofrece mayor seguridad por bit que RSA.
+    El rho de Pollard es un \emph{algoritmo gen\'erico}: no explota ninguna estructura espec\'ifica de las curvas el\'ipticas, solo la estructura de grupo finito c\'iclico. Esto significa que, a diferencia de los ataques \textit{index calculus} contra el DLP en~$\mathbb{F}_p^*$, no se conoce forma de ``transferir'' las propiedades aritm\'eticas del campo subyacente para acelerar el ataque. Esta es la raz\'on fundamental por la que ECC ofrece mayor seguridad por bit que RSA, como se refleja en la figura~\ref{fig:complexity}.
 \end{observacion}
-
 
 \subsection{Comparativa de tamaños de clave}
 \label{subsec:ecc-comparativa-claves}
@@ -304,7 +530,7 @@ La tercera comprobación es especialmente importante cuando $h > 1$, para preven
 \section{Intercambio de claves: ECDH}
 \label{sec:ecdh}
 
-El protocolo de Diffie--Hellman sobre curvas elípticas (ECDH) es la adaptación directa del intercambio de claves Diffie--Hellman clásico (sección~\ref{subsec:dh-clasico}) al grupo de puntos de una curva elíptica. Su seguridad se fundamenta en el \emph{problema de Diffie--Hellman computacional en curvas elípticas} (ECDHP): dados $P$, $aP$ y $bP$, calcular $abP$.
+El protocolo de Diffie--Hellman sobre curvas elípticas (ECDH) es la adaptación directa del intercambio de claves Diffie--Hellman clásico (sección~\ref{sec:diffie_hellman}) al grupo de puntos de una curva elíptica. Su seguridad se fundamenta en el \emph{problema de Diffie--Hellman computacional en curvas elípticas} (ECDHP): dados $P$, $aP$ y $bP$, calcular $abP$.
 
 \subsection{Protocolo básico}
 \label{subsec:ecdh-protocolo}
