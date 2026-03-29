@@ -148,16 +148,117 @@ $i$ & $iP$ \\
 Para los giant steps, calculamos $8P = (53, 13)$ y recorremos $Q - j \cdot 8P$ hasta encontrar una coincidencia con la tabla de baby steps. La colisi\'on se produce para $j = 2$, $i = 0$, dando $d = 2 \cdot 8 + 0 = 16$. La figura~\ref{fig:bsgs-visual} muestra la visualizaci\'on de este proceso.
 \end{ejemplo}
 
-\subsubsection{M\'etodo rho de Pollard}
+
+\subsubsection{Método rho de Pollard}
 \label{subsubsec:pollard-rho}
 
-El rho de Pollard~\cite{pollard1978monte} alcanza la misma complejidad temporal que BSGS ($O(\sqrt{n})$) pero con requerimiento de memoria constante~$O(1)$, lo que lo convierte en el ataque m\'as pr\'actico contra el ECDLP~\cite{hankerson2004guide}. Su nombre proviene de la forma de la letra griega~$\rho$ que adopta la secuencia de puntos generada por el algoritmo, como se ilustra en la figura~\ref{fig:rho-shape}.
+El rho de Pollard~\cite{pollard1978monte} alcanza la misma complejidad temporal que BSGS ($O(\sqrt{n})$) pero con requerimiento de memoria constante~$O(1)$, lo que lo convierte en el ataque más práctico contra el ECDLP~\cite{hankerson2004guide}. Su nombre proviene de la forma de la letra griega~$\rho$ que adopta la secuencia de puntos generada por el algoritmo.
 
-\paragraph{Idea intuitiva.}
-El m\'etodo se basa en la \emph{paradoja del cumplea\~nos}: si elegimos elementos al azar de un conjunto de~$N$ elementos, esperamos encontrar una colisi\'on (dos elementos iguales) tras aproximadamente~$\sqrt{\pi N/2}$ intentos. Pollard aplica este principio al grupo $\langle P \rangle$: construye una secuencia pseudoaleatoria de puntos $x_0, x_1, x_2, \ldots$ mediante una funci\'on de iteraci\'on determinista. Dado que el grupo es finito, la secuencia eventualmente entra en un \emph{ciclo}. Cuando se detecta una colisi\'on ---dos \'indices distintos $i \neq j$ con $x_i = x_j$---, se puede extraer el logaritmo discreto.
+
+\paragraph{La paradoja del cumpleaños.}
+Antes de describir el algoritmo, conviene entender la observación probabilística que lo fundamenta. Consideremos la siguiente pregunta: ¿cuántas personas deben reunirse en una sala para que haya al menos un 50\,\% de probabilidad de que dos de ellas compartan cumpleaños?
+
+Intuitivamente, como hay 365 días posibles, podríamos pensar que hacen falta muchas personas. Sin embargo, la respuesta es sorprendentemente baja: \textbf{basta con 23 personas}. Este resultado, conocido como la \emph{paradoja del cumpleaños}, se explica porque no buscamos que alguien comparta cumpleaños \emph{con una persona concreta}, sino que \emph{cualquier par} de personas coincida. Con $k$ personas, el número de pares posibles es $\binom{k}{2} = k(k-1)/2$, que crece cuadráticamente.
+
+La probabilidad exacta de que al menos dos personas de un grupo de~$k$ compartan cumpleaños (suponiendo $N = 365$ días equiprobables) se calcula como el complemento de que \emph{todos} tengan cumpleaños distintos:
+\[
+    P(k) = 1 - \prod_{i=0}^{k-1} \frac{N - i}{N}
+         = 1 - \frac{N}{N} \cdot \frac{N-1}{N} \cdot \frac{N-2}{N} \cdots \frac{N-k+1}{N}.
+\]
+
+El cuadro~\ref{tab:birthday} muestra los valores concretos.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{rc}
+\hline
+\textbf{Personas ($k$)} & \textbf{$P$(coincidencia)} \\
+\hline
+5   & 2.7\,\% \\
+10  & 11.7\,\% \\
+20  & 41.1\,\% \\
+\textbf{23} & \textbf{50.7\,\%} \\
+30  & 70.6\,\% \\
+40  & 89.1\,\% \\
+50  & 97.0\,\% \\
+57  & 99.0\,\% \\
+70  & 99.9\,\% \\
+\hline
+\end{tabular}
+\caption{Probabilidad de que al menos dos personas compartan cumpleaños en un grupo de~$k$ personas ($N = 365$ días).}
+\label{tab:birthday}
+\end{table}
+
+El umbral del 50\,\% se alcanza con $k = 23 \approx \sqrt{\pi \cdot 365 / 2} \approx 1{,}25\sqrt{365}$. Esto no es casualidad: mediante una aproximación estándar ($\ln(1-x) \approx -x$ para $x$ pequeño), se demuestra que el número esperado de elementos que debemos elegir al azar de un conjunto de~$N$ para encontrar una colisión es
+\begin{equation}
+\label{eq:birthday-bound}
+    k \approx \sqrt{\frac{\pi N}{2}} \approx 1{,}25 \sqrt{N}.
+\end{equation}
+
+Nótese que este resultado es \emph{independiente} de qué elemento concreto se repita: solo depende del tamaño~$N$ del conjunto.
+
+
+\paragraph{De cumpleaños a curvas elípticas.}
+El ataque rho de Pollard traslada esta observación al grupo de puntos de una curva elíptica. Si el generador~$P$ tiene orden~$n$, el subgrupo $\langle P \rangle$ contiene exactamente $n$~puntos distintos. Si generamos una secuencia de puntos pseudoaleatorios en este grupo, por la cota~\eqref{eq:birthday-bound} esperamos encontrar una \emph{colisión} (dos índices $i \neq j$ con $x_i = x_j$) tras aproximadamente $\sqrt{\pi n/2} \approx 1{,}25\sqrt{n}$ pasos. Para una curva de 256~bits ($n \approx 2^{256}$), esto supone $\approx 2^{128}$ pasos, que es precisamente la seguridad que atribuimos a dicha curva. El cuadro~\ref{tab:birthday-ecc} muestra esta correspondencia.
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{ccc}
+\hline
+\textbf{Curva (bits)} & \textbf{Orden $n \approx$} & \textbf{Pasos esperados $\approx$} \\
+\hline
+160 & $2^{160}$ & $2^{80}$ \\
+224 & $2^{224}$ & $2^{112}$ \\
+256 & $2^{256}$ & $2^{128}$ \\
+384 & $2^{384}$ & $2^{192}$ \\
+521 & $2^{521}$ & $2^{260}$ \\
+\hline
+\end{tabular}
+\caption{Número esperado de pasos del rho de Pollard según el tamaño de la curva. Los bits de seguridad son exactamente la mitad de los bits de la curva.}
+\label{tab:birthday-ecc}
+\end{table}
+
+Pero la paradoja del cumpleaños, por sí sola, solo dice cuántos pasos necesitamos para una colisión. No dice cómo \emph{detectar} esa colisión eficientemente (sin almacenar los $\sqrt{n}$ puntos previos, lo cual requeriría tanto espacio como BSGS), ni cómo \emph{extraer} el logaritmo discreto de ella. Para esto se necesitan dos ingredientes: un \emph{paseo pseudoaleatorio con invariante} y la \emph{detección de ciclos de Floyd}.
+
+
+\paragraph{El paseo pseudoaleatorio y el invariante.}
+La idea clave de Pollard es construir la secuencia de puntos de forma \emph{determinista} pero que se \emph{comporte} como aleatoria, manteniendo en todo momento un invariante que permita recuperar~$d$ al encontrar una colisión. Cada punto $R_i$ de la secuencia se escribe como $R_i = a_i P + b_i Q$ donde los coeficientes $a_i, b_i$ son conocidos.
+
+El siguiente punto se calcula aplicando una regla que depende solo del punto actual, particionando el grupo en tres subconjuntos según la coordenada~$x$ módulo~3:
+
+\begin{center}
+\begin{tabular}{clccc}
+\hline
+\textbf{Partición} & \textbf{Condición} & \textbf{Nuevo punto} & \textbf{Nuevo $a$} & \textbf{Nuevo $b$} \\
+\hline
+$S_1$ & $x_R \equiv 0 \pmod{3}$ & $R + Q$ & $a$ & $b + 1$ \\
+$S_2$ & $x_R \equiv 1 \pmod{3}$ & $2R$ & $2a$ & $2b$ \\
+$S_3$ & $x_R \equiv 2 \pmod{3}$ & $R + P$ & $a + 1$ & $b$ \\
+\hline
+\end{tabular}
+\end{center}
+
+Todos los cálculos de coeficientes se realizan módulo~$n$. En los tres casos se preserva el invariante: si $R = aP + bQ$ antes del paso, el nuevo punto $R'$ también se expresa como $R' = a'P + b'Q$ con los coeficientes actualizados según la tabla.
+
+\paragraph{¿Por qué estas tres operaciones?}
+La elección no es arbitraria. Las tres reglas cumplen propiedades esenciales:
+
+\begin{itemize}
+    \item \textbf{Preservan el invariante.} Cada regla actualiza $(a, b)$ de forma que $R' = a'P + b'Q$ sigue siendo cierto. Esto es imprescindible para poder extraer~$d$ al final.
+
+    \item \textbf{La partición debe ser aproximadamente equilibrada.} Si los tres subconjuntos $S_1, S_2, S_3$ contienen aproximadamente $n/3$ puntos cada uno, el paseo se comporta como una función aleatoria sobre el grupo. Usar $x_R \bmod 3$ produce una distribución razonablemente uniforme para la mayoría de las curvas.
+
+    \item \textbf{La duplicación ($S_2$) aporta ``mezcla''.} Si solo sumásemos $P$ o $Q$, el paseo sería demasiado regular (una progresión aritmética en los coeficientes). La duplicación introduce no linealidad en los coeficientes ($a \mapsto 2a$, $b \mapsto 2b$), haciendo que la secuencia ``salte'' por el grupo de forma menos predecible.
+\end{itemize}
+
+El punto inicial $R_0 = a_0 P + b_0 Q$ puede ser cualquier punto con coeficientes conocidos. La elección $a_0 = 1$, $b_0 = 0$ (es decir, $R_0 = P$) es simplemente la más sencilla.
+
+\paragraph{Nota sobre campos binarios.}
+El algoritmo es \emph{idéntico} para curvas sobre $\mathbb{F}_{2^m}$: la partición se basa igualmente en la coordenada~$x$ del punto, las tres reglas ($+Q$, $2R$, $+P$) utilizan la aritmética de grupo de la curva (que en $\mathbb{F}_{2^m}$ emplea las fórmulas de la sección~\ref{subsec:ecc-campos-binarios}), y los coeficientes $(a, b)$ se actualizan módulo~$n$ de la misma manera. La única diferencia es que las operaciones de campo subyacentes (suma~$=$~XOR, multiplicación de polinomios) son distintas, pero esto es transparente al nivel del algoritmo de Pollard.
+
 
 \paragraph{Estructura $\rho$.}
-La secuencia $x_0, x_1, x_2, \ldots$ tiene la estructura de la letra~$\rho$: una \emph{cola} de longitud~$\lambda$ (puntos que se visitan una sola vez) seguida de un \emph{ciclo} de longitud~$\mu$ (puntos que se repiten indefinidamente). Es decir, $x_{\lambda + \mu} = x_\lambda$. La figura~\ref{fig:rho-shape} muestra esta estructura para el ejemplo que desarrollaremos a continuaci\'on.
+Dado que el grupo $\langle P \rangle$ es finito, la secuencia $x_0, x_1, x_2, \ldots$ necesariamente revisita algún punto, formando una cola de longitud~$\lambda$ seguida de un ciclo de longitud~$\mu$: se cumple $x_{\lambda + \mu} = x_\lambda$. Esta estructura se ilustra en la figura~\ref{fig:rho-shape}.
 
 \begin{figure}[htbp]
 \centering
@@ -167,24 +268,22 @@ La secuencia $x_0, x_1, x_2, \ldots$ tiene la estructura de la letra~$\rho$: una
     cpoint/.style={circle, draw, fill=red!20, minimum size=6mm, font=\small},
     arrow/.style={->, >=stealth, thick}
 ]
-% Cola (tail) - vertical
+% Cola (tail)
 \node[point] (x0) {$x_0$};
 \node[point, below of=x0] (x1) {$x_1$};
-\node[point, below of=x1] (x2) {$x_2$};
+\node[point, below of=x1] (x2) {$x_\lambda$};
 
-% Ciclo (cycle) - circular arrangement
-\node[cpoint, below right=0.8cm and 1.5cm of x2] (x3) {$x_3$};
-\node[cpoint, right=1.2cm of x3] (x4) {$x_4$};
-\node[cpoint, above right=0.8cm and 0.6cm of x4] (x5) {$x_5$};
-\node[cpoint, above=1.2cm of x5] (x6) {$x_6$};
-\node[cpoint, above left=0.8cm and 0.6cm of x6] (x7) {$x_7$};
-\node[cpoint, left=1.2cm of x7] (x8) {$x_8$};
+% Ciclo (cycle) - circular
+\node[cpoint, below right=0.8cm and 1.5cm of x2] (x3) {$x_{\lambda\!+\!1}$};
+\node[cpoint, right=1.4cm of x3] (x4) {};
+\node[cpoint, above right=0.8cm and 0.6cm of x4] (x5) {};
+\node[cpoint, above=1.2cm of x5] (x6) {};
+\node[cpoint, above left=0.8cm and 0.6cm of x6] (x7) {};
+\node[cpoint, left=1.4cm of x7] (x8) {$x_{\lambda\!+\!\mu}$};
 
 % Arrows - tail
 \draw[arrow, blue!60] (x0) -- (x1);
-\draw[arrow, blue!60] (x1) -- (x2);
-
-% Arrow connecting tail to cycle
+\draw[arrow, blue!60] (x1) -- node[left, font=\scriptsize, gray]{$\vdots$} (x2);
 \draw[arrow, blue!60] (x2) -- (x3);
 
 % Arrows - cycle
@@ -193,171 +292,154 @@ La secuencia $x_0, x_1, x_2, \ldots$ tiene la estructura de la letra~$\rho$: una
 \draw[arrow, red!60] (x5) -- (x6);
 \draw[arrow, red!60] (x6) -- (x7);
 \draw[arrow, red!60] (x7) -- (x8);
-\draw[arrow, red!60, bend left=20] (x8) to (x3);
+\draw[arrow, red!60, bend left=20] (x8) to node[below, font=\scriptsize]{$= x_\lambda$} (x3);
 
-% Labels
+% Braces
 \draw[decorate, decoration={brace, amplitude=8pt, mirror}]
     ([xshift=-8mm]x0.north) -- ([xshift=-8mm]x2.south)
-    node[midway, left=10pt, font=\small] {Cola $\lambda$};
-
-\node[right=2.5cm of x5, font=\small, text=red!70!black] {Ciclo $\mu$};
-
-% Dots for continuation
-\node[below left=0.3cm and 0cm of x2, font=\small, gray] {$\vdots$};
+    node[midway, left=10pt, font=\small] {cola $\lambda$};
+\node[right=2.5cm of x5, font=\small, text=red!70!black] {ciclo $\mu$};
 
 \end{tikzpicture}
-\caption{Estructura $\rho$ de la secuencia pseudoaleatoria. Los primeros $\lambda$ puntos (azul) forman la cola y no se repiten. A partir de $x_\lambda$, la secuencia entra en un ciclo de longitud~$\mu$ (rojo). Se cumple $x_{\lambda + \mu} = x_\lambda$.}
+\caption{Estructura~$\rho$ de la secuencia. Los primeros $\lambda$ puntos (azul) forman la cola. A partir de~$x_\lambda$ la secuencia entra en un ciclo de longitud~$\mu$ (rojo), cumpliéndose $x_{\lambda+\mu} = x_\lambda$.}
 \label{fig:rho-shape}
 \end{figure}
 
 
-\paragraph{Funci\'on de iteraci\'on.}
-Se define una funci\'on $f\colon \langle P \rangle \to \langle P \rangle$ que particiona el grupo en tres subconjuntos seg\'un el valor de la coordenada $x$ m\'odulo~3:
-\[
-    f(R) = \begin{cases}
-        R + Q & \text{si } x_R \equiv 0 \pmod{3}  \quad (R \in S_1), \\
-        2R    & \text{si } x_R \equiv 1 \pmod{3}  \quad (R \in S_2), \\
-        R + P & \text{si } x_R \equiv 2 \pmod{3}  \quad (R \in S_3).
-    \end{cases}
-\]1
-La clave es mantener un \emph{invariante}: cada punto de la secuencia se expresa como $x_i = a_i P + b_i Q$ con coeficientes $a_i, b_i$ conocidos. Al aplicar~$f$, los coeficientes se actualizan:
-\begin{itemize}
-    \item $S_1$ ($+Q$): $a_{i+1} = a_i$,\; $b_{i+1} = b_i + 1$.
-    \item $S_2$ ($2R$): $a_{i+1} = 2a_i$,\; $b_{i+1} = 2b_i$.
-    \item $S_3$ ($+P$): $a_{i+1} = a_i + 1$,\; $b_{i+1} = b_i$.
-\end{itemize}
-Todos los c\'alculos de coeficientes se realizan m\'odulo~$n$.
+\paragraph{Detección de ciclos: tortuga y liebre de Floyd.}
+Para detectar cuándo la secuencia se repite sin almacenar todos los puntos visitados, se emplean dos iteradores que recorren el \emph{mismo} paseo a velocidades distintas. Denotamos por~$f$ la aplicación de un paso del paseo (elegir partición según $x_R \bmod 3$, actualizar punto y coeficientes). Entonces:
+\begin{align}
+    \text{Tortuga:} \quad t_i &= f(t_{i-1}) = x_i, \label{eq:tortuga}\\
+    \text{Liebre:}  \quad \ell_i &= f(f(\ell_{i-1})) = x_{2i}. \label{eq:liebre}
+\end{align}
+La tortuga aplica~$f$ una vez por iteración (avanza un paso en la secuencia) y la liebre aplica~$f$ dos veces (avanza dos pasos). En cada iteración~$i$ se comprueba si $t_i = \ell_i$. Puesto que la liebre recorre la secuencia al doble de velocidad, eventualmente ``alcanzará'' a la tortuga dentro del ciclo.
 
-\paragraph{Detecci\'on de ciclos: tortuga y liebre de Floyd.}
-Para detectar una colisi\'on sin almacenar toda la secuencia, se emplean dos iteradores que recorren la misma funci\'on $f$ a velocidades distintas:
-\begin{align*}
-    \text{Tortuga:} \quad & t_i = f(t_{i-1}) = x_i, \\
-    \text{Liebre:}  \quad & \ell_i = f(f(\ell_{i-1})) = x_{2i}.
-\end{align*}
-Es decir, la tortuga avanza un paso por iteraci\'on y la liebre avanza dos. En cada iteraci\'on se comprueba si $t_i = \ell_i$. Puesto que la liebre recorre la secuencia al doble de velocidad, si existe un ciclo de longitud~$\mu$, la liebre ``alcanzar\'a'' a la tortuga dentro del ciclo tras como m\'aximo $\lambda + \mu$ pasos.
-
-\paragraph{Extracci\'on del logaritmo.}
-Cuando se produce la colisi\'on $t_i = \ell_i$, se tiene
+\paragraph{Extracción del logaritmo.}
+Cuando se produce la colisión $t_i = \ell_i$, la tortuga y la liebre se encuentran en el mismo punto de la curva, pero llegaron por caminos distintos y por tanto tienen coeficientes potencialmente diferentes:
 \[
-    a_t P + b_t Q = a_\ell P + b_\ell Q,
+    a_t P + b_t Q = a_\ell P + b_\ell Q.
 \]
-donde $(a_t, b_t)$ son los coeficientes de la tortuga y $(a_\ell, b_\ell)$ los de la liebre. Sustituyendo $Q = dP$:
+Sustituyendo $Q = dP$:
 \[
-    (a_t + b_t d)P = (a_\ell + b_\ell d)P
+    (a_t - a_\ell)P = (b_\ell - b_t) d P
     \quad\Longrightarrow\quad
-    (a_t - a_\ell) \equiv (b_\ell - b_t) \cdot d \pmod{n}.
+    a_t - a_\ell \equiv (b_\ell - b_t) \cdot d \pmod{n}.
 \]
-Si $\gcd(b_\ell - b_t, n) = 1$ (lo cual es probable cuando $n$ es primo), entonces
+Si $\gcd(b_\ell - b_t, n) = 1$ (lo cual ocurre con alta probabilidad cuando $n$ es primo), se despeja:
 \begin{equation}
 \label{eq:rho-recovery}
     d = (a_t - a_\ell) \cdot (b_\ell - b_t)^{-1} \bmod n.
 \end{equation}
 
 
-\paragraph{Pseudoc\'odigo.}
-El algoritmo~\ref{alg:pollard-rho} resume el procedimiento completo.
+\paragraph{Pseudocódigo.}
+El algoritmo~\ref{alg:pollard-rho} detalla el procedimiento completo con la lógica de partición expandida, mostrando explícitamente cómo la tortuga aplica un paso y la liebre dos en cada iteración.
 
 \begin{algorithm}[htbp]
-\caption{M\'etodo $\rho$ de Pollard para el ECDLP}
+\caption{Método $\rho$ de Pollard para el ECDLP}
 \label{alg:pollard-rho}
 \begin{algorithmic}[1]
 \Require Puntos $P$, $Q \in E(\mathbb{F}_q)$ con $Q = dP$, orden primo $n = |P|$
 \Ensure Entero $d$ tal que $Q = dP$
-\State Inicializar: $t_0 \leftarrow P$,\; $a_t \leftarrow 1$,\; $b_t \leftarrow 0$
-    \Comment{Tortuga: $t_0 = 1 \cdot P + 0 \cdot Q$}
-\State Inicializar: $\ell_0 \leftarrow P$,\; $a_\ell \leftarrow 1$,\; $b_\ell \leftarrow 0$
-    \Comment{Liebre: $\ell_0 = 1 \cdot P + 0 \cdot Q$}
-\For{$i = 1, 2, 3, \ldots$}
-    \State $(t_i, a_t, b_t) \leftarrow f(t_{i-1}, a_t, b_t)$
-        \Comment{Tortuga: un paso}
-    \State $(\ell_i, a_\ell, b_\ell) \leftarrow f(f(\ell_{i-1}, a_\ell, b_\ell))$
-        \Comment{Liebre: dos pasos}
-    \If{$t_i = \ell_i$}
-        \Comment{Colisi\'on detectada}
-        \If{$b_\ell \equiv b_t \pmod{n}$}
-            \State \textbf{Fallo}: reintentar con otra partici\'on
-        \Else
-            \State \Return $d \leftarrow (a_t - a_\ell) \cdot (b_\ell - b_t)^{-1} \bmod n$
-        \EndIf
+\State $t \leftarrow P$;\; $a_t \leftarrow 1$;\; $b_t \leftarrow 0$
+    \Comment{Tortuga: $t = 1 \cdot P + 0 \cdot Q$}
+\State $\ell \leftarrow P$;\; $a_\ell \leftarrow 1$;\; $b_\ell \leftarrow 0$
+    \Comment{Liebre: igual inicio}
+\Repeat
+    \State \Comment{--- Tortuga: un paso ---}
+    \If{$x_t \equiv 0 \pmod{3}$}
+        \State $t \leftarrow t + Q$;\; $b_t \leftarrow b_t + 1$
+    \ElsIf{$x_t \equiv 1 \pmod{3}$}
+        \State $t \leftarrow 2t$;\; $a_t \leftarrow 2a_t$;\; $b_t \leftarrow 2b_t$
+    \Else
+        \State $t \leftarrow t + P$;\; $a_t \leftarrow a_t + 1$
     \EndIf
-\EndFor
+    \State \Comment{--- Liebre: dos pasos ---}
+    \For{$j = 1$ \textbf{to} $2$}
+        \If{$x_\ell \equiv 0 \pmod{3}$}
+            \State $\ell \leftarrow \ell + Q$;\; $b_\ell \leftarrow b_\ell + 1$
+        \ElsIf{$x_\ell \equiv 1 \pmod{3}$}
+            \State $\ell \leftarrow 2\ell$;\; $a_\ell \leftarrow 2a_\ell$;\; $b_\ell \leftarrow 2b_\ell$
+        \Else
+            \State $\ell \leftarrow \ell + P$;\; $a_\ell \leftarrow a_\ell + 1$
+        \EndIf
+    \EndFor
+    \State \Comment{Todos los coeficientes se reducen módulo $n$}
+\Until{$t = \ell$}
+\If{$b_\ell \equiv b_t \pmod{n}$}
+    \State \Return \textbf{Fallo} (reintentar con otro punto inicial)
+\Else
+    \State \Return $d \leftarrow (a_t - a_\ell) \cdot (b_\ell - b_t)^{-1} \bmod n$
+\EndIf
 \end{algorithmic}
 \end{algorithm}
 
 
-\paragraph{Ejemplo num\'erico.}
-\label{par:rho-ejemplo}
+\paragraph{Ejemplo numérico.}
 Consideremos la curva $E\colon y^2 = x^3 + 2x + 1$ sobre $\mathbb{F}_{89}$, con punto generador $P = (1, 2)$ de orden primo $n = 47$. Sea $Q = (87, 73) = 15P$ el punto cuyo logaritmo discreto queremos encontrar.
 
-La secuencia pura $x_0, x_1, x_2, \ldots$ generada por la funci\'on de iteraci\'on~$f$ es:
+Ambos iteradores parten de $t_0 = \ell_0 = P = (1,2)$ con coeficientes $(a, b) = (1, 0)$. En cada iteración, la tortuga aplica un paso del paseo y la liebre aplica dos. La siguiente tabla muestra el desarrollo completo:
+
 \begin{center}
 \begin{small}
-\begin{tabular}{rrcccl}
+\begin{tabular}{r|crrp{0.8cm}|crr|c}
 \hline
-$i$ & $x_i$ & $S$ & $a_i$ & $b_i$ & Verificaci\'on: $a_i P + b_i Q$ \\
+ & \multicolumn{4}{c|}{\textbf{Tortuga} $t_i = x_i$} & \multicolumn{3}{c|}{\textbf{Liebre} $\ell_i = x_{2i}$} & \\
+$i$ & Punto & $a_t$ & $b_t$ & Regla & Punto & $a_\ell$ & $b_\ell$ & $t_i\!=\!\ell_i$? \\
 \hline
-0  & $(1, 2)$    & $S_2$ &  1 & 0 & $1P + 0Q = P$ \\
-1  & $(83, 29)$  & $S_3$ &  2 & 0 & $2P$ \\
-2  & $(78, 28)$  & $S_1$ &  3 & 0 & $3P$ \\
-3  & $(38, 83)$  & $S_3$ &  3 & 1 & $3P + Q = 3P + 15P = 18P$ \\
-4  & $(10, 24)$  & $S_2$ &  4 & 1 & $4P + Q = 19P$ \\
-5  & $(80, 77)$  & $S_3$ &  8 & 2 & $8P + 2Q = 38P$ \\
-\multicolumn{6}{c}{$\vdots$} \\
-13 & $(64, 48)$  & $S_2$ & 29 & 29 & $29P + 29Q = 29P + 435P = 464P$ \\
-14 & $(84, 69)$  & $S_1$ & 11 & 11 & \\
-15 & $(78, 28)$  &       & 11 & 12 & $= x_2$ \quad $\Rightarrow$ cola $\lambda = 2$, ciclo $\mu = 13$ \\
+ 0 & $(1, 2)$    &  1 &  0 & & $(1, 2)$    &  1 &  0 &  \\
+ 1 & $(83, 29)$  &  2 &  0 & $S_2$ & $(78, 28)$  &  3 &  0 & No \\
+ 2 & $(78, 28)$  &  3 &  0 & $S_3$ & $(10, 24)$  &  4 &  1 & No \\
+ 3 & $(38, 83)$  &  3 &  1 & $S_1$ & $(42, 83)$  &  9 &  2 & No \\
+ 4 & $(10, 24)$  &  4 &  1 & $S_3$ & $(3, 52)$   & 18 &  6 & No \\
+ 5 & $(80, 77)$  &  8 &  2 & $S_2$ & $(40, 1)$   & 19 &  7 & No \\
+ 6 & $(42, 83)$  &  9 &  2 & $S_3$ & $(18, 66)$  & 29 & 28 & No \\
+ 7 & $(4, 47)$   &  9 &  3 & $S_1$ & $(84, 69)$  & 11 & 11 & No \\
+ 8 & $(3, 52)$   & 18 &  6 & $S_2$ & $(38, 83)$  & 11 & 13 & No \\
+ 9 & $(38, 6)$   & 18 &  7 & $S_1$ & $(80, 77)$  & 24 & 26 & No \\
+10 & $(40, 1)$   & 19 &  7 & $S_3$ & $(4, 47)$   & 25 & 27 & No \\
+11 & $(13, 34)$  & 38 & 14 & $S_2$ & $(38, 6)$   &  3 &  8 & No \\
+12 & $(18, 66)$  & 29 & 28 & $S_2$ & $(13, 34)$  &  8 & 16 & No \\
+\textbf{13} & $\mathbf{(64, 48)}$ & \textbf{29} & \textbf{29} & $S_1$ & $\mathbf{(64, 48)}$ & \textbf{16} & \textbf{33} & \textbf{Sí} \\
 \hline
 \end{tabular}
 \end{small}
 \end{center}
 
-Aplicando el algoritmo con la tortuga ($t_i = x_i$) y la liebre ($\ell_i = x_{2i}$):
+Veamos en detalle cómo se obtiene la fila $i = 1$. La tortuga parte de $t_0 = (1, 2)$; como $x_{t_0} = 1 \equiv 1 \pmod{3}$, estamos en $S_2$ (duplicar), así que $t_1 = 2 \cdot (1, 2) = (83, 29)$ y los coeficientes se duplican: $(a_t, b_t) = (2, 0)$. La liebre parte del mismo punto pero aplica el paseo \emph{dos veces}: primero obtiene $(83, 29)$ (igual que la tortuga), y después, como $83 \equiv 2 \pmod{3}$ ($S_3$), suma~$P$: $\ell_1 = (83, 29) + P = (78, 28)$ con $(a_\ell, b_\ell) = (2+1, 0) = (3, 0)$. La liebre ya está en $x_2$ de la secuencia mientras la tortuga está en $x_1$.
 
-\begin{center}
-\begin{small}
-\begin{tabular}{rrrrrrrrl}
-\hline
-$i$ & $t_i$ & $a_t$ & $b_t$ & $\ell_i$ & $a_\ell$ & $b_\ell$ & $t_i = \ell_i$? \\
-\hline
- 0 & $(1, 2)$    &  1 &  0 & $(1, 2)$    &  1 &  0 & (inicio) \\
- 1 & $(83, 29)$  &  2 &  0 & $(78, 28)$  &  3 &  0 & No \\
- 2 & $(78, 28)$  &  3 &  0 & $(10, 24)$  &  4 &  1 & No \\
- 3 & $(38, 83)$  &  3 &  1 & $(42, 83)$  &  9 &  2 & No \\
- 4 & $(10, 24)$  &  4 &  1 & $(3, 52)$   & 18 &  6 & No \\
-\multicolumn{8}{c}{$\vdots$} \\
-12 & $(18, 66)$  & 29 & 28 & $(13, 34)$  &  8 & 16 & No \\
-\textbf{13} & $\mathbf{(64, 48)}$ & \textbf{29} & \textbf{29} & $\mathbf{(64, 48)}$ & \textbf{16} & \textbf{33} & \textbf{S\'i} \\
-\hline
-\end{tabular}
-\end{small}
-\end{center}
+En el paso $i = 13$ se produce la colisión: $t_{13} = \ell_{13} = (64, 48)$. Los coeficientes son:
+\[
+    \text{Tortuga: } (64, 48) = 29P + 29Q, \qquad
+    \text{Liebre: } (64, 48) = 16P + 33Q.
+\]
 
-En el paso $i = 13$ se produce la colisi\'on $t_{13} = \ell_{13} = (64, 48)$. Aplicando la ecuaci\'on~\eqref{eq:rho-recovery}:
+Aplicando la ecuación~\eqref{eq:rho-recovery}:
 \begin{align*}
     a_t - a_\ell &= 29 - 16 = 13 \pmod{47}, \\
     b_\ell - b_t &= 33 - 29 = 4 \pmod{47}, \\
-    4^{-1} &\equiv 12 \pmod{47} \quad (\text{pues } 4 \cdot 12 = 48 \equiv 1), \\
+    4^{-1} &\equiv 12 \pmod{47} \quad (\text{pues } 4 \cdot 12 = 48 \equiv 1 \pmod{47}), \\
     d &= 13 \cdot 12 \bmod 47 = 156 \bmod 47 = \mathbf{15}.
 \end{align*}
 Verificamos: $15 \cdot P = 15 \cdot (1, 2) = (87, 73) = Q$. \qed
 
-La figura~\ref{fig:rho-visual} muestra la visualizaci\'on de este proceso generada por nuestro script \texttt{visual\_ecdlp\_attacks.py}.
+La secuencia pura generada por el paseo tiene cola $\lambda = 2$ (los puntos $x_0, x_1$ no se repiten) y ciclo $\mu = 13$ (desde $x_2$ hasta $x_{14}$, con $x_{15} = x_2$). La colisión de Floyd se produce en el paso~13 porque es el primer momento en que la tortuga (en $x_{13}$) y la liebre (en $x_{26}$, que por el ciclo coincide con $x_{13}$) se encuentran en el mismo punto. La figura~\ref{fig:rho-visual} muestra la visualización de este proceso.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{imagenes/attack_pollard_rho.png}
-    \caption{Visualizaci\'on del rho de Pollard sobre la curva $y^2 = x^3 + 2x + 1$ mod~89. Panel izquierdo: trayectoria pseudoaleatoria de puntos, coloreados por orden de aparici\'on; la estrella marca la colisi\'on en el paso~13. Panel derecho: estructura abstracta de $\rho$ mostrando la cola ($\lambda = 2$) y el ciclo ($\mu = 13$).}
+    \caption{Visualización del rho de Pollard sobre la curva $y^2 = x^3 + 2x + 1$ mod~89. Panel izquierdo: trayectoria pseudoaleatoria de la tortuga sobre la curva, coloreada por orden de aparición; la estrella marca la colisión en el paso~13. Panel derecho: estructura abstracta de~$\rho$ mostrando la cola ($\lambda = 2$, azul) y el ciclo ($\mu = 13$, rojo).}
     \label{fig:rho-visual}
 \end{figure}
 
 
 \paragraph{Complejidad.}
-El n\'umero esperado de iteraciones hasta encontrar una colisi\'on es $O(\sqrt{n})$ por la paradoja del cumplea\~nos, donde cada iteraci\'on consiste en una o dos operaciones de grupo (sumas y duplicaciones de puntos). Crucialmente, el m\'etodo de Floyd solo necesita almacenar dos puntos y sus coeficientes en cada momento, lo que da espacio $O(1)$. Esto es una ventaja decisiva frente a BSGS, que requiere $O(\sqrt{n})$ espacio para la tabla hash.
+El número esperado de iteraciones hasta la colisión es $O(\sqrt{n})$ por la paradoja del cumpleaños (cuadro~\ref{tab:birthday-ecc}). Cada iteración consiste en una operación de grupo para la tortuga y dos para la liebre. Crucialmente, el método de Floyd solo almacena dos puntos y sus coeficientes en cada momento: espacio~$O(1)$. Esto supone una ventaja decisiva frente a BSGS, que necesita~$O(\sqrt{n})$ espacio para su tabla hash.
 
-Para una curva de 256~bits con $n \approx 2^{256}$, el ataque requiere $\approx 2^{128}$ operaciones, completamente fuera del alcance computacional actual. El r\'ecord pr\'actico fue la resoluci\'on de la curva ECC2K-130 (130~bits sobre campo binario) en 2009 tras un esfuerzo de c\'alculo distribuido masivo~\cite{gaudry2007breaking}, confirmando experimentalmente la inviabilidad para curvas de tama\~nos criptogr\'aficos.
+Para una curva de 256~bits con $n \approx 2^{256}$, el ataque requiere $\approx 2^{128}$ operaciones, fuera del alcance computacional actual. El récord práctico fue la resolución de la curva ECC2K-130 (130~bits sobre campo binario) en 2009, tras un esfuerzo de cálculo distribuido masivo~\cite{gaudry2007breaking}.
 
 \begin{observacion}
-    El rho de Pollard es un \emph{algoritmo gen\'erico}: no explota ninguna estructura espec\'ifica de las curvas el\'ipticas, solo la estructura de grupo finito c\'iclico. Esto significa que, a diferencia de los ataques \textit{index calculus} contra el DLP en~$\mathbb{F}_p^*$, no se conoce forma de ``transferir'' las propiedades aritm\'eticas del campo subyacente para acelerar el ataque. Esta es la raz\'on fundamental por la que ECC ofrece mayor seguridad por bit que RSA, como se refleja en la figura~\ref{fig:complexity}.
+    El rho de Pollard es un \emph{algoritmo genérico}: no explota ninguna propiedad específica de las curvas elípticas, solo la estructura de grupo finito cíclico. Funciona de forma idéntica sobre campos primos~$\mathbb{F}_p$ y campos binarios~$\mathbb{F}_{2^m}$, ya que solo depende de la operación de grupo (suma de puntos), no de la aritmética del campo subyacente. Esta genericidad es, paradójicamente, la razón por la que ECC es segura: a diferencia de los ataques \textit{index calculus} contra el DLP en~$\mathbb{F}_p^*$ (que explotan la estructura aritmética del campo), no se conoce forma de acelerar el ataque en curvas elípticas más allá de~$O(\sqrt{n})$.
 \end{observacion}
 
 \subsection{Comparativa de tamaños de clave}

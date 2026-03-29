@@ -28,9 +28,9 @@
             "command": "latexmk",
             "args": [
                 "-pdf",
+                "-cd",
                 "-interaction=nonstopmode",
                 "-synctex=1",
-                "-outdir=%OUTDIR%",
                 "%DOC%"
             ]
         },
@@ -48,7 +48,7 @@
         {
             "name": "bibtex",
             "command": "bibtex",
-            "args": ["%DOCFILE%"]
+            "args": ["%OUTDIR%/%DOCFILE%"]
         }
     ],
     "latex-workshop.latex.clean.fileTypes": [
