@@ -47,24 +47,26 @@ The project also includes a Docker-based environment for compiling and running t
 ## 2. Project Structure
 
 ```bash
-mi_proyecto_crypto/
+ecc-thesis/
 ├── Makefile
 ├── include/                  # Header files (.hpp)
 │   ├── common.hpp            # Shared types and constants
 │   ├── rng.hpp               # RNG interface
 │   ├── rsa.hpp               # RSA classes and functions
-│   ├── ecc.hpp               # ECC classes and functions
+│   ├── ecc.hpp               # ECC (prime field, affine + Jacobian coordinates)
+│   ├── ecc_binary.hpp        # ECC over binary fields GF(2^m)
 │   └── sha256.hpp            # SHA-256 hash (FIPS PUB 180-4)
 ├── src/                      # Implementation files (.cpp)
 │   ├── rng.cpp
 │   ├── rsa.cpp
-│   ├── ecc.cpp
+│   ├── ecc.cpp               # Prime field ECC (affine + Jacobian)
+│   ├── ecc_binary.cpp        # Binary field ECC (GF(2^m), 5 SEC 2 curves)
 │   ├── sha256.cpp
-│   └── main.cpp              # Benchmark engine (CSV output)
+│   └── main.cpp              # Benchmark engine (CSV output, 5 modes)
 ├── scripts/                  # Automation and analysis scripts
 │   ├── run_benchmarks.sh     # Master orchestration script
-│   ├── visualize_benchmarks.py   # Chart generation (matplotlib)
-│   ├── create_collages.py    # Combines charts into collages
+│   ├── visualize_benchmarks.py   # Chart generation (11 charts)
+│   ├── create_collages.py    # Combines charts into 3 collages
 │   ├── compare_openssl.sh    # OpenSSL baseline comparison
 │   ├── run_bench.sh          # Single algorithm runner
 │   ├── quick_demo.sh         # Quick demonstration
@@ -74,9 +76,10 @@ mi_proyecto_crypto/
 ├── results/                  # Benchmark outputs
 │   ├── summary_*.csv         # Aggregated statistics per benchmark
 │   ├── raw_*.csv             # Per-iteration timing data
-│   ├── chart_*.png           # Individual charts (8 types)
-│   ├── collage_comparison.png    # RSA vs ECC overview (4-panel)
-│   └── collage_detailed.png     # Detailed analysis (4-panel)
+│   ├── chart_*.png           # Individual charts (11 types)
+│   ├── collage_comparison.png          # RSA vs ECC overview (4-panel)
+│   ├── collage_detailed.png            # Detailed analysis (4-panel)
+│   └── collage_coordinates_fields.png  # Jacobian & binary field analysis (4-panel)
 ├── data/                     # Static data (seeds, curves, etc.)
 ├── bin/                      # Compiled executables
 ├── docs/                     # Documentation
@@ -607,26 +610,25 @@ Para análisis detallado, consulte: benchmark_results_20251206_122427.txt
 You can also compile and run individual tests manually:
 
 ```bash
-make test-rsa-2k ITERS=10
+# RSA benchmarks
 ./bin/bench -a RSA -b 2048 -i 10 -s fixed
-./bin/bench -a RSA -b 2048 -i 10 -s random
-./bin/bench -a RSA -b 4096 -i 5 -s fixed
-# NIST P-256
+./bin/bench -a RSA -b 4096 -i 5 -s random
+
+# ECC prime field (affine coordinates)
 ./bin/bench -a ECC -c P-256 -i 10
-
-# NIST P-384
 ./bin/bench -a ECC -c P-384 -i 10
-
-# secp256k1 (Bitcoin)
 ./bin/bench -a ECC -c secp256k1 -i 10
 
-# Jacobian P-256
-./bin/bench -a ECCJ -c P-256 -i 20 -v > jacobian.csv
+# ECC prime field (Jacobian coordinates)
+./bin/bench -a ECCJ -c P-256 -i 10
+./bin/bench -a ECCJ -c secp256k1 -i 10
 
-# Binary field sect283k1
-./bin/bench -a BIN -c sect283k1 -i 10 -v > binary.csv
+# ECC binary field GF(2^m)
+./bin/bench -a BIN -c sect163k1 -i 5
+./bin/bench -a BIN -c sect283k1 -i 5
+./bin/bench -a BIN -c sect233r1 -i 5
 
-# 3 dimensional comparison (RSA-3072 vs P-256 vs secp256k1)
+# Full 3-dimensional comparison (all algorithms, all coordinate systems)
 ./bin/bench -a CMP -i 20 -v > results/summary.csv
 ```
 
@@ -900,9 +902,13 @@ Next step: Analyze with Python:
 
 ## 6. Benchmarks & Comparative Analysis
 
-This section documents the comparative performance analysis between our RSA and ECC implementations. The benchmark suite measures key generation, digital signatures (sign/verify), encryption/decryption, ECDH key agreement, and scalar multiplication across multiple key sizes and elliptic curves.
+This section documents the comparative performance analysis across three dimensions:
 
-All comparisons use **equivalent security levels** as defined by NIST SP 800-57 to ensure a fair comparison: RSA-3072 vs P-256/secp256k1 (128-bit security) and RSA-4096 vs P-384 (192-bit security).
+1. RSA vs ECC - Fundamentally different algorithms (factorization vs ECDLP)
+2. Affine vs Jacobian coordinates - Same math, different point representation (clarity vs speed)
+3. Prime field Fp vs Binary field GF(2^m) - Same algebraic structure, different arithmetic
+
+All comparisons use equivalent security levels as defined by NIST SP 800-57: RSA-3072 vs P-256/secp256k1 (128-bit security) and RSA-4096 vs P-384 (192-bit security). Binary field comparisons use sect283k1 (~128-bit) and sect233k1 (~112-bit).
 
 ### Quick Start
 
@@ -929,16 +935,18 @@ python3 scripts/create_collages.py results results
 The benchmark engine supports three modes:
 
 ```bash
-./bin/bench -a RSA -b 2048 -i 50 -v > rsa_only.csv      # RSA only
-./bin/bench -a ECC -c P-256 -i 50 -v > ecc_only.csv      # ECC only
-./bin/bench -a CMP -i 20 -r raw.csv -v > comparison.csv   # Full comparison
+./bin/bench -a RSA  -b 2048 -i 50 -v > rsa_only.csv      # RSA only
+./bin/bench -a ECC  -c P-256 -i 50 -v > ecc_affine.csv    # ECC affine
+./bin/bench -a ECCJ -c P-256 -i 50 -v > ecc_jacobian.csv  # ECC Jacobian
+./bin/bench -a BIN  -c sect283k1 -i 10 -v > binary.csv    # ECC binary field
+./bin/bench -a CMP  -i 20 -r raw.csv -v > comparison.csv   # Full 3D comparison
 ```
 
 ### Benchmark Architecture
 
 The benchmark system is split into three layers that reuse the existing cryptographic modules:
 
-Each benchmark includes 3 warm-up iterations (discarded) followed by N measured iterations, and reports the following statistics: mean, median, standard deviation, min, max, and percentiles P5/P95. The use of `std::chrono::high_resolution_clock` provides microsecond resolution which is sufficient for operations in the 100us-1s range.
+Each benchmark includes 3 warm-up iterations (discarded) followed by N measured iterations, and reports the following statistics: mean, median, standard deviation, min, max, and percentiles P5/P95. The use of `std::chrono::high_resolution_clock` provides microsecond resolution which is sufficient for operations in the 100us-1s range. The `-a CMP` mode generates ~72 benchmarks: 4 RSA sizes x 6 ops, 3 prime curves x 6 ops (affine), 3 prime curves x 5 ops (Jacobian), 5 binary curves x 3 ops.
 
 ### Comparative Results: RSA vs ECC
 
@@ -958,6 +966,28 @@ The following collage summarizes the key findings from running all 42 benchmarks
 
 The results reveal that ECC has a massive advantage in key generation (45-90x faster) because RSA requires finding two large primes while ECC only needs a random scalar multiplication. For signing, ECC is moderately faster (1.2-1.5x). However, RSA verification is dramatically faster (65-77x) due to the small public exponent e=65537, which requires only 17 squarings and 1 multiplication versus the full scalar multiplication ECC needs.
 
+### Affine vs Jacobian Coordinates
+ 
+The third collage shows the direct comparison between coordinate systems and field types:
+ 
+<p align="center">
+   <img src="results/collage_coordinates_fields.png" alt="Coordinate Systems and Field Arithmetic" width="100%">
+</p>
+**Why we started with affine coordinates and then added Jacobian:**
+ 
+We initially implemented all ECC operations using affine coordinates `(x, y)` for pedagogical reasons: each intermediate point can be verified with `is_on_curve()`, the formulas map directly to textbook math, and debugging is straightforward. The cost is that every point addition and doubling requires a modular inversion (~80-100x the cost of a multiplication).
+ 
+Jacobian coordinates `(X, Y, Z)` where `x = X/Z^2, y = Y/Z^3` eliminate these inversions entirely during scalar multiplication. Only one inversion is needed at the very end when converting back to affine. For a 256-bit scalar multiplication this means ~384 inversions eliminated, yielding a theoretical speedup of ~8x (practical 3-5x).
+ 
+The `chart_affine_vs_jacobian.png` and `chart_jacobian_speedup.png` charts show the measured speedup per operation and curve. The `use_jacobian` parameter in the API allows switching between both modes for direct comparison.
+ 
+### Prime Field vs Binary Field
+ 
+Binary field curves operate over GF(2^m) where elements are polynomials with binary coefficients. The key arithmetic differences are: addition is XOR (extremely fast, no carries), squaring is linear (insert zeros between bits), but polynomial multiplication is more complex in software than modular integer multiplication.
+ 
+Our implementation includes 5 SEC 2 standard curves: three Koblitz curves (sect163k1, sect233k1, sect283k1) where `a in {0,1}` enables special optimizations, and two random curves (sect233r1, sect283r1) for comparison.
+ 
+The `chart_binary_curves.png` shows performance across all 5 binary curves, and `chart_prime_vs_binary.png` compares prime field vs binary field at equivalent security levels (~128 bits: P-256 vs sect283k1).
 
 ### Detailed Analysis
 
@@ -1067,62 +1097,66 @@ BENCHMARK_MAIN();
 
 ### Individual Chart Gallery
 
-The 8 individual charts generated by the benchmark suite are also available for detailed inspection:
+The 11 individual charts generated by the benchmark suite are available for detailed inspection:
 
 <details>
 <summary>Click to expand individual charts</summary>
-
-#### Summary Heatmap
-All operations and parameters in a single view. Color intensity (log scale) immediately reveals where each algorithm excels.
-
+Summary Heatmap
+All algorithms, operations, and parameters in a single view. Rows are grouped by type (RSA, ECC Affine, ECC Jacobian, ECC Binary) with color intensity on log scale.
 <p align="center">
    <img src="results/chart_summary_table.png" alt="Summary Heatmap" width="90%">
 </p>
-
-#### Key Generation Comparison
-RSA key generation requires finding large primes, making it orders of magnitude slower than ECC's simple scalar multiplication. Note the logarithmic scale.
-
+Key Generation Comparison
+All key generation times across RSA sizes, ECC curves (affine, Jacobian), and binary field curves. Logarithmic scale.
 <p align="center">
    <img src="results/chart_keygen_comparison.png" alt="Key Generation" width="80%">
 </p>
-
-#### Sign & Verify at Equivalent Security
-Grouped comparison at NIST-equivalent security levels. The verify chart uses log scale because RSA verify (small exponent) is ~65x faster than ECDSA verify (full scalar multiplication).
-
+Sign & Verify at Equivalent Security
+Grouped comparison at NIST-equivalent security levels including Jacobian overlay.
 <p align="center">
    <img src="results/chart_sign_verify_comparison.png" alt="Sign and Verify" width="90%">
 </p>
-
-#### Performance Speedup Ratios
+Performance Speedup Ratios
 Horizontal bars showing ECC's advantage (red) or RSA's advantage (blue) at each security level. Log scale on x-axis.
-
 <p align="center">
    <img src="results/chart_speedup_ratios.png" alt="Speedup Ratios" width="80%">
 </p>
-
-#### RSA Scaling with Key Size
-All RSA operations on a log scale showing how performance degrades with key size. Key generation scales super-polynomially; encryption and verification (small exponent) scale much more gracefully.
-
+RSA Scaling with Key Size
+All RSA operations on a log scale showing how performance degrades with key size.
 <p align="center">
    <img src="results/chart_rsa_scaling.png" alt="RSA Scaling" width="80%">
 </p>
-
-#### ECC Operations by Curve
-Grouped bars comparing all ECC operations across the three supported curves. P-384 is roughly 2x slower than the 256-bit curves.
-
+ECC Operations by Curve (Affine)
+Grouped bars comparing all ECC operations across the three prime field curves using affine coordinates.
 <p align="center">
    <img src="results/chart_ecc_curves.png" alt="ECC Curves" width="80%">
 </p>
-
-#### Timing Distributions
-Box plots from raw per-iteration data showing measurement stability. ECC operations have very tight distributions; RSA key generation shows high variance due to probabilistic prime search.
-
+Affine vs Jacobian Coordinates
+Per-curve, per-operation comparison between affine and Jacobian with speedup factors annotated.
+<p align="center">
+   <img src="results/chart_affine_vs_jacobian.png" alt="Affine vs Jacobian" width="90%">
+</p>
+Jacobian Speedup Summary
+Horizontal bars showing the measured Jacobian speedup factor for each operation and curve, sorted from highest to lowest.
+<p align="center">
+   <img src="results/chart_jacobian_speedup.png" alt="Jacobian Speedup" width="80%">
+</p>
+Binary Field Curves
+Performance comparison across all 5 SEC 2 binary field curves (3 Koblitz + 2 random).
+<p align="center">
+   <img src="results/chart_binary_curves.png" alt="Binary Curves" width="80%">
+</p>
+Prime vs Binary Field
+Direct comparison of prime field (Fp) and binary field (GF(2^m)) at equivalent security levels.
+<p align="center">
+   <img src="results/chart_prime_vs_binary.png" alt="Prime vs Binary" width="80%">
+</p>
+Timing Distributions
+Box plots from raw per-iteration data showing measurement stability, including Jacobian variants alongside affine.
 <p align="center">
    <img src="results/chart_distribution_sign.png" alt="Sign Distribution" width="80%">
 </p>
-
 <p align="center">
    <img src="results/chart_distribution_verify.png" alt="Verify Distribution" width="80%">
 </p>
-
 </details>
