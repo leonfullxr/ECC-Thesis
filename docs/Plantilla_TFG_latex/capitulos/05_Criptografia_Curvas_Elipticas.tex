@@ -68,7 +68,7 @@ La seguridad de todos los protocolos basados en curvas elípticas (ECDH, ECDSA, 
 
 \begin{definicion}[ECDLP]
 \label{def:ecdlp}
-Sea $E$ una curva elíptica definida sobre un campo finito $\mathbb{F}_q$ y sea $P \in E(\mathbb{F}_q)$ un punto de orden primo $n$. Dado un punto $Q \in \langle P \rangle$ (el subgrupo cíclico generado por~$P$), el \emph{problema del logaritmo discreto en curvas elípticas} (ECDLP) consiste en encontrar el entero $d$, con $0 \leq d \leq n-1$, tal que
+Sea $E$ una curva elíptica definida sobre un cuerpo finito $\mathbb{F}_q$ y sea $P \in E(\mathbb{F}_q)$ un punto de orden primo $n$. Dado un punto $Q \in \langle P \rangle$ (el subgrupo cíclico generado por~$P$), el \emph{problema del logaritmo discreto en curvas elípticas} (ECDLP) consiste en encontrar el entero $d$, con $0 \leq d \leq n-1$, tal que
 \[
     Q = d \cdot P = \underbrace{P + P + \cdots + P}_{d \text{ veces}}.
 \]
@@ -79,7 +79,7 @@ La operación $d \cdot P$ (multiplicación escalar) es eficiente: usando el algo
 \paragraph{Comparación con el DLP en $\mathbb{F}_p^*$.}
 En el grupo multiplicativo $\mathbb{F}_p^*$, el problema del logaritmo discreto clásico (dado $g$ y $h = g^a \bmod p$, encontrar $a$) admite algoritmos sub-exponenciales como el \textit{index calculus}, cuya complejidad es $L_p\big[\tfrac{1}{3}, c\big] = e^{c(\ln p)^{1/3}(\ln \ln p)^{2/3}}$. Estos métodos explotan la estructura aritmética de $\mathbb{Z}/p\mathbb{Z}$ para ``factorizar'' elementos del grupo sobre una base de factores.
 
-En curvas elípticas, no se conoce una analogía del \textit{index calculus}. Los mejores algoritmos genéricos son:
+En curvas elípticas, no se conoce una versión efectiva del \textit{index calculus} para curvas generales sobre cuerpos primos: los mejores algoritmos conocidos son genéricos (es decir, se aplican a cualquier grupo cíclico) y no explotan ninguna estructura específica de la curva. Los más relevantes son:
 \begin{itemize}
     \item \textbf{Baby-step/Giant-step} (Shanks): complejidad $O(\sqrt{n})$ en tiempo y espacio.
     \item \textbf{Rho de Pollard}: complejidad $O(\sqrt{n})$ en tiempo con espacio $O(1)$.
@@ -136,16 +136,19 @@ Calculamos $m = \lceil\sqrt{50}\rceil = 8$. Los baby steps son:
 \begin{tabular}{cl}
 $i$ & $iP$ \\
 \hline
-0 & $\mathcal{O}$ \\
+0 & $\O$ \\
 1 & $(0, 10)$ \\
-2 & $(69, 22)$ \\
-3 & $(19, 91)$ \\
-\multicolumn{2}{c}{$\vdots$}
+2 & $(65, 32)$ \\
+3 & $(23, 24)$ \\
+4 & $(52, 68)$ \\
+5 & $(88, 56)$ \\
+6 & $(95, 66)$ \\
+7 & $(10, 76)$ \\
 \end{tabular}
 \end{small}
 \end{center}
  
-Para los giant steps, calculamos $8P = (53, 13)$ y recorremos $Q - j \cdot 8P$ hasta encontrar una coincidencia con la tabla de baby steps. La colisi\'on se produce para $j = 2$, $i = 0$, dando $d = 2 \cdot 8 + 0 = 16$. La figura~\ref{fig:bsgs-visual} muestra la visualizaci\'on de este proceso.
+Para los giant steps, calculamos $8P = (84, 37)$ y recorremos $S_j = Q - j \cdot 8P$ para $j=0,1,2,\dots$ hasta encontrar una coincidencia con la tabla de baby steps. Concretamente, $S_0 = (92, 81)$ y $S_1 = (84, 37)$, ninguno de los cuales aparece en la tabla; en cambio, $S_2 = Q - 16P = \O$ coincide con la entrada $i = 0$. La colisi\'on se produce, por tanto, para $j = 2$, $i = 0$, dando $d = 2 \cdot 8 + 0 = 16$, como cab\'ia esperar de la construcci\'on $Q = 16P$.
 \end{ejemplo}
 
 
@@ -253,8 +256,8 @@ La elección no es arbitraria. Las tres reglas cumplen propiedades esenciales:
 
 El punto inicial $R_0 = a_0 P + b_0 Q$ puede ser cualquier punto con coeficientes conocidos. La elección $a_0 = 1$, $b_0 = 0$ (es decir, $R_0 = P$) es simplemente la más sencilla.
 
-\paragraph{Nota sobre campos binarios.}
-El algoritmo es \emph{idéntico} para curvas sobre $\mathbb{F}_{2^m}$: la partición se basa igualmente en la coordenada~$x$ del punto, las tres reglas ($+Q$, $2R$, $+P$) utilizan la aritmética de grupo de la curva (que en $\mathbb{F}_{2^m}$ emplea las fórmulas de la sección~\ref{subsec:ecc-campos-binarios}), y los coeficientes $(a, b)$ se actualizan módulo~$n$ de la misma manera. La única diferencia es que las operaciones de campo subyacentes (suma~$=$~XOR, multiplicación de polinomios) son distintas, pero esto es transparente al nivel del algoritmo de Pollard.
+\paragraph{Nota sobre cuerpos binarios.}
+El algoritmo es \emph{idéntico} para curvas sobre $\mathbb{F}_{2^m}$: la partición se basa igualmente en la coordenada~$x$ del punto, las tres reglas ($+Q$, $2R$, $+P$) utilizan la aritmética de grupo de la curva (que en $\mathbb{F}_{2^m}$ emplea las fórmulas de la sección~\ref{subsec:ecc-campos-binarios}), y los coeficientes $(a, b)$ se actualizan módulo~$n$ de la misma manera. La única diferencia es que las operaciones de cuerpo subyacentes (suma~$=$~XOR, multiplicación de polinomios) son distintas, pero esto es transparente al nivel del algoritmo de Pollard.
 
 
 \paragraph{Estructura $\rho$.}
@@ -436,10 +439,10 @@ La secuencia pura generada por el paseo tiene cola $\lambda = 2$ (los puntos $x_
 \paragraph{Complejidad.}
 El número esperado de iteraciones hasta la colisión es $O(\sqrt{n})$ por la paradoja del cumpleaños (cuadro~\ref{tab:birthday-ecc}). Cada iteración consiste en una operación de grupo para la tortuga y dos para la liebre. Crucialmente, el método de Floyd solo almacena dos puntos y sus coeficientes en cada momento: espacio~$O(1)$. Esto supone una ventaja decisiva frente a BSGS, que necesita~$O(\sqrt{n})$ espacio para su tabla hash.
 
-Para una curva de 256~bits con $n \approx 2^{256}$, el ataque requiere $\approx 2^{128}$ operaciones, fuera del alcance computacional actual. El récord práctico fue la resolución de la curva ECC2K-130 (130~bits sobre campo binario) en 2009, tras un esfuerzo de cálculo distribuido masivo~\cite{gaudry2007breaking}.
+Para una curva de 256~bits con $n \approx 2^{256}$, el ataque requiere $\approx 2^{128}$ operaciones, fuera del alcance computacional actual. El récord práctico fue la resolución de la curva ECC2K-130 (130~bits sobre cuerpo binario) en 2009, tras un esfuerzo de cálculo distribuido masivo~\cite{gaudry2007breaking}.
 
 \begin{observacion}
-    El rho de Pollard es un \emph{algoritmo genérico}: no explota ninguna propiedad específica de las curvas elípticas, solo la estructura de grupo finito cíclico. Funciona de forma idéntica sobre campos primos~$\mathbb{F}_p$ y campos binarios~$\mathbb{F}_{2^m}$, ya que solo depende de la operación de grupo (suma de puntos), no de la aritmética del campo subyacente. Esta genericidad es, paradójicamente, la razón por la que ECC es segura: a diferencia de los ataques \textit{index calculus} contra el DLP en~$\mathbb{F}_p^*$ (que explotan la estructura aritmética del campo), no se conoce forma de acelerar el ataque en curvas elípticas más allá de~$O(\sqrt{n})$.
+    El rho de Pollard es un \emph{algoritmo genérico}: no explota ninguna propiedad específica de las curvas elípticas, solo la estructura de grupo finito cíclico. Funciona de forma idéntica sobre cuerpos primos~$\mathbb{F}_p$ y cuerpos binarios~$\mathbb{F}_{2^m}$, ya que solo depende de la operación de grupo (suma de puntos), no de la aritmética del cuerpo subyacente. Esta genericidad es, paradójicamente, la razón por la que ECC es segura: a diferencia de los ataques \textit{index calculus} contra el DLP en~$\mathbb{F}_p^*$ (que explotan la estructura aritmética del cuerpo), no se conoce forma de acelerar el ataque en curvas elípticas más allá de~$O(\sqrt{n})$.
 \end{observacion}
 
 \subsection{Comparativa de tamaños de clave}
@@ -464,7 +467,7 @@ La ausencia de ataques sub-exponenciales en curvas elípticas tiene una consecue
 \label{tab:ecc-rsa-equiv}
 \end{table}
 
-La relación RSA/ECC \emph{crece} a medida que aumenta el nivel de seguridad deseado. Esto se debe a que la complejidad del mejor ataque a RSA (criba del campo numérico general, sub-exponencial) escala peor que la del mejor ataque a ECC (Pollard rho, exponencial). En la práctica, esto se traduce en:
+La relación RSA/ECC \emph{crece} a medida que aumenta el nivel de seguridad deseado. Esto se debe a que la complejidad del mejor ataque a RSA (criba del cuerpo numérico general, sub-exponencial) escala peor que la del mejor ataque a ECC (Pollard rho, exponencial). En la práctica, esto se traduce en:
 
 \begin{itemize}
     \item Menor consumo de ancho de banda (certificados TLS más pequeños).
@@ -476,16 +479,16 @@ La relación RSA/ECC \emph{crece} a medida que aumenta el nivel de seguridad des
 \subsection{Parámetros del dominio de una curva elíptica}
 \label{subsec:ecc-parametros-dominio}
 
-Para instanciar un criptosistema basado en curvas elípticas, todas las partes involucradas deben acordar un conjunto de \emph{parámetros del dominio}. En el caso de curvas sobre campos primos $\mathbb{F}_p$, estos parámetros se definen como la séxtupla
+Para instanciar un criptosistema basado en curvas elípticas, todas las partes involucradas deben acordar un conjunto de \emph{parámetros del dominio}. En el caso de curvas sobre cuerpos primos $\mathbb{F}_p$, estos parámetros se definen como la séxtupla
 \[
     T = (p,\; a,\; b,\; G,\; n,\; h),
 \]
 donde:
 \begin{itemize}
-    \item $p$ es un primo que define el campo finito $\mathbb{F}_p$.
+    \item $p$ es un primo que define el cuerpo finito $\mathbb{F}_p$.
     \item $a, b \in \mathbb{F}_p$ son los coeficientes de la ecuación de Weierstrass $y^2 = x^3 + ax + b$.
     \item $G = (G_x, G_y) \in E(\mathbb{F}_p)$ es el \emph{punto generador} (o \emph{base point}).
-    \item $n$ es el \emph{orden} de $G$, es decir, el menor entero positivo tal que $n \cdot G = \varnothing$.
+    \item $n$ es el \emph{orden} de $G$, es decir, el menor entero positivo tal que $n \cdot G = \O$.
     \item $h = \#E(\mathbb{F}_p) / n$ es el \emph{cofactor}.
 \end{itemize}
 
@@ -507,7 +510,7 @@ Los parámetros del dominio $T = (p, a, b, G, n, h)$ pueden obtenerse de dos for
 \subsubsection{Generación de parámetros sobre $\mathbb{F}_p$}
 \label{subsubsec:gen-params-fp}
 
-El proceso de generación de una curva elíptica segura sobre un campo primo $\mathbb{F}_p$ consta de los siguientes pasos:
+El proceso de generación de una curva elíptica segura sobre un cuerpo primo $\mathbb{F}_p$ consta de los siguientes pasos:
 
 \begin{enumerate}
     \item \textbf{Selección del primo~$p$.} Se elige un primo $p$ de tamaño adecuado al nivel de seguridad deseado (por ejemplo, 256~bits para 128~bits de seguridad). Para eficiencia, se prefieren primos con estructura especial que facilite la reducción modular, como los \emph{primos pseudo-Mersenne} usados por el NIST (e.g., $p_{256} = 2^{256} - 2^{224} + 2^{192} + 2^{96} - 1$).
@@ -525,7 +528,7 @@ El proceso de generación de una curva elíptica segura sobre un campo primo $\m
         \item (Opcional) El endomorfismo de la curva no tiene estructura explotable.
     \end{itemize}
     
-    \item \textbf{Selección del generador~$G$.} Se elige un punto aleatorio $P \in E(\mathbb{F}_p)$ y se calcula $G = hP$. Se verifica que $G \neq \varnothing$, lo que garantiza que $G$ tiene orden~$n$.
+    \item \textbf{Selección del generador~$G$.} Se elige un punto aleatorio $P \in E(\mathbb{F}_p)$ y se calcula $G = hP$. Se verifica que $G \neq \O$, lo que garantiza que $G$ tiene orden~$n$.
 \end{enumerate}
 
 Si alguna verificación falla, se repite el proceso con nuevos coeficientes.
@@ -559,9 +562,9 @@ La verificación de parámetros de dominio es esencial cuando se reciben de un t
 \Ensure \textbf{Válido} o \textbf{Inválido}
 \State Verificar que $p$ es primo y $p > 3$.
 \State Verificar que $a, b \in [0, p-1]$ y $4a^3 + 27b^2 \not\equiv 0 \pmod{p}$.
-\State Verificar que $G \neq \varnothing$ y que $G$ está en la curva: $G_y^2 \equiv G_x^3 + aG_x + b \pmod{p}$.
+\State Verificar que $G \neq \O$ y que $G$ está en la curva: $G_y^2 \equiv G_x^3 + aG_x + b \pmod{p}$.
 \State Verificar que $n$ es primo.
-\State Verificar que $n \cdot G = \varnothing$. \Comment{$G$ tiene orden $n$}
+\State Verificar que $n \cdot G = \O$. \Comment{$G$ tiene orden $n$}
 \State Verificar que $h = \lfloor (\sqrt{p} + 1)^2 / n \rfloor$. \Comment{Cofactor correcto}
 \State Verificar que $hn \neq p$ (no anómala).
 \State Verificar que $p^k \not\equiv 1 \pmod{n}$ para $1 \leq k \leq 20$. \Comment{Grado de inmersión alto}
@@ -574,7 +577,7 @@ En nuestro proyecto utilizamos exclusivamente curvas estandarizadas por el NIST~
 
 De forma análoga, \texttt{BinaryCurveParams::validate()} comprueba que el grado del polinomio irreducible coincide con~$m$, que $b \neq 0$ (discriminante no nulo en característica~2), y que $n$ y $h$ son positivos.
 
-La validación de claves públicas se realiza en el constructor de \texttt{ECPoint}, que verifica automáticamente $y^2 = x^3 + ax + b \pmod{p}$ al crear cualquier punto, lanzando una excepción si el punto no pertenece a la curva. Para las curvas con cofactor $h = 1$ (NIST P-256, P-384, secp256k1), esta verificación es suficiente, ya que todo punto no trivial de la curva tiene orden~$n$. Para curvas con $h > 1$ (como las binarias sect233k1 con $h = 4$), sería necesario verificar adicionalmente que $n \cdot Q = \varnothing$ para garantizar la pertenencia al subgrupo correcto, lo que se documenta como limitación del prototipo.
+La validación de claves públicas se realiza en el constructor de \texttt{ECPoint}, que verifica automáticamente $y^2 = x^3 + ax + b \pmod{p}$ al crear cualquier punto, lanzando una excepción si el punto no pertenece a la curva. Para las curvas con cofactor $h = 1$ (NIST P-256, P-384, secp256k1), esta verificación es suficiente, ya que todo punto no trivial de la curva tiene orden~$n$. Para curvas con $h > 1$ (como las binarias sect233k1 con $h = 4$), sería necesario verificar adicionalmente que $n \cdot Q = \O$ para garantizar la pertenencia al subgrupo correcto, lo que se documenta como limitación del prototipo.
 
 
 % ============================================================================
@@ -601,9 +604,9 @@ La seguridad del par de claves depende críticamente de la calidad del generador
 \paragraph{Validación de la clave pública.}
 Al recibir una clave pública~$Q$ de un tercero, es imprescindible verificar que:
 \begin{enumerate}
-    \item $Q \neq \varnothing$ (no es el punto en el infinito).
+    \item $Q \neq \O$ (no es el punto en el infinito).
     \item $Q$ pertenece a la curva: $Q_y^2 \equiv Q_x^3 + aQ_x + b \pmod{p}$.
-    \item $Q$ pertenece al subgrupo correcto: $n \cdot Q = \varnothing$.
+    \item $Q$ pertenece al subgrupo correcto: $n \cdot Q = \O$.
 \end{enumerate}
 La tercera comprobación es especialmente importante cuando $h > 1$, para prevenir ataques de contribución de subgrupo pequeño~\cite{hankerson2004guide}.
 
@@ -668,7 +671,7 @@ Alice calcula $S = 3 \cdot Q_B = 3 \cdot (80, 87) = (3, 91)$ y Bob calcula $S = 
 En la práctica, la coordenada~$x$ del punto compartido $S$ no se utiliza directamente como clave simétrica, sino que se pasa por una \emph{función de derivación de clave} (KDF, \textit{Key Derivation Function}). Las razones son:
 
 \begin{itemize}
-    \item La coordenada~$x$ puede tener bits con distribución no uniforme (por ejemplo, los bits más significativos pueden estar correlacionados con la estructura del campo).
+    \item La coordenada~$x$ puede tener bits con distribución no uniforme (por ejemplo, los bits más significativos pueden estar correlacionados con la estructura del cuerpo).
     \item Se necesita adaptar la longitud del secreto al tamaño de la clave simétrica deseada (128, 192 o 256~bits para AES).
     \item Un KDF aporta una capa adicional de seguridad: aunque se descubriese alguna debilidad parcial en la coordenada~$x$, la clave derivada permanece segura si el KDF es robusto.
 \end{itemize}
@@ -744,7 +747,7 @@ Dada una firma $(r, s)$ sobre un mensaje $m$ y la clave pública $Q$ del firmant
     \[
         R' = u_1 \cdot G + u_2 \cdot Q.
     \]
-    \item Si $R' = \varnothing$, rechazar. En caso contrario, calcular $v = x_{R'} \bmod n$.
+    \item Si $R' = \O$, rechazar. En caso contrario, calcular $v = x_{R'} \bmod n$.
     \item Aceptar la firma si y solo si $v = r$.
 \end{enumerate}
 
@@ -791,7 +794,7 @@ Para mitigar los riesgos asociados a la generación aleatoria de~$k$, el RFC~697
 \subsection{Coordenadas afines frente a Jacobianas}
 \label{subsec:ecc-afines-jacobianas}
 
-Como se describió en la sección~\ref{sec:coord-proyectivas}, las fórmulas de suma y duplicación de puntos en coordenadas afines requieren una inversión modular por cada operación. Dado que la inversión en $\mathbb{F}_p$ tiene un coste equivalente a 80--100 multiplicaciones modulares para campos de 256~bits~\cite{hankerson2004guide}, este es el cuello de botella principal.
+Como se describió en la sección~\ref{sec:coord-proyectivas}, las fórmulas de suma y duplicación de puntos en coordenadas afines requieren una inversión modular por cada operación. Dado que la inversión en $\mathbb{F}_p$ tiene un coste equivalente a 80--100 multiplicaciones modulares para cuerpos de 256~bits~\cite{hankerson2004guide}, este es el cuello de botella principal.
 
 \paragraph{Coste en coordenadas afines.}
 Para una multiplicación escalar de 256 bits mediante \textit{double-and-add}:
@@ -812,7 +815,7 @@ Las coordenadas Jacobianas (véase definición~\ref{def:coord-jacobi}) represent
     Y_3 &= D(B - X_3) - C, \\
     Z_3 &= 2Y_1 Z_1.
 \end{align*}
-Coste: 4 multiplicaciones + 4 cuadrados (ó 1M + 8S + 1 multiplicación por~$a$ cuando $a = -3$, como en NIST P-256).
+Coste: 4 multiplicaciones + 6 cuadrados en el caso general; con $a = -3$ (NIST P-256, P-384), el término $3X_1^2 + aZ_1^4$ se factoriza como $3(X_1 - Z_1^2)(X_1 + Z_1^2)$, ahorrando una multiplicación y reduciendo el coste a 4M + 4S~\cite{hankerson2004guide}.
 
 \textbf{Suma} de $(X_1, Y_1, Z_1)$ y $(X_2, Y_2, Z_2)$:
 \begin{align*}
@@ -831,10 +834,10 @@ Durante toda la multiplicación escalar, las operaciones se realizan en coordena
 En nuestra implementación, las coordenadas Jacobianas proporcionaron un \textit{speedup} medible frente a las afines, cuyos resultados detallados se presentan en el capítulo de experimentación.
 
 
-\subsection{Curvas sobre campos binarios $\mathbb{F}_{2^m}$}
+\subsection{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}
 \label{subsec:ecc-campos-binarios}
 
-Las curvas elípticas también se definen sobre campos binarios $\mathbb{F}_{2^m}$, donde los elementos son polinomios de grado menor que~$m$ con coeficientes en $\{0, 1\}$, y la aritmética se describe en la sección~\ref{sec:aritmetica-f2m}. La ecuación de Weierstrass toma una forma diferente en característica~2.
+Las curvas elípticas también se definen sobre cuerpos binarios $\mathbb{F}_{2^m}$, donde los elementos son polinomios de grado menor que~$m$ con coeficientes en $\{0, 1\}$, y la aritmética se describe en la sección~\ref{sec:aritmetica-f2m}. La ecuación de Weierstrass toma una forma diferente en característica~2.
 
 \paragraph{Ecuación no supersingular.}
 Para curvas no supersingulares sobre $\mathbb{F}_{2^m}$, la ecuación simplificada es
@@ -865,16 +868,16 @@ Las fórmulas de suma y duplicación difieren de las del caso primo:
     \]
 \end{itemize}
 
-Nótese que todas las operaciones de campo (suma, multiplicación, inversión) son operaciones sobre polinomios binarios. En particular, la suma es una operación XOR, sin propagación de acarreo, lo que la hace extremadamente eficiente en hardware.
+Nótese que todas las operaciones de cuerpo (suma, multiplicación, inversión) son operaciones sobre polinomios binarios. En particular, la suma es una operación XOR, sin propagación de acarreo, lo que la hace extremadamente eficiente en hardware.
 
 \paragraph{Curvas estándar implementadas.}
-En nuestra implementación incluimos cinco curvas estándar SEC~2~\cite{sec2-v2} sobre campos binarios:
+En nuestra implementación incluimos cinco curvas estándar SEC~2~\cite{sec2-v2} sobre cuerpos binarios:
 
 \begin{table}[htbp]
 \centering
 \begin{tabular}{lccl}
 \hline
-\textbf{Curva} & \textbf{Campo} & \textbf{Seguridad (bits)} & \textbf{Tipo} \\
+\textbf{Curva} & \textbf{Cuerpo} & \textbf{Seguridad (bits)} & \textbf{Tipo} \\
 \hline
 sect163k1 & $\mathbb{F}_{2^{163}}$ & $\sim$80  & Koblitz \\
 sect233k1 & $\mathbb{F}_{2^{233}}$ & $\sim$112 & Koblitz \\
@@ -883,14 +886,14 @@ sect233r1 & $\mathbb{F}_{2^{233}}$ & $\sim$112 & Aleatoria \\
 sect283r1 & $\mathbb{F}_{2^{283}}$ & $\sim$128 & Aleatoria \\
 \hline
 \end{tabular}
-\caption{Curvas sobre campos binarios implementadas (SEC~2).}
+\caption{Curvas sobre cuerpos binarios implementadas (SEC~2).}
 \label{tab:binary-curves}
 \end{table}
 
-Las curvas de tipo Koblitz (con $a \in \{0, 1\}$) admiten optimizaciones adicionales basadas en el endomorfismo de Frobenius, que permite sustituir duplicaciones de punto por operaciones de cuadrado en el campo (mucho más baratas en $\mathbb{F}_{2^m}$). Las curvas aleatorias (sufijo ``r'') se generaron con coeficientes pseudoaleatorios verificables para evitar sospechas de puertas traseras.
+Las curvas de tipo Koblitz (con $a \in \{0, 1\}$) admiten optimizaciones adicionales basadas en el endomorfismo de Frobenius, que permite sustituir duplicaciones de punto por operaciones de cuadrado en el cuerpo (mucho más baratas en $\mathbb{F}_{2^m}$). Las curvas aleatorias (sufijo ``r'') se generaron con coeficientes pseudoaleatorios verificables para evitar sospechas de puertas traseras.
 
 \paragraph{Razón de inclusión.}
-Aunque el NIST ha ido retirando curvas binarias de sus recomendaciones más recientes en favor de curvas sobre campos primos, su estudio es relevante para este trabajo por tres razones: completitud teórica (las dos familias principales de curvas elípticas sobre campos finitos), comparación de rendimiento (campo primo frente a campo binario), y aplicabilidad en hardware embebido donde la aritmética XOR es especialmente ventajosa.
+Aunque el NIST ha ido retirando curvas binarias de sus recomendaciones más recientes en favor de curvas sobre cuerpos primos, su estudio es relevante para este trabajo por tres razones: completitud teórica (las dos familias principales de curvas elípticas sobre cuerpos finitos), comparación de rendimiento (cuerpo primo frente a cuerpo binario), y aplicabilidad en hardware embebido donde la aritmética XOR es especialmente ventajosa.
 
 
 \subsection{Multiplicación escalar}
@@ -904,7 +907,7 @@ La multiplicación escalar $k \cdot P$ es la operación computacionalmente domin
 \begin{algorithmic}[1]
 \Require Escalar $k = (k_{t-1}, k_{t-2}, \ldots, k_1, k_0)_2$ y punto $P \in E(\mathbb{F}_q)$
 \Ensure $Q = k \cdot P$
-\State $Q \leftarrow \varnothing$ \Comment{Punto en el infinito}
+\State $Q \leftarrow \O$ \Comment{Punto en el infinito}
 \For{$i = t-1$ \textbf{down to} $0$}
     \State $Q \leftarrow 2Q$ \Comment{Duplicación}
     \If{$k_i = 1$}
@@ -947,13 +950,13 @@ La elección de una curva elíptica para uso criptográfico no es trivial. Adem�
 A continuación se describen las principales familias de curvas utilizadas en la práctica:
 
 \paragraph{Curvas NIST (P-256, P-384, P-521).}
-Publicadas en FIPS~186--4~\cite{nist-fips186-4} y NIST SP~800-186~\cite{nist-sp800-186}, las curvas NIST sobre campos primos utilizan la forma corta de Weierstrass $y^2 = x^3 - 3x + b$ con primos diseñados para reducción rápida. Son las curvas más ampliamente desplegadas en Internet (TLS, SSH, S/MIME) y en aplicaciones gubernamentales. En nuestra implementación incluimos P-256 (128~bits de seguridad) y P-384 (192~bits de seguridad).
+Publicadas en FIPS~186--4~\cite{nist-fips186-4} y NIST SP~800-186~\cite{nist-sp800-186}, las curvas NIST sobre cuerpos primos utilizan la forma corta de Weierstrass $y^2 = x^3 - 3x + b$ con primos diseñados para reducción rápida. Son las curvas más ampliamente desplegadas en Internet (TLS, SSH, S/MIME) y en aplicaciones gubernamentales. En nuestra implementación incluimos P-256 (128~bits de seguridad) y P-384 (192~bits de seguridad).
 
 \paragraph{secp256k1 (Bitcoin).}
-Definida por SECG~\cite{sec2-v2}, esta curva utiliza la ecuación $y^2 = x^3 + 7$ sobre un campo primo ($a = 0$, $b = 7$). El coeficiente $a = 0$ la convierte en una curva de Koblitz sobre $\mathbb{F}_p$, lo que permite ciertas optimizaciones en el endomorfismo GLV. Es la curva utilizada por Bitcoin y Ethereum para las firmas ECDSA de transacciones~\cite{secp256k1-bitcoin}. En nuestra implementación está incluida como una de las tres curvas principales.
+Definida por SECG~\cite{sec2-v2}, esta curva utiliza la ecuación $y^2 = x^3 + 7$ sobre un cuerpo primo ($a = 0$, $b = 7$). El coeficiente $a = 0$ la convierte en una curva de Koblitz sobre $\mathbb{F}_p$, lo que permite ciertas optimizaciones en el endomorfismo GLV. Es la curva utilizada por Bitcoin y Ethereum para las firmas ECDSA de transacciones~\cite{secp256k1-bitcoin}. En nuestra implementación está incluida como una de las tres curvas principales.
 
 \paragraph{Curve25519 y Ed25519.}
-Diseñadas por Bernstein~\cite{bernstein2006curve25519}, Curve25519 (para ECDH, usando X25519) y Ed25519 (para firmas, usando EdDSA) emplean una curva de Montgomery y su birrationalmente equivalente curva de Edwards, respectivamente, sobre el campo $\mathbb{F}_{2^{255}-19}$. Su diseño prioriza la resistencia a implementaciones incorrectas: aritmética de tiempo constante, inmunidad a ataques de curva inválida (por diseño), y parámetros completamente rígidos. Son las curvas predeterminadas en TLS~1.3 y SSH moderno.
+Diseñadas por Bernstein~\cite{bernstein2006curve25519}, Curve25519 (para ECDH, usando X25519) y Ed25519 (para firmas, usando EdDSA) emplean una curva de Montgomery y su birrationalmente equivalente curva de Edwards, respectivamente, sobre el cuerpo $\mathbb{F}_{2^{255}-19}$. Su diseño prioriza la resistencia a implementaciones incorrectas: aritmética de tiempo constante, inmunidad a ataques de curva inválida (por diseño), y parámetros completamente rígidos. Son las curvas predeterminadas en TLS~1.3 y SSH moderno.
 
 
 \subsection{Controversias y confianza}
