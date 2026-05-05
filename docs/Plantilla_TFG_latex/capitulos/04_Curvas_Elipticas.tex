@@ -1,23 +1,21 @@
-\chapter{Teoría de las curvas elípticas}
+\chapter{Teoría de las curvas elípticas}\label{chap:Curvas_elipticas}
 
 \section{Introducción y motivación}
-Los sistemas criptográficos que usan las curvas elípticas dependen de la aritmética de los puntos de la curva. Como hemos mencionado anteriormente en el capítulo~\ref{chap:Campos_finitos}, la eficiencia de estos esquemas basados en curvas elípticas depende directamente de la velocidad de los algoritmos de aritmética de curva, que a su vez recaen en las operaciones sobre el campo (suma, multiplicación, inversión)...
+Los sistemas criptográficos basados en curvas elípticas dependen, en última instancia, de la aritmética de los puntos de la curva. Como se mostró en el capítulo~\ref{chap:Campos_finitos}, la eficiencia de estos esquemas se apoya directamente en la velocidad de los algoritmos de aritmética de curva, que a su vez se construyen sobre las operaciones del cuerpo subyacente: suma, multiplicación e inversión.
 
-La figura~\ref{fig:ECDSA_esquema} muestra las bases necesarias para entender e implementar un protocolo como el algoritmo de firma digital de curva elíptica (ECDSA). La aritmética de curvas no solo se construye sobre las operaciones en el campo subyacente, sino que en algunos casos también requiere aritmética de grandes enteros y operaciones modulares. ECDSA emplea una función hash y ciertas operaciones modulares, pero los pasos más costosos desde el punto de vista computacional son las propias operaciones en la curva.
+La figura~\ref{fig:ECDSA_esquema} muestra los bloques necesarios para entender e implementar un protocolo como el algoritmo de firma digital sobre curvas elípticas (ECDSA). La aritmética de curvas no solo descansa en las operaciones del cuerpo, sino que en algunos casos también requiere aritmética de grandes enteros y operaciones modulares. ECDSA emplea, además, una función hash; pero los pasos computacionalmente más costosos son las propias operaciones sobre la curva.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{imagenes/ECDSA_esquema.png}
-    \caption{Esquema del Algoritmo de firma digital de las curvas elípticas (ECDSA)}
+    \caption{Esquema del Algoritmo de Firma Digital sobre Curvas Elípticas (ECDSA).}
     \label{fig:ECDSA_esquema}
 \end{figure}
-%need to update this
-La sección~\ref{sec:historia_curvas_elipticas} ofrece una introducción a las curvas elípticas donde se presentan las operaciones de grupo de suma y duplicado para los puntos de la curva, junto con su estructura fundamental y otras propiedades básicas. La sección~3.2 expone las representaciones en coordenadas proyectivas (y los algoritmos asociados de suma y duplicado), de especial interés cuando la inversión en el campo es más cara que la multiplicación. La sección~3.3 discute estrategias para la multiplicación de puntos.
 
-Los métodos de las secciones~3.4, 3.5 y 3.6 están relacionados en que todos ellos explotan endomorfismos de la curva para reducir el coste del duplicado en la multiplicación de puntos. La sección~3.4 trata las curvas de Koblitz especiales, que permiten sustituir el duplicado de punto sobre \(\mathbb{F}_2\) por operaciones de cuadrado en el campo, mucho más baratas. La sección~3.5 examina una clase más amplia de curvas elípticas que admiten endomorfismos usados eficientemente para disminuir el número de duplicaciones. Las estrategias de la sección~3.6, para curvas sobre campos binarios, reemplazan la mayoría de los duplicados por una operación de “halving” de punto, potencialmente más rápida. La sección~3.7 recoge comparaciones de conteo de operaciones para métodos seleccionados de multiplicación de puntos. Finalmente, la sección~3.8 concluye con notas del capítulo y referencias.
+Este capítulo desarrolla los fundamentos teóricos necesarios para abordar el capítulo de criptografía y la implementación. La sección~\ref{sec:historia_curvas_elipticas} ofrece un breve recorrido histórico desde las integrales elípticas hasta su uso criptográfico moderno. La sección~\ref{sec:definicion_curvas_elipticas} introduce la definición formal de curva elíptica como modelo de Weierstrass generalizado, junto con sus invariantes asociados (discriminante, condición de no singularidad, punto en el infinito). En la sección~\ref{sec:simplificaciones_weierstrass_curvas_elipticas} se obtienen las formas simplificadas según la característica del cuerpo base, distinguiendo los casos \(\mathrm{char}(K)\neq2,3\), \(\mathrm{char}(K)=2\) y \(\mathrm{char}(K)=3\). La sección~\ref{sec:ley_de_grupo} construye la \emph{ley de grupo} sobre los puntos de la curva mediante la regla de la cuerda y la tangente, primero de forma geométrica y después en fórmulas algebraicas explícitas para cada caso. La sección~\ref{sec:curvas_sobre_cuerpos_finitos} estudia el comportamiento del grupo de puntos cuando el cuerpo base es finito \(\mathbb{F}_q\), incluyendo el teorema de Hasse sobre el orden del grupo. Finalmente, la sección~\ref{sec:representacion_puntos} introduce las \emph{coordenadas proyectivas} (estándar, Jacobianas, Chudnovsky y López–Dahab), motivadas por la necesidad de evitar la inversión modular en cada operación, lo cual conecta directamente con las decisiones de implementación detalladas en el capítulo~\ref{ch:implementacion}.
 
 
 \subsection{Historia}\label{sec:historia_curvas_elipticas}
-Las curvas elípticas nacen del problema de calcular la longitud de arco de una elipse, que John Wallis abordó en 1655, y se articulan primero como integrales elípticas gracias a los pioneros Giulio Fagnano y Leonhard Euler en la primera mitad del siglo XVIII. En 1786, Adrien-Marie Legendre sistematiza estas integrales en tres “tipos” y sienta las bases de las funciones elípticas. A finales de la década de 1820, Niels Abel y Carl Jacobi invierten estas integrales, dando lugar a la teoría clásica de funciones elípticas. A mediados del siglo XIX, Karl Weierstrass y Bernhard Riemann las conectan con la estructura algebraico‐geométrica de curvas de género uno (tóricas complejas). Finalmente, en el siglo XX, Louis Mordell y André Weil desarrollan la teoría aritmética de puntos racionales, abriendo paso a la geometría algebraica moderna.
+Las curvas elípticas nacen del problema de calcular la longitud de arco de una elipse, que John Wallis abordó en 1655, y se articulan primero como integrales elípticas gracias a los pioneros Giulio Fagnano y Leonhard Euler en la primera mitad del siglo XVIII. En 1786, Adrien-Marie Legendre sistematiza estas integrales en tres “tipos” y sienta las bases de las funciones elípticas. A finales de la década de 1820, Niels Abel y Carl Jacobi invierten estas integrales, dando lugar a la teoría clásica de funciones elípticas. A mediados del siglo XIX, Karl Weierstrass y Bernhard Riemann las conectan con la estructura algebraico‐geométrica que hoy reconocemos en la forma normal de Weierstrass. Finalmente, en el siglo XX, Louis Mordell y André Weil desarrollan la teoría aritmética de puntos racionales, abriendo paso a la geometría algebraica moderna.
 
 \section{Definición de una curva elíptica}\label{sec:definicion_curvas_elipticas}
 \begin{definicion}[Curva elíptica sobre un cuerpo]\label{def:definicion_curvas_elipticas}
@@ -33,7 +31,7 @@ sujeto a la condición de no singularidad que expresaremos a continuación.
 
 \medskip
 
-\noindent\textbf{Invariantes auxiliares.} Definimos los siguientes invariantes:
+\noindent\textbf{Invariantes auxiliares.} Definimos los siguientes invariantes (denotados habitualmente $b_2, b_4, b_6, b_8$ en la literatura clásica~\cite{silverman1986aec,hankerson2004guide}; aquí los llamamos $d_i$ para evitar confusión con el coeficiente $b$ de la ecuación corta):
 \[
 \begin{aligned}
   d_2 &= a_1^2 + 4a_2, &\quad
@@ -49,15 +47,15 @@ sujeto a la condición de no singularidad que expresaremos a continuación.
 \[
   \Delta \;=\;-\,d_2^2\,d_8 \;-\; 8\,d_4^3 \;-\; 27\,d_6^2 \;+\; 9\,d_2\,d_4\,d_6.
 \]
-Con la condición necesaria $\Delta \;\neq\; 0$.
+Para que \eqref{eq:weierstrass_generalizada} defina una curva elíptica se exige $\Delta \neq 0$ (condición de no singularidad, discutida más adelante).
 
 \medskip
 
 \noindent\textbf{Punto en el infinito y conjunto de puntos racionales.}  
-Denotamos por $\infty$ el único punto en el infinito (punto de Weierstrass) que completa la curva para obtener un cuerpo de funciones de género 1. Para cualquier extensión de cuerpos $L/K$, el conjunto de puntos de $E$ con coordenadas en $L$ viene dado por
+Denotamos por $\mathcal{O}$ el único punto en el infinito que completa la curva al considerar su cierre proyectivo: corresponde al punto $(0:1:0)$ en $\mathbb{P}^2(K)$ y desempeña el papel de elemento neutro de la ley de grupo (sección~\ref{sec:ley_de_grupo}). Para cualquier extensión de cuerpos $L/K$, el conjunto de puntos de $E$ con coordenadas en $L$ viene dado por
 \[
   E(L) \;=\; \bigl\{(x,y)\in L^2 : y^2 + a_1\,x\,y + a_3\,y - x^3 - a_2\,x^2 - a_4\,x - a_6 = 0 \bigr\}
-  \;\cup\;\{\infty\}.
+  \;\cup\;\{\mathcal{O}\}.
 \]
 \end{definicion}
 
@@ -66,19 +64,20 @@ Denotamos por $\infty$ el único punto en el infinito (punto de Weierstrass) que
 \begin{enumerate}
   \item La ecuación \eqref{eq:weierstrass_generalizada} se conoce como la \emph{ecuación de Weierstrass}.
   \item Decimos que \(E\) está \emph{definida sobre} \(K\) porque los coeficientes \(a_i\) pertenecen a \(K\). A menudo escribimos \(E/K\) y diremos que \(K\) es un \emph{cuerpo base}.
-  \item La condición \(\Delta\neq0\) garantiza que la curva es \emph{suave}, es decir, no tiene singularidades (no hay puntos con dos tangentes distintas). Esto esencialmente viene dado por puntos que anulan las derivadas paricales de la siguiente función de una curva elíptica:
+  \item La condición \(\Delta\neq0\) garantiza que la curva es \emph{suave}, es decir, no tiene puntos singulares. Recordemos que un punto \((x_0,y_0)\) de la curva se denomina \emph{singular} cuando ambas derivadas parciales de
   \[
-    f(x,y) = y^2 +a_1xy + a_3y -x^3 - a_2x^2 - a_4x - a_6
+    f(x,y) = y^2 + a_1xy + a_3y - x^3 - a_2x^2 - a_4x - a_6
   \]
-  Se puede encontrar un ejemplo donde \(\Delta\neq0\) en la figura ~\ref{fig:elliptic_curve_singular_example}.
-  \item El punto \(\infty\) es el único punto de la "línea en el infinito" que satisface la forma proyectiva de la ecuación de Weierstrass.
-  \item Los \emph{puntos \(L\)-racionales} de \(E\) son aquellos cuyos pares \((x,y)\) pertenecen al cuerpo \(L\). Siempre incluimos \(\infty\).
+  se anulan simultáneamente en él, es decir, cuando \(\partial f/\partial x\,(x_0,y_0)=\partial f/\partial y\,(x_0,y_0)=0\). Geométricamente, en un punto singular la curva no admite una recta tangente bien definida: puede tener dos tangentes distintas (\emph{nodo}) o una sola tangente con multiplicidad doble (\emph{cúspide}). Un ejemplo clásico de cúspide aparece en la curva \(y^2 = x^3\), singular en el origen, donde las dos derivadas parciales se anulan a la vez. La condición algebraica \(\Delta\neq0\) excluye precisamente la presencia de tales puntos.  
+  En la figura~\ref{fig:elliptic_curve_singular_example} se muestra un ejemplo de curva singular (con \(\Delta = 0\)).
+  \item El punto \(\mathcal{O}\) es el único punto de la ``línea en el infinito'' que satisface la forma proyectiva de la ecuación de Weierstrass.
+  \item Los \emph{puntos \(L\)-racionales} de \(E\) son aquellos cuyos pares \((x,y)\) pertenecen al cuerpo \(L\). Siempre incluimos \(\mathcal{O}\).
 \end{enumerate}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{imagenes/elliptic_curve_singular_example.png}
-    \caption{Ejemplo de una curva elíptica con un punto singular, es decir, \(\Delta\neq0\)}
+    \caption{Ejemplo de una curva con un punto singular (cúspide en el origen), correspondiente a \(\Delta = 0\).}
     \label{fig:elliptic_curve_singular_example}
 \end{figure}
 
@@ -89,8 +88,8 @@ Consideremos dos curvas elípticas sobre \(\mathbb{R}\):
   \qquad
   E_2: \;y^2 = x^3 + 3x + 15.
 \]
-Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\infty\}\) y
-\(E_2(\mathbb{R})\setminus\{\infty\}\) se muestran en la figura~\ref{fig:curvas_reales}.
+Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\mathcal{O}\}\) y
+\(E_2(\mathbb{R})\setminus\{\mathcal{O}\}\) se muestran en la figura~\ref{fig:curvas_reales}.
 \end{ejemplo}
 
 \begin{figure}[H]
@@ -98,29 +97,25 @@ Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\infty\}\) y
   \includegraphics[width=0.48\textwidth]{imagenes/elliptic_curve2D_example.png}
   \hfill
   \includegraphics[width=0.48\textwidth]{imagenes/elliptic_curve2D_example2.png}
-  \caption{Curvas \(E_1\) y \(E_2\) sobre \(\mathbb{R}\), con sus respectivos puntos (excepto \(\infty\)).}
+  \caption{Curvas \(E_1\) y \(E_2\) sobre \(\mathbb{R}\), con sus respectivos puntos (excepto \(\mathcal{O}\)).}
   \label{fig:curvas_reales}
 \end{figure}
 
 \subsection{Ecuaciones simplificadas de Weierstrass}\label{sec:simplificaciones_weierstrass_curvas_elipticas}
 
-\begin{definicion}
+\begin{definicion}\label{def:curvas_isomorfas}
 Sean dos curvas elípticas $E_1$ y $E_2$ definidas sobre un cuerpo $K$, dadas por las ecuaciones de Weierstrass
-
 \[
 \begin{aligned}
-E_1:\; & y^2 + a_1 x y + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6,\\
-E_2:\; & y^2 + a_1 x y + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6,
+E_1:\; & y^2 + a_1\,x\,y + a_3\,y \;=\; x^3 + a_2\,x^2 + a_4\,x + a_6,\\[2pt]
+E_2:\; & y'^2 + a_1'\,x'\,y' + a_3'\,y' \;=\; x'^3 + a_2'\,x'^2 + a_4'\,x' + a_6',
 \end{aligned}
 \]
-
-se dice que $E_1$ y $E_2$ son \emph{isomorfas} sobre $K$ si existen $u,r,s,t\in K$, $u\neq0$, tales que el cambio de variables
-
+con coeficientes \(a_i, a_i'\in K\). Decimos que $E_1$ y $E_2$ son \emph{isomorfas sobre \(K\)} si existen $u,r,s,t\in K$ con $u\neq0$ tales que el cambio de variables
 \begin{equation}\label{eq:cambio_admisible}
-(x,y)\longmapsto\bigl(u^2x + r,\;u^3y + u^2s,\;x + t\bigr)
+(x,\,y)\longmapsto\bigl(\,u^2\,x' + r,\;\;u^3\,y' + u^2\,s\,x' + t\,\bigr)
 \end{equation}
-
-transforma la ecuación de $E_1$ en la de $E_2$. A dicho cambio se le llama \emph{admisible}.
+transforma la ecuación de \(E_1\) en la de \(E_2\). A dicho cambio se le llama \emph{admisible}, y la relación así definida es una relación de equivalencia sobre el conjunto de curvas elípticas definidas sobre \(K\).
 \end{definicion}
 
 \subsubsection*{1. Característica $\neq2,3$}
@@ -148,7 +143,7 @@ donde $a,b\in K$. El discriminante de esta curva es
 \]
 
 \paragraph{Razón algebraica de la simplificación}
-Los cambios de variable implementan los pasos de "completar cuadrados" y "completar cubos" para eliminar los \emph{términos cruzados} (aquellos que mezclan $x$ e $y$ o que no son puramente $y^2$ o $x^3$) en la ecuación general:
+Los cambios de variable implementan los pasos de ``completar cuadrados'' y ``completar cubos'' para eliminar los \emph{términos cruzados} (aquellos que mezclan $x$ e $y$ o que no son puramente $y^2$ o $x^3$) en la ecuación general:
 
 \begin{itemize}
   \item Para suprimir $a_1xy + a_3y$, completamos el cuadrado en $y^2 + a_1xy + a_3y$ mediante
@@ -281,7 +276,7 @@ La razón de distinguir tres familias de ecuaciones simplificadas responde a la 
       y^2 = x^3 + ax + b.
     \]
     Es la forma \emph{short} más habitual en criptografía de curva elíptica sobre primos grandes, ya que minimiza el número de parámetros y simplifica las fórmulas de suma y duplicación~\cite{silverman1986aec}. Todas las curvas estándar de NIST y SECG usan este modelo~\cite{nist-sp800-186}.
-  \item \textbf{Característica \(2\) (campos binarios)}  
+  \item \textbf{Característica \(2\) (cuerpos binarios)}  
     \begin{align*}
       y^2 + x y &= x^3 + A x^2 + B
       &&\text{(no supersingular)},\\
@@ -302,50 +297,25 @@ La razón de distinguir tres familias de ecuaciones simplificadas responde a la 
 La condición de \emph{supersingularidad} (discriminante especial, ver cada caso) refleja que el grupo de puntos de la curva tiene un anillo de endomorfismos más grande. Si bien ciertas construcciones pairing‐based usan curvas supersingulares (por sus endomorfismos explícitos), para ECC estándar se prefieren curvas \emph{ordinarias} (no supersingulares) para evitar ataques que explotan ese extra de simetría~\cite{waterhouse1969}.  
 
 \subsection{Ley de Grupo}\label{sec:ley_de_grupo}
-Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\O\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}, basado en dos construcciones geométricas distintas, según si sumamos dos puntos distintos o duplicamos un mismo punto.
-
-\subsubsection*{1. Suma de puntos distintos (\(P \neq Q\))}
-
-\begin{enumerate}
-  \item {\bf Geometría:} Dado \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) con \(P\neq Q\), trazamos la \emph{cuerda} que los une. Esta recta corta la curva en un tercer punto \(S\). Luego, definimos
-  \[
-    R \;=\; P + Q
-    \;=\; \overline{S}
-  \]
-  como la reflexión de \(S\) respecto al eje \(x\).  
-\end{enumerate}
-
-\subsubsection*{2. Suma de puntos idénticos (\(P = Q\))}
-
-\begin{enumerate}
-  \item {\bf Geometría:} Para duplicar \(P=(x_1,y_1)\), trazamos la \emph{tangente} a la curva en \(P\). Esta recta corta la curva en un segundo punto \(T\). Definimos
-  \[
-    R \;=\; 2P
-    \;=\; \overline{T}
-  \]
-  como la reflexión de \(T\) respecto al eje \(x\).  
-\end{enumerate}
-
-A continuación se explica la ley de grupo, primero de forma geométrica y luego se dan las fórmulas algebraicas en coordenadas afines a modo de ejemplo.
+Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\mathcal{O}\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}. A continuación describimos primero la construcción geométrica y, después, distinguimos los casos algebraicos según la posición relativa de los dos operandos.
 
 \subsubsection*{Descripción geométrica}
 \begin{itemize}
-  \item \textbf{Identidad.} El punto en el infinito \(\O\) actúa como elemento neutro: 
+  \item \textbf{Identidad.} El punto en el infinito \(\mathcal{O}\) actúa como elemento neutro:
     \[
-      P + \O = \O + P = P,\quad\forall P\in E(K).
+      P + \mathcal{O} \;=\; \mathcal{O} + P \;=\; P,\qquad\forall\,P\in E(K).
     \]
-  \item \textbf{Opuesto.} Dados \(P=(x,y)\in E(K)\), su opuesto es \(-P=(x,-y)\) (la reflexión sobre el eje \(x\)), pues 
-    \((x,y)+(x,-y)=\O\).
-  \item \textbf{Suma de puntos distintos.} Para \(P\neq Q\) trazamos la recta que los une; esta línea corta a la curva en un tercer punto \(R'\). Entonces 
+  \item \textbf{Opuesto.} Dado \(P=(x,y)\in E(K)\), su opuesto es \(-P=(x,-y)\) (la reflexión sobre el eje \(x\)), de modo que \(P + (-P) = \mathcal{O}\).
+  \item \textbf{Suma de puntos distintos (cuerda).} Para \(P\neq Q\) trazamos la recta secante que los une; ésta corta a la curva en un tercer punto \(R'\). Entonces
     \[
-      P + Q = R,
+      P + Q \;=\; -R'
     \]
-    siendo \(R\) la reflexión de \(R'\) respecto. al eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(a)).
-  \item \textbf{Duplicación.} Para \(P\) trazamos la tangente a la curva en \(P\); esta línea corta de nuevo a la curva en \(R'\). De forma análoga,
+    es la reflexión de \(R'\) respecto al eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(a)).
+  \item \textbf{Duplicación (tangente).} Para \(P=Q\) trazamos la recta tangente a la curva en \(P\); ésta vuelve a cortar a la curva en un punto \(R'\). De forma análoga,
     \[
-      2P = R,
+      2P \;=\; -R'
     \]
-    resultando \(R\) como la reflexión de \(R'\) en el eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(b)).
+    es la reflexión de \(R'\) sobre el eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(b)).
 \end{itemize}
 
 \begin{figure}[H]
@@ -360,14 +330,37 @@ A continuación se explica la ley de grupo, primero de forma geométrica y luego
     \includegraphics[width=\textwidth]{imagenes/elliptic_curve_same_addition_example.png}\\
     (b) Duplicación \(2P\)
   \end{minipage}
-  \caption{Geometría de la ley de grupo en curvas elípticas}
+  \caption{Geometría de la ley de grupo en curvas elípticas.}
   \label{fig:grupo_elipticas}
 \end{figure}
 
+\subsubsection*{Casos algebraicos para calcular \(P + Q\)}
+Sean \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) dos puntos de \(E(K)\). El cálculo de \(R = P+Q\) se descompone en los cinco casos disjuntos siguientes:
+
+\begin{enumerate}
+  \item \textbf{Caso 1: alguno de los operandos es \(\mathcal{O}\).} Si \(P=\mathcal{O}\), entonces \(R = Q\); análogamente si \(Q=\mathcal{O}\), entonces \(R = P\).
+
+  \item \textbf{Caso 2: \(Q = -P\) (puntos opuestos).} Si \(x_1 = x_2\) y \(y_2 = -y_1 - a_1 x_1 - a_3\) (en la forma corta, simplemente \(y_2 = -y_1\)), entonces los puntos son inversos y
+    \[
+      R \;=\; P + (-P) \;=\; \mathcal{O}.
+    \]
+
+  \item \textbf{Caso 3: \(P\neq Q\) y \(x_1\neq x_2\) (suma genérica con cuerda).} Se calcula la pendiente de la cuerda y se obtiene el tercer punto.
+
+  \item \textbf{Caso 4: \(P = Q\) y \(y_1\neq 0\) (duplicación con tangente).} Se calcula la pendiente de la tangente y se obtiene la duplicación \(2P\).
+
+  \item \textbf{Caso 5: \(P = Q\) y \(2y_1 + a_1 x_1 + a_3 = 0\) (tangente vertical).} En la forma corta esto equivale a \(y_1 = 0\). En tal situación la tangente es vertical y
+    \[
+      R \;=\; 2P \;=\; \mathcal{O}.
+    \]
+\end{enumerate}
+
+\noindent Los casos 3 y 4 son los únicos que requieren aritmética no trivial en el cuerpo: las fórmulas concretas se exponen a continuación, primero para característica \(\neq 2,3\) y después para cuerpos binarios.
+
 \subsubsection*{Propiedades del grupo abeliano}
-El conjunto de puntos de la curva, junto con la operación $+$ y el elemento neutro $\O$, forma un \emph{grupo abeliano} que denotamos
+El conjunto de puntos de la curva, junto con la operación $+$ y el elemento neutro $\mathcal{O}$, forma un \emph{grupo abeliano} que denotamos
 \[
-  \bigl(E(K),\;+\,,\;\O\bigr).
+  \bigl(E(K),\;+\,,\;\mathcal{O}\bigr).
 \]
 Este grupo verifica las siguientes propiedades:
 
@@ -380,15 +373,15 @@ Este grupo verifica las siguientes propiedades:
     \[
       (P + Q) + R \;=\; P + (Q + R).
     \]
-  \item \textbf{Elemento neutro.} Existe $\O\in E(K)$ tal que
+  \item \textbf{Elemento neutro.} Existe $\mathcal{O}\in E(K)$ tal que
     \[
-      P + \O = \O + P = P,
+      P + \mathcal{O} = \mathcal{O} + P = P,
       \quad \forall\,P\in E(K).
     \]
   \item \textbf{Inverso.} Para cada $P\in E(K)$ existe $-P\in E(K)$ (el opuesto de $P$)
     tal que
     \[
-      P + (-P) = (-P) + P = \O.
+      P + (-P) = (-P) + P = \mathcal{O}.
     \]
   \item \textbf{Conmutatividad.} Para todo $P,Q\in E(K)$,
     \[
@@ -406,29 +399,29 @@ Para la forma corta de Weierstrass
   \quad a,b\in K,
   \quad \mathrm{char}(K)\neq2,3,
 \]
-las operaciones en coordenadas afines \((x,y)\) sobre \(K\) son:
+las operaciones en coordenadas afines \((x,y)\) sobre \(K\) se concretan, según el caso identificado arriba, como sigue:
 
 \begin{enumerate}
   \item \emph{Negativo:} \(-P = (x,-y)\).
-  \item \emph{Suma} \(P=(x_1,y_1)\), \(Q=(x_2,y_2)\), \(x_1\neq x_2\). Sea
+  \item \emph{Suma con \(P\neq\pm Q\)} (caso 3, \(x_1\neq x_2\)). Sea
     \[
-      \lambda = \frac{y_2 - y_1}{x_2 - x_1}, 
-      \quad
-      x_3 = \lambda^2 - x_1 - x_2,\quad
-      y_3 = \lambda(x_1 - x_3) - y_1.
+      \lambda \;=\; \frac{y_2 - y_1}{x_2 - x_1},
+      \qquad
+      x_3 \;=\; \lambda^2 - x_1 - x_2,\qquad
+      y_3 \;=\; \lambda(x_1 - x_3) - y_1.
     \]
     Entonces \(P + Q = (x_3,y_3)\).
-  \item \emph{Duplicación} \(P=(x_1,y_1)\), \(y_1\neq0\). Sea
+  \item \emph{Duplicación con \(y_1\neq0\)} (caso 4). Sea
     \[
-      \lambda = \frac{3x_1^2 + a}{2y_1}, 
-      \quad
-      x_3 = \lambda^2 - 2x_1,\quad
-      y_3 = \lambda(x_1 - x_3) - y_1.
+      \lambda \;=\; \frac{3x_1^2 + a}{2y_1},
+      \qquad
+      x_3 \;=\; \lambda^2 - 2x_1,\qquad
+      y_3 \;=\; \lambda(x_1 - x_3) - y_1.
     \]
     Entonces \(2P = (x_3,y_3)\).
 \end{enumerate}
 
-\subsubsection*{Ley de grupo en campos binarios}
+\subsubsection*{Ley de grupo en cuerpos binarios}
 
 Cuando \(K = \mathbb{F}_{2^m}\) y la curva es no supersingular,
 \[
@@ -465,7 +458,7 @@ Cuando trabajamos sobre un cuerpo finito \(\mathbb{F}_q\), la gráfica de una cu
 \[
   E(\mathbb{F}_q)
   \;=\;
-  \bigl\{(x,y)\in\mathbb{F}_q\times\mathbb{F}_q : y^2 + a_1xy + a_3y = x^3 + a_2x^2 + a_4x + a_6\bigr\}\;\cup\;\{\O\}
+  \bigl\{(x,y)\in\mathbb{F}_q\times\mathbb{F}_q : y^2 + a_1xy + a_3y = x^3 + a_2x^2 + a_4x + a_6\bigr\}\;\cup\;\{\mathcal{O}\}
 \]
 sigue formando un \emph{grupo abeliano finito} bajo la ley de la cuerda y la tangente.
 
@@ -474,7 +467,7 @@ sigue formando un \emph{grupo abeliano finito} bajo la ley de la cuerda y la tan
   \item \textbf{Aritmética exacta:} Todas las sumas y multiplicaciones de coordenadas se hacen \emph{módulo \(q\)}, con lo que no existen errores de redondeo ni acumulación de imprecisión.  
   \item \textbf{Cierre y existencia de inversos:} En \(\mathbb{F}_q\), todo elemento no nulo tiene inverso multiplicativo, lo que permite definir de forma sencilla la operación de división en las fórmulas de suma y de duplicación de puntos.  
   \item \textbf{Rendimiento:} Los procesadores suelen integrar instrucciones nativas para operar \emph{módulo} un primo \(p\) (por ejemplo, reducción rápida, multiplicadores de enteros), de modo que las operaciones en \(\mathbb{F}_p\) resultan muy eficientes.  
-  \item \textbf{Seguridad:} El tamaño finito del grupo y su estructura abeliana permiten cuantificar con precisión la resistencia ante ataques de fuerza bruta o algoritmos de Logaritmo Discreto; elegir \(q\) y la curva de modo que \(\#E(\mathbb{F}_q)\)~\ref{subsec:orden_del_grupo} tenga un gran factor primo es esencial para garantizar la dificultad del problema.  
+  \item \textbf{Seguridad:} El tamaño finito del grupo y su estructura abeliana permiten cuantificar con precisión la resistencia ante ataques de fuerza bruta o algoritmos de logaritmo discreto; elegir \(q\) y la curva de modo que \(\#E(\mathbb{F}_q)\) (véase la sección~\ref{subsec:orden_del_grupo}) tenga un gran factor primo es esencial para garantizar la dificultad del problema.  
 \end{itemize}
 
 \begin{figure}[H]
@@ -485,7 +478,7 @@ sigue formando un \emph{grupo abeliano finito} bajo la ley de la cuerda y la tan
 \end{figure}
 
 \subsubsection*{Orden del grupo}\label{subsec:orden_del_grupo}
-Algo a destacar de las curvas elípticas sobre campos finitos es el número de puntos racionales que forman. El valor del número de puntos es esencial para determinar la dificultad de resolver el problema del logaritmo discreto en \(E(\mathbb{F}_q)\) y garantiza la seguridad del sistema que depende de que ese valor tenga un factor primo grande.
+Algo a destacar de las curvas elípticas sobre cuerpos finitos es el número de puntos racionales que forman. El valor del número de puntos es esencial para determinar la dificultad de resolver el problema del logaritmo discreto en \(E(\mathbb{F}_q)\) y garantiza la seguridad del sistema que depende de que ese valor tenga un factor primo grande.
 
 Sea \(E\) una curva elíptica definida sobre el cuerpo finito \(\mathbb{F}_q\).  
 El número de puntos en \(E(\mathbb{F}_q)\), denotado \(\#E(\mathbb{F}_q)\), se llama \emph{orden} de la curva sobre \(\mathbb{F}_q\).  
@@ -518,11 +511,11 @@ se conoce como el \emph{intervalo de Hasse}. Una formulación equivalente dice q
   \quad
   |t|\le2\sqrt{q},
 \]
-donde \(t\) se denomina \emph{traza} de la curva \(E\) sobre \(\mathbb{F}_q\). Dado que \(2\sqrt q\ll q\) para campos grandes, se tiene
+donde \(t\) se denomina \emph{traza} de la curva \(E\) sobre \(\mathbb{F}_q\). Dado que \(2\sqrt q\ll q\) para cuerpos grandes, se tiene
 \[
   \#E(\mathbb{F}_q)\;\approx\;q,
 \]
-lo cual es fundamental para la seguridad criptográfica (pues el tamaño del grupo resulta comparable al del campo base).
+lo cual es fundamental para la seguridad criptográfica (pues el tamaño del grupo resulta comparable al del cuerpo base).
 
 \subsubsection*{Órdenes admisibles}
 
@@ -553,7 +546,7 @@ Cada punto \((x,y)\) se calcula resolviendo la ecuación en \(\mathbb{F}_p\). Po
 \[
   p = 97,\quad a=2,\quad b=3,
 \]
-podemos listar todos los \(x\in\{0,1,\dots,96\}\), calcular \(x^3+2x+3\pmod{97}\) y buscar las raíces cuadradas en \(\mathbb{F}_{97}\). Al final obtendremos \(\#E(\mathbb{F}_{97})\approx97\) puntos (incluido \(\O\)), que forman el grupo \(\bigl(E(\mathbb{F}_{97}),+,\O\bigr)\).
+podemos listar todos los \(x\in\{0,1,\dots,96\}\), calcular \(x^3+2x+3\pmod{97}\) y buscar las raíces cuadradas en \(\mathbb{F}_{97}\). Al final obtendremos \(\#E(\mathbb{F}_{97})\approx97\) puntos (incluido \(\mathcal{O}\)), que forman el grupo \(\bigl(E(\mathbb{F}_{97}),+,\mathcal{O}\bigr)\).
 
 \section{Representación de puntos y la ley de grupo}\label{sec:representacion_puntos}
 En \S\ref{sec:ley_de_grupo} presentamos la ley de grupo para puntos en curvas elípticas en coordenadas afines. Sin embargo, las operaciones de suma y duplicación requieren invertir en el cuerpo base, lo cual puede ser costoso si la inversión es mucho más lenta que la multiplicación. Para reducir el número de inversiones es útil emplear \emph{coordenadas proyectivas}, que representan cada punto por un triple \((X:Y:Z)\) en lugar de \((x,y)\). A continuación describimos esta representación de forma general y sus variantes más utilizadas en \(\mathbb{F}_p\) y \(\mathbb{F}_{2^m}\).
@@ -574,7 +567,7 @@ donde
     Y_1=\lambda^dY_2,\;
     Z_1=\lambda\,Z_2.
 \]
-La clase de equivalencia \((X:Y:Z)\) se llama \emph{punto proyectivo}. Si \(Z\neq0\) elegimos el representante único \((X/Z^c,\;Y/Z^d,\;1)\), que corresponde al punto afín \((x,y)=(X/Z^c,Y/Z^d)\). Los puntos con \(Z=0\) forman la \emph{recta en el infinito}, que en las curvas elípticas se identifica con el punto neutro \(\O\).
+La clase de equivalencia \((X:Y:Z)\) se llama \emph{punto proyectivo}. Si \(Z\neq0\) elegimos el representante único \((X/Z^c,\;Y/Z^d,\;1)\), que corresponde al punto afín \((x,y)=(X/Z^c,Y/Z^d)\). Los puntos con \(Z=0\) forman la \emph{recta en el infinito}, que en las curvas elípticas se identifica con el punto neutro \(\mathcal{O}\).
 
 Para pasar de la ecuación afín \(y^2 = x^3 + ax + b\) a su forma proyectiva estándar (con \(c=d=1\)), reemplazamos
 \[
@@ -586,7 +579,7 @@ llevando la curva a
 \]
 que es homogénea de grado 3 en \((X,Y,Z)\).
 
-\subsection{Coordenadas en \(\mathbb{F}_p\)}\label{sec:proj_Fp}
+\subsection{\texorpdfstring{Coordenadas en $\mathbb{F}_p$}{Coordenadas en Fp}}\label{sec:proj_Fp}
 Para curvas en forma corta de Weierstrass
 \[
   E\colon y^2 = x^3 + a\,x + b,\quad a,b\in\mathbb{F}_p,\;p>3,
@@ -599,34 +592,34 @@ las coordenadas proyectivas más comunes son:
     \[
       E\colon\;Y^2Z = X^3 + a\,X Z^2 + b\,Z^3.
     \]
-  \item \emph{Punto en el infinito:} \(\O = (0:1:0)\).
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (0:1:0)\).
   \item \emph{Opuesto:} \(- (X:Y:Z) = (X:-Y:Z)\).
 \end{itemize}
 
-\subsubsection*{2. Coordenadas Jacobianas \((c=2,d=3)\)}
+\subsubsection*{2. Coordenadas Jacobianas \((c=2,d=3)\)}\label{def:coord-jacobi}
 \begin{itemize}
   \item \emph{Representación:} \((X:Y:Z)\)\quad con \(\;x = X/Z^2,\;y = Y/Z^3\).
   \item \emph{Ecuación:}
     \[
       E\colon\;Y^2 = X^3 + a\,X Z^4 + b\,Z^6.
     \]
-  \item \emph{Punto en el infinito:} \(\O = (1:1:0)\).
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (1:1:0)\).
   \item \emph{Opuesto:} \(- (X:Y:Z) = (X:-Y:Z)\).
 \end{itemize}
 
 \subsubsection*{3. Coordenadas de Chudnovsky}
 \begin{itemize}
   \item \emph{Representación extendida:} \(\;(X:Y:Z:Z^2:Z^3)\).  
-  \item \emph{Punto en el infinito:} \(\O=(1:1:0:0:0)\).
+  \item \emph{Punto en el infinito:} \(\mathcal{O}=(1:1:0:0:0)\).
   \item \emph{Opuesto:} \(- (X:Y:Z:Z^2:Z^3) = (X:-Y:Z:Z^2:Z^3)\).
 \end{itemize}
 
-\subsection{Coordenadas en \(\mathbb{F}_{2^m}\)}\label{sec:proj_F2m}
+\subsection{\texorpdfstring{Coordenadas en $\mathbb{F}_{2^m}$}{Coordenadas en F2m}}\label{sec:proj_F2m}
 Para curvas binarias no supersingulares
 \[
   E\colon y^2 + x\,y = x^3 + A\,x^2 + B,\quad A,B\in\mathbb{F}_{2^m},
 \]
-la inversión en el campo puede ser muy cara en software, por lo que resulta útil trabajar en coordenadas proyectivas. A continuación se presentan las más comunes:
+la inversión en el cuerpo puede ser muy cara en software, por lo que resulta útil trabajar en coordenadas proyectivas. A continuación se presentan las más comunes:
 
 \subsubsection*{1. Coordenadas proyectivas estándar \((c=1,\,d=1)\)}
 
@@ -639,12 +632,12 @@ la inversión en el campo puede ser muy cara en software, por lo que resulta út
   \[
     Y^2Z \;+\; X\,Y\,Z \;=\; X^3 \;+\; A\,X^2\,Z \;+\; B\,Z^3.
   \]
-  \item \emph{Punto en el infinito:} \(\O = (0:1:0)\).  
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (0:1:0)\).  
   \item \emph{Negativo:} 
   \[
     -(X:Y:Z) \;=\; (X:\;X+Y:\;Z),
   \]
-  que corresponde a reflejar en la "línea" \(y = x\).
+  que corresponde a reflejar en la ``línea'' \(y = x\).
 \end{itemize}
 
 \subsubsection*{2. Coordenadas Jacobianas \((c=2,\,d=3)\)}
@@ -658,7 +651,7 @@ la inversión en el campo puede ser muy cara en software, por lo que resulta út
   \[
     Y^2 \;+\; X\,Y\,Z \;=\; X^3 \;+\; A\,X^2\,Z^2 \;+\; B\,Z^6.
   \]
-  \item \emph{Punto en el infinito:} \(\O = (1:1:0)\).  
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (1:1:0)\).  
   \item \emph{Negativo:} 
   \[
     -(X:Y:Z) \;=\; (X:\;X+Y:\;Z).
@@ -677,7 +670,7 @@ la inversión en el campo puede ser muy cara en software, por lo que resulta út
   \[
     Y^2 \;+\; X\,Y\,Z \;=\; X^3\,Z \;+\; A\,X^2\,Z^2 \;+\; B\,Z^4.
   \]
-  \item \emph{Punto en el infinito:} \(\O = (1:0:0)\).  
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (1:0:0)\).  
   \item \emph{Negativo:} 
   \[
     -(X:Y:Z) \;=\; (X:\;X+Y:\;Z).
@@ -698,7 +691,6 @@ la inversión en el campo puede ser muy cara en software, por lo que resulta út
 En la práctica, para curvas de uso criptográfico sobre primos grandes, las coordenadas de Jacobi con \(a=-3\) son el estándar de facto, pues combinan rapidez en duplicación y sencillez de implementación.
 
 
-\section{Selección de parámetros}
-\subsection{Tamaños de curva y seguridad}
-\subsection{Cofactores y subgrupos}
-\subsection{Curvas estandarizadas (secp256k1, Curve25519, …)}
+\section{Selección de parámetros}\label{sec:seleccion_parametros_ch4}
+
+La elección de los parámetros del dominio de una curva elíptica ---el cuerpo base \(\mathbb{F}_q\), los coeficientes \((a,b)\) (o \((a,b,c)\) en característica~2), el punto generador \(G\), su orden \(n\) y el cofactor \(h\)--- determina simultáneamente la seguridad y el rendimiento del criptosistema resultante. Como esta selección está íntimamente ligada al uso criptográfico (tamaño de clave equivalente, resistencia frente al ECDLP, ataques especializados como Pohlig–Hellman, MOV/Frey–Rück o Smart–Semaev–Satoh), su discusión se difiere al capítulo~\ref{ch:ecc}: en particular, la sección~\ref{subsec:ecc-comparativa-claves} compara tamaños de clave entre RSA y ECC para distintos niveles de seguridad, la sección~\ref{subsec:ecc-parametros-dominio} enumera los requisitos formales que debe satisfacer un dominio seguro, y la sección~\ref{subsec:ecc-curvas-estandar} describe las curvas estandarizadas usadas en la práctica (NIST P-256, P-384, secp256k1, Curve25519, las cinco curvas binarias SEC~2 implementadas en este trabajo, etc.).
