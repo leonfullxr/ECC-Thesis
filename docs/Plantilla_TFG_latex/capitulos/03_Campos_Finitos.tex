@@ -129,7 +129,7 @@ Los elementos de $\mathbb{F}_{31}$ son $\{0,1,2,\dots,30\}$. A continuación se 
 \end{enumerate}
 \end{ejemplo}
 
-\subsection{Suma en $\mathbb{F}_p$}
+\subsection{Suma en \texorpdfstring{$\mathbb{F}_p$}{Fp}}
 Para sumar dos elementos de \(\mathbb{F}_p\cong\mathbb{Z}/p\mathbb{Z}\), representados como enteros únicos en \([0,p-1]\), basta sumar los enteros y comprobar si el resultado es \(\ge p\); en tal caso restamos \(p\) para obtener un valor en \([0,p-1]\). De forma análoga, tras restar dos enteros, sumamos \(p\) si el resultado es negativo. El coste total sigue siendo \(O(n)\) operaciones a nivel de bit, donde \(n=\lg p\) es el número de bits necesarios para representar un elemento del cuerpo.
 
 Para sumar o restar dos elementos de \(\mathbb{F}_q\cong(\mathbb{Z}/p\mathbb{Z})[x]/(f)\), simplemente sumamos o restamos los coeficientes correspondientes de los polinomios, con un coste total de \(O(d\lg p)\) operaciones de bit, donde \(d=\deg f\). Nuevamente, si definimos \(n=\lg q=d\lg p\), el coste es \(O(n)\) operaciones de bit.
@@ -386,9 +386,9 @@ Sea \(m\ge2\) un entero y \(\omega\in\mathbb{F}_p^*\). El binomio \(f(z)=z^m-\om
 \end{enumerate}
 \end{teorema}
 
-\begin{corolario}\label{cor:omega_primitivo}
+\begin{corollary}\label{cor:omega_primitivo}
 Si \(\omega\) es un elemento primitivo de \(\mathbb{F}_p^*\) y \(m\mid(p-1)\), entonces \(z^m-\omega\) es irreducible en \(\mathbb{F}_p[z]\).
-\end{corolario}
+\end{corollary}
 
 \begin{ejemplo}[Cuerpo $\mathbb{F}_{251^5}$]\label{ej:F_251_5}
 Sea $p=251$, $m=5$ y $f(z)=z^5+z^4+12z^3+9z^2+7$, irreducible en $\mathbb{F}_{251}[z]$. Entonces $\mathbb{F}_{251^5}$ consta de polinomios de grado \(<5\) con coeficientes en $\{0,1,\dots,250\}$. Por ejemplo, sean:

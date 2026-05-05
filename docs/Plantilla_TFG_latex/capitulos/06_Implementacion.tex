@@ -36,7 +36,7 @@ El proyecto sigue una arquitectura modular en la que cada componente criptográf
 \centering
 \begin{tikzpicture}[
     every node/.style={font=\small\ttfamily, draw, rounded corners, minimum height=0.8cm, minimum width=2cm, align=center, fill=blue!5},
-    arrow/.style={-{Stealth[length=2mm]}, thick},
+    arrow/.style={->, >=latex, thick},
     node distance=0.4cm and 0.6cm
 ]
     % Capa 0: punto de entrada
@@ -189,7 +189,7 @@ La función \texttt{CurveParams::validate()} implementa las siguientes comprobac
 
 De forma analoga, \texttt{BinaryCurveParams::validate()} comprueba que $\deg(f) = m$, que $b \neq 0$ (discriminante en característica~2), y que $n, h > 0$.
 
-Las verificaciones que \emph{no} se implementan ---primalidad de $n$, $nG = \O$, curva no anómala, grado de inmersión alto--- se describen como requisitos teóricos en la sección~\ref{subsec:ecc-parametros-dominio}. Su omisión esta justificada por el uso exclusivo de curvas pre-auditadas (véase la discusión en la sección~\ref{subsubsec:verificacion-params}).
+Las verificaciones que \emph{no} se implementan ---primalidad de $n$, $nG = \mathcal{O}$, curva no anómala, grado de inmersión alto--- se describen como requisitos teóricos en la sección~\ref{subsec:ecc-parametros-dominio}. Su omisión esta justificada por el uso exclusivo de curvas pre-auditadas (véase la discusión en la sección~\ref{subsubsec:verificacion-params}).
 
 
 % ============================================================================
@@ -319,27 +319,27 @@ El cuadro~\ref{tab:operaciones} resume las operaciones medidas para cada algorit
 \hline
 \textbf{Algoritmo} & \textbf{Operación} & \textbf{Descripción} \\
 \hline
-\multirow{6}{*}{RSA} & Keygen & Generación de claves (1024, 2048, 3072, 4096 bits) \\
- & Encrypt & Cifrado $c = m^e \bmod n$ \\
- & Decrypt & Descifrado directo $m = c^d \bmod n$ \\
- & Decrypt CRT & Descifrado con Teorema Chino del Resto \\
- & Sign & Firma $s = h^d \bmod n$ \\
- & Verify & Verificación $h = s^e \bmod n$ \\
+RSA              & Keygen           & Generación de claves (1024, 2048, 3072, 4096 bits) \\
+                 & Encrypt          & Cifrado $c = m^e \bmod n$ \\
+                 & Decrypt          & Descifrado directo $m = c^d \bmod n$ \\
+                 & Decrypt CRT      & Descifrado con Teorema Chino del Resto \\
+                 & Sign             & Firma $s = h^d \bmod n$ \\
+                 & Verify           & Verificación $h = s^e \bmod n$ \\
 \hline
-\multirow{6}{*}{ECC (afín)} & Keygen & Generación $Q = dG$ (P-256, P-384, secp256k1) \\
- & Scalar mult & Multiplicación escalar $kP$ \\
- & ECDH & Secreto compartido $S = d_A Q_B$ \\
- & ECDSA sign & Firma con nonce $k$ \\
- & ECDSA verify & Verificación $u_1G + u_2Q$ \\
- & Point add/double & Operaciones elementales de grupo \\
+ECC (afín)       & Keygen           & Generación $Q = dG$ (P-256, P-384, secp256k1) \\
+                 & Scalar mult      & Multiplicación escalar $kP$ \\
+                 & ECDH             & Secreto compartido $S = d_A Q_B$ \\
+                 & ECDSA sign       & Firma con nonce $k$ \\
+                 & ECDSA verify     & Verificación $u_1G + u_2Q$ \\
+                 & Point add/double & Operaciones elementales de grupo \\
 \hline
-\multirow{3}{*}{ECC (Jacobiano)} & Keygen & Igual que afín, con \texttt{use\_jacobian=true} \\
- & ECDH & Secreto compartido con aritmética Jacobiana \\
- & ECDSA sign/verify & Firma y verificación con aritmética Jacobiana \\
+ECC (Jacobiano)  & Keygen           & Igual que afín, con \texttt{use\_jacobian=true} \\
+                 & ECDH             & Secreto compartido con aritmética Jacobiana \\
+                 & ECDSA sign/verify & Firma y verificación con aritmética Jacobiana \\
 \hline
-\multirow{3}{*}{ECC (binario)} & Keygen & Generación sobre $\mathbb{F}_{2^m}$ (5 curvas SEC~2) \\
- & Scalar mult & Multiplicación escalar en cuerpo binario \\
- & ECDH & Secreto compartido sobre $\mathbb{F}_{2^m}$ \\
+ECC (binario)    & Keygen           & Generación sobre $\mathbb{F}_{2^m}$ (5 curvas SEC~2) \\
+                 & Scalar mult      & Multiplicación escalar en cuerpo binario \\
+                 & ECDH             & Secreto compartido sobre $\mathbb{F}_{2^m}$ \\
 \hline
 \end{tabular}
 \caption{Operaciones criptográficas medidas en el benchmark.}
@@ -373,7 +373,7 @@ El script genera ficheros con timestamp (evitando sobreescrituras) y crea enlace
 \section{Curvas implementadas}
 \label{sec:impl-curvas}
 
-\subsection{Curvas sobre cuerpos primos $\mathbb{F}_p$}
+\subsection{\texorpdfstring{Curvas sobre cuerpos primos $\mathbb{F}_p$}{Curvas sobre cuerpos primos Fp}}
 \label{subsec:impl-curvas-primas}
 
 Se implementaron tres curvas estándar, con parámetros tomados directamente de FIPS~186-4 y SEC~2:
@@ -396,7 +396,7 @@ secp256k1 (Bitcoin)    & 256 & $0$  & 1 & $\sim$128 bits \\
 Las curvas NIST utilizan $a = -3$, lo que permite una optimización en la formula de duplicación Jacobiana: el termino $3X_1^2 + aZ_1^4$ se simplifica a $3(X_1 - Z_1^2)(X_1 + Z_1^2)$, ahorrando una multiplicación. La curva secp256k1 utiliza $a = 0$, lo que elimina completamente el termino $aZ_1^4$.
 
 
-\subsection{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}
+\subsection{\texorpdfstring{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}{Curvas sobre cuerpos binarios F2m}}
 \label{subsec:impl-curvas-binarias}
 
 Se implementaron cinco curvas del estándar SEC~2~\cite{sec2-v2}:
@@ -436,7 +436,7 @@ Es importante señalar que esta implementación es un prototipo educativo y de b
     
     \item \textbf{Esquemas de padding.} RSA se implementa sin padding (textbook RSA). Una implementación segura requeriría OAEP para cifrado y PSS para firmas.
     
-    \item \textbf{Validación incompleta de parámetros.} Como se detalla en la sección~\ref{subsec:impl-validacion-params}, no se verifica la primalidad de~$n$, $nG = \O$, ni las condiciones de inmersión y anomalía, confiando en los parámetros estandarizados.
+    \item \textbf{Validación incompleta de parámetros.} Como se detalla en la sección~\ref{subsec:impl-validacion-params}, no se verifica la primalidad de~$n$, $nG = \mathcal{O}$, ni las condiciones de inmersión y anomalía, confiando en los parámetros estandarizados.
 \end{enumerate}
 
 Estas limitaciones no afectan la validez de las comparaciones de rendimiento, que es el objetivo principal del proyecto, pero deben tenerse en cuenta si se considerase reutilizar el código en un contexto de seguridad real.

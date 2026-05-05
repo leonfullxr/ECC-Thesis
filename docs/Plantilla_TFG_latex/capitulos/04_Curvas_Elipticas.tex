@@ -52,10 +52,10 @@ Para que \eqref{eq:weierstrass_generalizada} defina una curva elíptica se exige
 \medskip
 
 \noindent\textbf{Punto en el infinito y conjunto de puntos racionales.}  
-Denotamos por $\O$ el único punto en el infinito que completa la curva al considerar su cierre proyectivo: corresponde al punto $(0:1:0)$ en $\mathbb{P}^2(K)$ y desempeña el papel de elemento neutro de la ley de grupo (sección~\ref{sec:ley_de_grupo}). Para cualquier extensión de cuerpos $L/K$, el conjunto de puntos de $E$ con coordenadas en $L$ viene dado por
+Denotamos por $\mathcal{O}$ el único punto en el infinito que completa la curva al considerar su cierre proyectivo: corresponde al punto $(0:1:0)$ en $\mathbb{P}^2(K)$ y desempeña el papel de elemento neutro de la ley de grupo (sección~\ref{sec:ley_de_grupo}). Para cualquier extensión de cuerpos $L/K$, el conjunto de puntos de $E$ con coordenadas en $L$ viene dado por
 \[
   E(L) \;=\; \bigl\{(x,y)\in L^2 : y^2 + a_1\,x\,y + a_3\,y - x^3 - a_2\,x^2 - a_4\,x - a_6 = 0 \bigr\}
-  \;\cup\;\{\O\}.
+  \;\cup\;\{\mathcal{O}\}.
 \]
 \end{definicion}
 
@@ -70,8 +70,8 @@ Denotamos por $\O$ el único punto en el infinito que completa la curva al consi
   \]
   se anulan simultáneamente en él, es decir, cuando \(\partial f/\partial x\,(x_0,y_0)=\partial f/\partial y\,(x_0,y_0)=0\). Geométricamente, en un punto singular la curva no admite una recta tangente bien definida: puede tener dos tangentes distintas (\emph{nodo}) o una sola tangente con multiplicidad doble (\emph{cúspide}). Un ejemplo clásico de cúspide aparece en la curva \(y^2 = x^3\), singular en el origen, donde las dos derivadas parciales se anulan a la vez. La condición algebraica \(\Delta\neq0\) excluye precisamente la presencia de tales puntos.  
   En la figura~\ref{fig:elliptic_curve_singular_example} se muestra un ejemplo de curva singular (con \(\Delta = 0\)).
-  \item El punto \(\O\) es el único punto de la ``línea en el infinito'' que satisface la forma proyectiva de la ecuación de Weierstrass.
-  \item Los \emph{puntos \(L\)-racionales} de \(E\) son aquellos cuyos pares \((x,y)\) pertenecen al cuerpo \(L\). Siempre incluimos \(\O\).
+  \item El punto \(\mathcal{O}\) es el único punto de la ``línea en el infinito'' que satisface la forma proyectiva de la ecuación de Weierstrass.
+  \item Los \emph{puntos \(L\)-racionales} de \(E\) son aquellos cuyos pares \((x,y)\) pertenecen al cuerpo \(L\). Siempre incluimos \(\mathcal{O}\).
 \end{enumerate}
 
 \begin{figure}[H]
@@ -88,8 +88,8 @@ Consideremos dos curvas elípticas sobre \(\mathbb{R}\):
   \qquad
   E_2: \;y^2 = x^3 + 3x + 15.
 \]
-Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\O\}\) y
-\(E_2(\mathbb{R})\setminus\{\O\}\) se muestran en la figura~\ref{fig:curvas_reales}.
+Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\mathcal{O}\}\) y
+\(E_2(\mathbb{R})\setminus\{\mathcal{O}\}\) se muestran en la figura~\ref{fig:curvas_reales}.
 \end{ejemplo}
 
 \begin{figure}[H]
@@ -97,7 +97,7 @@ Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\O\}\) y
   \includegraphics[width=0.48\textwidth]{imagenes/elliptic_curve2D_example.png}
   \hfill
   \includegraphics[width=0.48\textwidth]{imagenes/elliptic_curve2D_example2.png}
-  \caption{Curvas \(E_1\) y \(E_2\) sobre \(\mathbb{R}\), con sus respectivos puntos (excepto \(\O\)).}
+  \caption{Curvas \(E_1\) y \(E_2\) sobre \(\mathbb{R}\), con sus respectivos puntos (excepto \(\mathcal{O}\)).}
   \label{fig:curvas_reales}
 \end{figure}
 
@@ -297,15 +297,15 @@ La razón de distinguir tres familias de ecuaciones simplificadas responde a la 
 La condición de \emph{supersingularidad} (discriminante especial, ver cada caso) refleja que el grupo de puntos de la curva tiene un anillo de endomorfismos más grande. Si bien ciertas construcciones pairing‐based usan curvas supersingulares (por sus endomorfismos explícitos), para ECC estándar se prefieren curvas \emph{ordinarias} (no supersingulares) para evitar ataques que explotan ese extra de simetría~\cite{waterhouse1969}.  
 
 \subsection{Ley de Grupo}\label{sec:ley_de_grupo}
-Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\O\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}. A continuación describimos primero la construcción geométrica y, después, distinguimos los casos algebraicos según la posición relativa de los dos operandos.
+Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\mathcal{O}\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}. A continuación describimos primero la construcción geométrica y, después, distinguimos los casos algebraicos según la posición relativa de los dos operandos.
 
 \subsubsection*{Descripción geométrica}
 \begin{itemize}
-  \item \textbf{Identidad.} El punto en el infinito \(\O\) actúa como elemento neutro:
+  \item \textbf{Identidad.} El punto en el infinito \(\mathcal{O}\) actúa como elemento neutro:
     \[
-      P + \O \;=\; \O + P \;=\; P,\qquad\forall\,P\in E(K).
+      P + \mathcal{O} \;=\; \mathcal{O} + P \;=\; P,\qquad\forall\,P\in E(K).
     \]
-  \item \textbf{Opuesto.} Dado \(P=(x,y)\in E(K)\), su opuesto es \(-P=(x,-y)\) (la reflexión sobre el eje \(x\)), de modo que \(P + (-P) = \O\).
+  \item \textbf{Opuesto.} Dado \(P=(x,y)\in E(K)\), su opuesto es \(-P=(x,-y)\) (la reflexión sobre el eje \(x\)), de modo que \(P + (-P) = \mathcal{O}\).
   \item \textbf{Suma de puntos distintos (cuerda).} Para \(P\neq Q\) trazamos la recta secante que los une; ésta corta a la curva en un tercer punto \(R'\). Entonces
     \[
       P + Q \;=\; -R'
@@ -338,11 +338,11 @@ Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de pun
 Sean \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) dos puntos de \(E(K)\). El cálculo de \(R = P+Q\) se descompone en los cinco casos disjuntos siguientes:
 
 \begin{enumerate}
-  \item \textbf{Caso 1: alguno de los operandos es \(\O\).} Si \(P=\O\), entonces \(R = Q\); análogamente si \(Q=\O\), entonces \(R = P\).
+  \item \textbf{Caso 1: alguno de los operandos es \(\mathcal{O}\).} Si \(P=\mathcal{O}\), entonces \(R = Q\); análogamente si \(Q=\mathcal{O}\), entonces \(R = P\).
 
   \item \textbf{Caso 2: \(Q = -P\) (puntos opuestos).} Si \(x_1 = x_2\) y \(y_2 = -y_1 - a_1 x_1 - a_3\) (en la forma corta, simplemente \(y_2 = -y_1\)), entonces los puntos son inversos y
     \[
-      R \;=\; P + (-P) \;=\; \O.
+      R \;=\; P + (-P) \;=\; \mathcal{O}.
     \]
 
   \item \textbf{Caso 3: \(P\neq Q\) y \(x_1\neq x_2\) (suma genérica con cuerda).} Se calcula la pendiente de la cuerda y se obtiene el tercer punto.
@@ -351,16 +351,16 @@ Sean \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) dos puntos de \(E(K)\). El cálculo de \(
 
   \item \textbf{Caso 5: \(P = Q\) y \(2y_1 + a_1 x_1 + a_3 = 0\) (tangente vertical).} En la forma corta esto equivale a \(y_1 = 0\). En tal situación la tangente es vertical y
     \[
-      R \;=\; 2P \;=\; \O.
+      R \;=\; 2P \;=\; \mathcal{O}.
     \]
 \end{enumerate}
 
 \noindent Los casos 3 y 4 son los únicos que requieren aritmética no trivial en el cuerpo: las fórmulas concretas se exponen a continuación, primero para característica \(\neq 2,3\) y después para cuerpos binarios.
 
 \subsubsection*{Propiedades del grupo abeliano}
-El conjunto de puntos de la curva, junto con la operación $+$ y el elemento neutro $\O$, forma un \emph{grupo abeliano} que denotamos
+El conjunto de puntos de la curva, junto con la operación $+$ y el elemento neutro $\mathcal{O}$, forma un \emph{grupo abeliano} que denotamos
 \[
-  \bigl(E(K),\;+\,,\;\O\bigr).
+  \bigl(E(K),\;+\,,\;\mathcal{O}\bigr).
 \]
 Este grupo verifica las siguientes propiedades:
 
@@ -373,15 +373,15 @@ Este grupo verifica las siguientes propiedades:
     \[
       (P + Q) + R \;=\; P + (Q + R).
     \]
-  \item \textbf{Elemento neutro.} Existe $\O\in E(K)$ tal que
+  \item \textbf{Elemento neutro.} Existe $\mathcal{O}\in E(K)$ tal que
     \[
-      P + \O = \O + P = P,
+      P + \mathcal{O} = \mathcal{O} + P = P,
       \quad \forall\,P\in E(K).
     \]
   \item \textbf{Inverso.} Para cada $P\in E(K)$ existe $-P\in E(K)$ (el opuesto de $P$)
     tal que
     \[
-      P + (-P) = (-P) + P = \O.
+      P + (-P) = (-P) + P = \mathcal{O}.
     \]
   \item \textbf{Conmutatividad.} Para todo $P,Q\in E(K)$,
     \[
@@ -458,7 +458,7 @@ Cuando trabajamos sobre un cuerpo finito \(\mathbb{F}_q\), la gráfica de una cu
 \[
   E(\mathbb{F}_q)
   \;=\;
-  \bigl\{(x,y)\in\mathbb{F}_q\times\mathbb{F}_q : y^2 + a_1xy + a_3y = x^3 + a_2x^2 + a_4x + a_6\bigr\}\;\cup\;\{\O\}
+  \bigl\{(x,y)\in\mathbb{F}_q\times\mathbb{F}_q : y^2 + a_1xy + a_3y = x^3 + a_2x^2 + a_4x + a_6\bigr\}\;\cup\;\{\mathcal{O}\}
 \]
 sigue formando un \emph{grupo abeliano finito} bajo la ley de la cuerda y la tangente.
 
@@ -546,7 +546,7 @@ Cada punto \((x,y)\) se calcula resolviendo la ecuación en \(\mathbb{F}_p\). Po
 \[
   p = 97,\quad a=2,\quad b=3,
 \]
-podemos listar todos los \(x\in\{0,1,\dots,96\}\), calcular \(x^3+2x+3\pmod{97}\) y buscar las raíces cuadradas en \(\mathbb{F}_{97}\). Al final obtendremos \(\#E(\mathbb{F}_{97})\approx97\) puntos (incluido \(\O\)), que forman el grupo \(\bigl(E(\mathbb{F}_{97}),+,\O\bigr)\).
+podemos listar todos los \(x\in\{0,1,\dots,96\}\), calcular \(x^3+2x+3\pmod{97}\) y buscar las raíces cuadradas en \(\mathbb{F}_{97}\). Al final obtendremos \(\#E(\mathbb{F}_{97})\approx97\) puntos (incluido \(\mathcal{O}\)), que forman el grupo \(\bigl(E(\mathbb{F}_{97}),+,\mathcal{O}\bigr)\).
 
 \section{Representación de puntos y la ley de grupo}\label{sec:representacion_puntos}
 En \S\ref{sec:ley_de_grupo} presentamos la ley de grupo para puntos en curvas elípticas en coordenadas afines. Sin embargo, las operaciones de suma y duplicación requieren invertir en el cuerpo base, lo cual puede ser costoso si la inversión es mucho más lenta que la multiplicación. Para reducir el número de inversiones es útil emplear \emph{coordenadas proyectivas}, que representan cada punto por un triple \((X:Y:Z)\) en lugar de \((x,y)\). A continuación describimos esta representación de forma general y sus variantes más utilizadas en \(\mathbb{F}_p\) y \(\mathbb{F}_{2^m}\).
@@ -567,7 +567,7 @@ donde
     Y_1=\lambda^dY_2,\;
     Z_1=\lambda\,Z_2.
 \]
-La clase de equivalencia \((X:Y:Z)\) se llama \emph{punto proyectivo}. Si \(Z\neq0\) elegimos el representante único \((X/Z^c,\;Y/Z^d,\;1)\), que corresponde al punto afín \((x,y)=(X/Z^c,Y/Z^d)\). Los puntos con \(Z=0\) forman la \emph{recta en el infinito}, que en las curvas elípticas se identifica con el punto neutro \(\O\).
+La clase de equivalencia \((X:Y:Z)\) se llama \emph{punto proyectivo}. Si \(Z\neq0\) elegimos el representante único \((X/Z^c,\;Y/Z^d,\;1)\), que corresponde al punto afín \((x,y)=(X/Z^c,Y/Z^d)\). Los puntos con \(Z=0\) forman la \emph{recta en el infinito}, que en las curvas elípticas se identifica con el punto neutro \(\mathcal{O}\).
 
 Para pasar de la ecuación afín \(y^2 = x^3 + ax + b\) a su forma proyectiva estándar (con \(c=d=1\)), reemplazamos
 \[
@@ -579,7 +579,7 @@ llevando la curva a
 \]
 que es homogénea de grado 3 en \((X,Y,Z)\).
 
-\subsection{Coordenadas en \(\mathbb{F}_p\)}\label{sec:proj_Fp}
+\subsection{\texorpdfstring{Coordenadas en $\mathbb{F}_p$}{Coordenadas en Fp}}\label{sec:proj_Fp}
 Para curvas en forma corta de Weierstrass
 \[
   E\colon y^2 = x^3 + a\,x + b,\quad a,b\in\mathbb{F}_p,\;p>3,
@@ -592,7 +592,7 @@ las coordenadas proyectivas más comunes son:
     \[
       E\colon\;Y^2Z = X^3 + a\,X Z^2 + b\,Z^3.
     \]
-  \item \emph{Punto en el infinito:} \(\O = (0:1:0)\).
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (0:1:0)\).
   \item \emph{Opuesto:} \(- (X:Y:Z) = (X:-Y:Z)\).
 \end{itemize}
 
@@ -603,18 +603,18 @@ las coordenadas proyectivas más comunes son:
     \[
       E\colon\;Y^2 = X^3 + a\,X Z^4 + b\,Z^6.
     \]
-  \item \emph{Punto en el infinito:} \(\O = (1:1:0)\).
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (1:1:0)\).
   \item \emph{Opuesto:} \(- (X:Y:Z) = (X:-Y:Z)\).
 \end{itemize}
 
 \subsubsection*{3. Coordenadas de Chudnovsky}
 \begin{itemize}
   \item \emph{Representación extendida:} \(\;(X:Y:Z:Z^2:Z^3)\).  
-  \item \emph{Punto en el infinito:} \(\O=(1:1:0:0:0)\).
+  \item \emph{Punto en el infinito:} \(\mathcal{O}=(1:1:0:0:0)\).
   \item \emph{Opuesto:} \(- (X:Y:Z:Z^2:Z^3) = (X:-Y:Z:Z^2:Z^3)\).
 \end{itemize}
 
-\subsection{Coordenadas en \(\mathbb{F}_{2^m}\)}\label{sec:proj_F2m}
+\subsection{\texorpdfstring{Coordenadas en $\mathbb{F}_{2^m}$}{Coordenadas en F2m}}\label{sec:proj_F2m}
 Para curvas binarias no supersingulares
 \[
   E\colon y^2 + x\,y = x^3 + A\,x^2 + B,\quad A,B\in\mathbb{F}_{2^m},
@@ -632,7 +632,7 @@ la inversión en el cuerpo puede ser muy cara en software, por lo que resulta ú
   \[
     Y^2Z \;+\; X\,Y\,Z \;=\; X^3 \;+\; A\,X^2\,Z \;+\; B\,Z^3.
   \]
-  \item \emph{Punto en el infinito:} \(\O = (0:1:0)\).  
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (0:1:0)\).  
   \item \emph{Negativo:} 
   \[
     -(X:Y:Z) \;=\; (X:\;X+Y:\;Z),
@@ -651,7 +651,7 @@ la inversión en el cuerpo puede ser muy cara en software, por lo que resulta ú
   \[
     Y^2 \;+\; X\,Y\,Z \;=\; X^3 \;+\; A\,X^2\,Z^2 \;+\; B\,Z^6.
   \]
-  \item \emph{Punto en el infinito:} \(\O = (1:1:0)\).  
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (1:1:0)\).  
   \item \emph{Negativo:} 
   \[
     -(X:Y:Z) \;=\; (X:\;X+Y:\;Z).
@@ -670,7 +670,7 @@ la inversión en el cuerpo puede ser muy cara en software, por lo que resulta ú
   \[
     Y^2 \;+\; X\,Y\,Z \;=\; X^3\,Z \;+\; A\,X^2\,Z^2 \;+\; B\,Z^4.
   \]
-  \item \emph{Punto en el infinito:} \(\O = (1:0:0)\).  
+  \item \emph{Punto en el infinito:} \(\mathcal{O} = (1:0:0)\).  
   \item \emph{Negativo:} 
   \[
     -(X:Y:Z) \;=\; (X:\;X+Y:\;Z).

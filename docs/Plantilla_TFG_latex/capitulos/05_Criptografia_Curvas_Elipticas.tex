@@ -136,7 +136,7 @@ Calculamos $m = \lceil\sqrt{50}\rceil = 8$. Los baby steps son:
 \begin{tabular}{cl}
 $i$ & $iP$ \\
 \hline
-0 & $\O$ \\
+0 & $\mathcal{O}$ \\
 1 & $(0, 10)$ \\
 2 & $(65, 32)$ \\
 3 & $(23, 24)$ \\
@@ -148,7 +148,7 @@ $i$ & $iP$ \\
 \end{small}
 \end{center}
  
-Para los giant steps, calculamos $8P = (84, 37)$ y recorremos $S_j = Q - j \cdot 8P$ para $j=0,1,2,\dots$ hasta encontrar una coincidencia con la tabla de baby steps. Concretamente, $S_0 = (92, 81)$ y $S_1 = (84, 37)$, ninguno de los cuales aparece en la tabla; en cambio, $S_2 = Q - 16P = \O$ coincide con la entrada $i = 0$. La colisi\'on se produce, por tanto, para $j = 2$, $i = 0$, dando $d = 2 \cdot 8 + 0 = 16$, como cab\'ia esperar de la construcci\'on $Q = 16P$.
+Para los giant steps, calculamos $8P = (84, 37)$ y recorremos $S_j = Q - j \cdot 8P$ para $j=0,1,2,\dots$ hasta encontrar una coincidencia con la tabla de baby steps. Concretamente, $S_0 = (92, 81)$ y $S_1 = (84, 37)$, ninguno de los cuales aparece en la tabla; en cambio, $S_2 = Q - 16P = \mathcal{O}$ coincide con la entrada $i = 0$. La colisi\'on se produce, por tanto, para $j = 2$, $i = 0$, dando $d = 2 \cdot 8 + 0 = 16$, como cab\'ia esperar de la construcci\'on $Q = 16P$.
 \end{ejemplo}
 
 
@@ -260,7 +260,7 @@ El punto inicial $R_0 = a_0 P + b_0 Q$ puede ser cualquier punto con coeficiente
 El algoritmo es \emph{idéntico} para curvas sobre $\mathbb{F}_{2^m}$: la partición se basa igualmente en la coordenada~$x$ del punto, las tres reglas ($+Q$, $2R$, $+P$) utilizan la aritmética de grupo de la curva (que en $\mathbb{F}_{2^m}$ emplea las fórmulas de la sección~\ref{subsec:ecc-campos-binarios}), y los coeficientes $(a, b)$ se actualizan módulo~$n$ de la misma manera. La única diferencia es que las operaciones de cuerpo subyacentes (suma~$=$~XOR, multiplicación de polinomios) son distintas, pero esto es transparente al nivel del algoritmo de Pollard.
 
 
-\paragraph{Estructura $\rho$.}
+\paragraph{\texorpdfstring{Estructura $\rho$.}{Estructura rho.}}
 Dado que el grupo $\langle P \rangle$ es finito, la secuencia $x_0, x_1, x_2, \ldots$ necesariamente revisita algún punto, formando una cola de longitud~$\lambda$ seguida de un ciclo de longitud~$\mu$: se cumple $x_{\lambda + \mu} = x_\lambda$. Esta estructura se ilustra en la figura~\ref{fig:rho-shape}.
 
 \begin{figure}[htbp]
@@ -488,7 +488,7 @@ donde:
     \item $p$ es un primo que define el cuerpo finito $\mathbb{F}_p$.
     \item $a, b \in \mathbb{F}_p$ son los coeficientes de la ecuación de Weierstrass $y^2 = x^3 + ax + b$.
     \item $G = (G_x, G_y) \in E(\mathbb{F}_p)$ es el \emph{punto generador} (o \emph{base point}).
-    \item $n$ es el \emph{orden} de $G$, es decir, el menor entero positivo tal que $n \cdot G = \O$.
+    \item $n$ es el \emph{orden} de $G$, es decir, el menor entero positivo tal que $n \cdot G = \mathcal{O}$.
     \item $h = \#E(\mathbb{F}_p) / n$ es el \emph{cofactor}.
 \end{itemize}
 
@@ -507,7 +507,7 @@ Para que los parámetros proporcionen seguridad criptográfica adecuada, deben s
 
 Los parámetros del dominio $T = (p, a, b, G, n, h)$ pueden obtenerse de dos formas: adoptando una curva estandarizada (como hacemos en nuestra implementación) o generando parámetros nuevos siguiendo un procedimiento riguroso. En ambos casos, es fundamental verificar que los parámetros satisfacen los requisitos de seguridad. A continuación describimos ambos procesos, siguiendo la exposición de Hankerson, Menezes y Vanstone~\cite{hankerson2004guide}.
 
-\subsubsection{Generación de parámetros sobre $\mathbb{F}_p$}
+\subsubsection{\texorpdfstring{Generación de parámetros sobre $\mathbb{F}_p$}{Generacion de parametros sobre Fp}}
 \label{subsubsec:gen-params-fp}
 
 El proceso de generación de una curva elíptica segura sobre un cuerpo primo $\mathbb{F}_p$ consta de los siguientes pasos:
@@ -528,12 +528,12 @@ El proceso de generación de una curva elíptica segura sobre un cuerpo primo $\
         \item (Opcional) El endomorfismo de la curva no tiene estructura explotable.
     \end{itemize}
     
-    \item \textbf{Selección del generador~$G$.} Se elige un punto aleatorio $P \in E(\mathbb{F}_p)$ y se calcula $G = hP$. Se verifica que $G \neq \O$, lo que garantiza que $G$ tiene orden~$n$.
+    \item \textbf{Selección del generador~$G$.} Se elige un punto aleatorio $P \in E(\mathbb{F}_p)$ y se calcula $G = hP$. Se verifica que $G \neq \mathcal{O}$, lo que garantiza que $G$ tiene orden~$n$.
 \end{enumerate}
 
 Si alguna verificación falla, se repite el proceso con nuevos coeficientes.
 
-\subsubsection{Generación de parámetros sobre $\mathbb{F}_{2^m}$}
+\subsubsection{\texorpdfstring{Generación de parámetros sobre $\mathbb{F}_{2^m}$}{Generacion de parametros sobre F2m}}
 \label{subsubsec:gen-params-f2m}
 
 El proceso es análogo pero con diferencias propias de la característica~2:
@@ -562,9 +562,9 @@ La verificación de parámetros de dominio es esencial cuando se reciben de un t
 \Ensure \textbf{Válido} o \textbf{Inválido}
 \State Verificar que $p$ es primo y $p > 3$.
 \State Verificar que $a, b \in [0, p-1]$ y $4a^3 + 27b^2 \not\equiv 0 \pmod{p}$.
-\State Verificar que $G \neq \O$ y que $G$ está en la curva: $G_y^2 \equiv G_x^3 + aG_x + b \pmod{p}$.
+\State Verificar que $G \neq \mathcal{O}$ y que $G$ está en la curva: $G_y^2 \equiv G_x^3 + aG_x + b \pmod{p}$.
 \State Verificar que $n$ es primo.
-\State Verificar que $n \cdot G = \O$. \Comment{$G$ tiene orden $n$}
+\State Verificar que $n \cdot G = \mathcal{O}$. \Comment{$G$ tiene orden $n$}
 \State Verificar que $h = \lfloor (\sqrt{p} + 1)^2 / n \rfloor$. \Comment{Cofactor correcto}
 \State Verificar que $hn \neq p$ (no anómala).
 \State Verificar que $p^k \not\equiv 1 \pmod{n}$ para $1 \leq k \leq 20$. \Comment{Grado de inmersión alto}
@@ -577,7 +577,7 @@ En nuestro proyecto utilizamos exclusivamente curvas estandarizadas por el NIST~
 
 De forma análoga, \texttt{BinaryCurveParams::validate()} comprueba que el grado del polinomio irreducible coincide con~$m$, que $b \neq 0$ (discriminante no nulo en característica~2), y que $n$ y $h$ son positivos.
 
-La validación de claves públicas se realiza en el constructor de \texttt{ECPoint}, que verifica automáticamente $y^2 = x^3 + ax + b \pmod{p}$ al crear cualquier punto, lanzando una excepción si el punto no pertenece a la curva. Para las curvas con cofactor $h = 1$ (NIST P-256, P-384, secp256k1), esta verificación es suficiente, ya que todo punto no trivial de la curva tiene orden~$n$. Para curvas con $h > 1$ (como las binarias sect233k1 con $h = 4$), sería necesario verificar adicionalmente que $n \cdot Q = \O$ para garantizar la pertenencia al subgrupo correcto, lo que se documenta como limitación del prototipo.
+La validación de claves públicas se realiza en el constructor de \texttt{ECPoint}, que verifica automáticamente $y^2 = x^3 + ax + b \pmod{p}$ al crear cualquier punto, lanzando una excepción si el punto no pertenece a la curva. Para las curvas con cofactor $h = 1$ (NIST P-256, P-384, secp256k1), esta verificación es suficiente, ya que todo punto no trivial de la curva tiene orden~$n$. Para curvas con $h > 1$ (como las binarias sect233k1 con $h = 4$), sería necesario verificar adicionalmente que $n \cdot Q = \mathcal{O}$ para garantizar la pertenencia al subgrupo correcto, lo que se documenta como limitación del prototipo.
 
 
 % ============================================================================
@@ -604,9 +604,9 @@ La seguridad del par de claves depende críticamente de la calidad del generador
 \paragraph{Validación de la clave pública.}
 Al recibir una clave pública~$Q$ de un tercero, es imprescindible verificar que:
 \begin{enumerate}
-    \item $Q \neq \O$ (no es el punto en el infinito).
+    \item $Q \neq \mathcal{O}$ (no es el punto en el infinito).
     \item $Q$ pertenece a la curva: $Q_y^2 \equiv Q_x^3 + aQ_x + b \pmod{p}$.
-    \item $Q$ pertenece al subgrupo correcto: $n \cdot Q = \O$.
+    \item $Q$ pertenece al subgrupo correcto: $n \cdot Q = \mathcal{O}$.
 \end{enumerate}
 La tercera comprobación es especialmente importante cuando $h > 1$, para prevenir ataques de contribución de subgrupo pequeño~\cite{hankerson2004guide}.
 
@@ -747,7 +747,7 @@ Dada una firma $(r, s)$ sobre un mensaje $m$ y la clave pública $Q$ del firmant
     \[
         R' = u_1 \cdot G + u_2 \cdot Q.
     \]
-    \item Si $R' = \O$, rechazar. En caso contrario, calcular $v = x_{R'} \bmod n$.
+    \item Si $R' = \mathcal{O}$, rechazar. En caso contrario, calcular $v = x_{R'} \bmod n$.
     \item Aceptar la firma si y solo si $v = r$.
 \end{enumerate}
 
@@ -766,7 +766,7 @@ La coordenada~$x$ de $R'$ coincide con la de $R$, luego $v = x_{R'} \bmod n = x_
 \subsection{Problemas prácticos y vulnerabilidades}
 \label{subsec:ecdsa-problemas}
 
-\paragraph{Reutilización del nonce $k$.}
+\paragraph{\texorpdfstring{Reutilización del nonce $k$.}{Reutilizacion del nonce k.}}
 Si se utiliza el mismo valor~$k$ para firmar dos mensajes distintos $m_1$ y $m_2$, las firmas resultantes $(r, s_1)$ y $(r, s_2)$ comparten la misma coordenada~$r$ (puesto que $R = kG$ es idéntico). Un atacante que observe ambas firmas puede recuperar la clave privada $d$ de forma inmediata:
 \[
     s_1 - s_2 = k^{-1}(e_1 - e_2) \pmod{n}
@@ -834,7 +834,7 @@ Durante toda la multiplicación escalar, las operaciones se realizan en coordena
 En nuestra implementación, las coordenadas Jacobianas proporcionaron un \textit{speedup} medible frente a las afines, cuyos resultados detallados se presentan en el capítulo de experimentación.
 
 
-\subsection{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}
+\subsection{\texorpdfstring{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}{Curvas sobre cuerpos binarios F2m}}
 \label{subsec:ecc-campos-binarios}
 
 Las curvas elípticas también se definen sobre cuerpos binarios $\mathbb{F}_{2^m}$, donde los elementos son polinomios de grado menor que~$m$ con coeficientes en $\{0, 1\}$, y la aritmética se describe en la sección~\ref{sec:aritmetica-f2m}. La ecuación de Weierstrass toma una forma diferente en característica~2.
@@ -907,7 +907,7 @@ La multiplicación escalar $k \cdot P$ es la operación computacionalmente domin
 \begin{algorithmic}[1]
 \Require Escalar $k = (k_{t-1}, k_{t-2}, \ldots, k_1, k_0)_2$ y punto $P \in E(\mathbb{F}_q)$
 \Ensure $Q = k \cdot P$
-\State $Q \leftarrow \O$ \Comment{Punto en el infinito}
+\State $Q \leftarrow \mathcal{O}$ \Comment{Punto en el infinito}
 \For{$i = t-1$ \textbf{down to} $0$}
     \State $Q \leftarrow 2Q$ \Comment{Duplicación}
     \If{$k_i = 1$}
