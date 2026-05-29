@@ -339,12 +339,12 @@ Todos los benchmarks anteriores se compilaron con el nivel de optimización \tex
 \textbf{Opciones de compilación} & \textbf{Mult. escalar} & \textbf{ECDH} & \textbf{Aceleración} \\
                                  & \textbf{($\mu$s)}      & \textbf{($\mu$s)} & \textbf{frente a \texttt{-O0}} \\
 \hline
-\texttt{-O0} (sin optimización)   & \textit{[medir]} & \textit{[medir]} & $1{,}00\times$ \\
-\texttt{-O1}                      & \textit{[medir]} & \textit{[medir]} & \textit{[medir]} \\
-\texttt{-O2} (usado en el proyecto) & \textit{[medir]} & \textit{[medir]} & \textit{[medir]} \\
-\texttt{-O3}                      & \textit{[medir]} & \textit{[medir]} & \textit{[medir]} \\
-\texttt{-Ofast}                   & \textit{[medir]} & \textit{[medir]} & \textit{[medir]} \\
-\texttt{-O2 -march=native}        & \textit{[medir]} & \textit{[medir]} & \textit{[medir]} \\
+\texttt{-O0} (sin optimización)   & 976{,}0 & 958{,}0 & $1{,}00\times$ \\
+\texttt{-O1}                      & 758{,}5 & 740{,}0 & $1{,}29\times$ \\
+\texttt{-O2} (usado en el proyecto) & 743{,}0 & 740{,}0 & $1{,}31\times$ \\
+\texttt{-O3}                      & 769{,}0 & 757{,}0 & $1{,}27\times$ \\
+\texttt{-Ofast}                   & 754{,}0 & 743{,}5 & $1{,}29\times$ \\
+\texttt{-O2 -march=native}        & 743{,}0 & 733{,}0 & $1{,}31\times$ \\
 \hline
 \end{tabular}
 \caption{Rendimiento de ECC (secp256k1, coordenadas afines) según las opciones de compilación. Datos obtenidos mediante el script \texttt{compare\_compiler\_flags.sh}.}
