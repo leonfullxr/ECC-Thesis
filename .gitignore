@@ -37,6 +37,7 @@
 ./reports/*
 benchmark_results_*.txt
 core
+./results/*.csv
 
 # LaTeX build artifacts
 *.aux
