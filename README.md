@@ -66,8 +66,11 @@ ecc-thesis/
 ├── scripts/                  # Automation and analysis scripts
 │   ├── run_benchmarks.sh     # Master orchestration script
 │   ├── visualize_benchmarks.py   # Chart generation (11 charts)
+│   ├── visualize_summary.py      # High-resolution summary heatmap
+│   ├── visualize_compiler_flags.py  # Compiler-flags comparison chart
 │   ├── create_collages.py    # Combines charts into 3 collages
 │   ├── compare_openssl.sh    # OpenSSL baseline comparison
+│   ├── compare_compiler_flags.sh    # ECC vs compiler optimization flags
 │   ├── run_bench.sh          # Single algorithm runner
 │   ├── quick_demo.sh         # Quick demonstration
 │   ├── benchmark_comparison.sh   # RSA key size comparison
@@ -912,9 +915,32 @@ All comparisons use equivalent security levels as defined by NIST SP 800-57: RSA
 
 ### Quick Start
 
+The whole experimental pipeline is wrapped in `make` targets so everything is reproducible with a single command:
+
+```bash
+make benchmark               # Full RSA vs ECC suite (100 iters) + all charts
+make compare-openssl         # OpenSSL baseline (50s per operation)
+make compare-compiler-flags  # ECC performance across -O0/-O1/-O2/-O3/-Ofast/-march=native + chart
+make figures                 # Regenerate every chart and copy them into docs/.../imagenes/
+make reproduce               # Everything above, in order (full reproduction)
+```
+
+Useful overridable variables:
+
+```bash
+make benchmark OPT=-O2 BENCH_ITERS=100   # reproduce the thesis numbers exactly (no -march=native)
+make compare-openssl OPENSSL_SECONDS=50
+make compare-compiler-flags FLAG_ITERS=100
+```
+
+`make` (no target) lists every available target with a short description.
+
+<details>
+<summary>Running the steps manually</summary>
+
 ```bash
 # Full pipeline: compile, benchmark, and generate charts
-bash scripts/run_benchmarks.sh 20
+bash scripts/run_benchmarks.sh 100
 
 # Or run steps individually:
 
@@ -923,23 +949,25 @@ docker run --rm -it -v $(pwd):/workspace ecc-thesis bash -c "make"
 
 
 # 2. Run full comparison (CSV to stdout, verbose progress to stderr)
-./bin/bench -a CMP -i 20 -r results/raw.csv -v > results/summary.csv
+./bin/bench -a CMP -i 100 -r results/raw.csv -v > results/summary.csv
 
 # 3. Generate visualizations
 python3 scripts/visualize_benchmarks.py results/summary.csv results/raw.csv results/
+python3 scripts/visualize_summary.py results/summary.csv results/
 
 # 4. Create collage images
 python3 scripts/create_collages.py results results
 ```
+</details>
 
-The benchmark engine supports three modes:
+The benchmark engine supports five modes:
 
 ```bash
 ./bin/bench -a RSA  -b 2048 -i 50 -v > rsa_only.csv      # RSA only
 ./bin/bench -a ECC  -c P-256 -i 50 -v > ecc_affine.csv    # ECC affine
 ./bin/bench -a ECCJ -c P-256 -i 50 -v > ecc_jacobian.csv  # ECC Jacobian
 ./bin/bench -a BIN  -c sect283k1 -i 10 -v > binary.csv    # ECC binary field
-./bin/bench -a CMP  -i 20 -r raw.csv -v > comparison.csv   # Full 3D comparison
+./bin/bench -a CMP  -i 100 -r raw.csv -v > comparison.csv  # Full 3D comparison
 ```
 
 ### Benchmark Architecture
@@ -950,21 +978,21 @@ Each benchmark includes 3 warm-up iterations (discarded) followed by N measured 
 
 ### Comparative Results: RSA vs ECC
 
-The following collage summarizes the key findings from running all 42 benchmarks (4 RSA key sizes x 6 operations + 3 ECC curves x 6 operations):
+The following collage summarizes the key findings from running the full suite of 72 benchmarks (4 RSA key sizes x 6 operations + 3 prime curves x 6 ops in affine + 3 prime curves x 5 ops in Jacobian + 5 binary curves x 3 ops):
 
 <p align="center">
    <img src="results/collage_comparison.png" alt="RSA vs ECC Comparative Overview" width="100%">
 </p>
 
-**Key findings at equivalent security levels (128-bit: RSA-3072 vs P-256/secp256k1):**
+**Key findings at equivalent security levels (128-bit: RSA-3072 vs P-256/secp256k1), median of 100 iterations:**
 
 | Operation | RSA-3072 | ECC (secp256k1) | ECC (P-256) | Winner |
 |-----------|----------|-----------------|-------------|--------|
-| Key Generation | ~69 ms | ~1.5 ms | ~1.6 ms | **ECC ~45x faster** |
-| Sign | ~2.1 ms | ~1.5 ms | ~1.7 ms | **ECC ~1.3x faster** |
-| Verify | ~47 us | ~3.0 ms | ~3.2 ms | **RSA ~65x faster** |
+| Key Generation | ~58 ms | ~0.72 ms | ~0.77 ms | **ECC ~80x faster** |
+| Sign | ~1.09 ms | ~0.73 ms | ~0.77 ms | **ECC ~1.5x faster** |
+| Verify | ~22 us | ~1.44 ms | ~1.52 ms | **RSA ~65x faster** |
 
-The results reveal that ECC has a massive advantage in key generation (45-90x faster) because RSA requires finding two large primes while ECC only needs a random scalar multiplication. For signing, ECC is moderately faster (1.2-1.5x). However, RSA verification is dramatically faster (65-77x) due to the small public exponent e=65537, which requires only 17 squarings and 1 multiplication versus the full scalar multiplication ECC needs.
+ECC times above use affine coordinates; switching to Jacobian coordinates makes ECC a further ~1.7-2x faster (e.g. secp256k1 keygen drops to ~0.42 ms, raising the keygen advantage to ~138x). The results reveal that ECC has a massive advantage in key generation because RSA must find two large primes while ECC only needs a random scalar multiplication. For signing, ECC is moderately faster (~1.5x). However, RSA verification is dramatically faster (~65x) due to the small public exponent e=65537, which requires only 17 squarings and 1 multiplication versus the full scalar multiplication ECC needs.
 
 ### Affine vs Jacobian Coordinates
  
@@ -973,11 +1001,12 @@ The third collage shows the direct comparison between coordinate systems and fie
 <p align="center">
    <img src="results/collage_coordinates_fields.png" alt="Coordinate Systems and Field Arithmetic" width="100%">
 </p>
+
 **Why we started with affine coordinates and then added Jacobian:**
  
 We initially implemented all ECC operations using affine coordinates `(x, y)` for pedagogical reasons: each intermediate point can be verified with `is_on_curve()`, the formulas map directly to textbook math, and debugging is straightforward. The cost is that every point addition and doubling requires a modular inversion (~80-100x the cost of a multiplication).
  
-Jacobian coordinates `(X, Y, Z)` where `x = X/Z^2, y = Y/Z^3` eliminate these inversions entirely during scalar multiplication. Only one inversion is needed at the very end when converting back to affine. For a 256-bit scalar multiplication this means ~384 inversions eliminated, yielding a theoretical speedup of ~8x (practical 3-5x).
+Jacobian coordinates `(X, Y, Z)` where `x = X/Z^2, y = Y/Z^3` eliminate these inversions entirely during scalar multiplication. Only one inversion is needed at the very end when converting back to affine. A naive operation count (treating one inversion as ~80-100 multiplications) would suggest a large speedup, but the **measured** speedup on this hardware is a consistent **1.7-2x** (e.g. ~1.72x for secp256k1, growing to ~1.9x for P-384). The gap between the naive estimate and the measured figure is itself an interesting result: NTL's modular inversion (built on GMP) is far better optimized than the 80-100 multiplication rule of thumb assumes, so eliminating inversions buys less than the simplified model predicts. The benefit grows with field size, since inversion becomes relatively more expensive in larger fields.
  
 The `chart_affine_vs_jacobian.png` and `chart_jacobian_speedup.png` charts show the measured speedup per operation and curve. The `use_jacobian` parameter in the API allows switching between both modes for direct comparison.
  
@@ -999,48 +1028,71 @@ The detailed collage shows how each algorithm scales internally and the distribu
 
 Notable observations:
 
-- **RSA scaling is super-polynomial**: key generation time grows roughly as O(k^3) to O(k^4) with key size k due to the primality testing involved. RSA-4096 keygen takes ~300ms vs ~1.5ms for RSA-1024 (a 200x increase for a 4x key size increase).
+- **RSA scaling is super-polynomial**: key generation time grows roughly as O(k^3) to O(k^4) with key size k due to the primality testing involved. RSA-4096 keygen takes ~156 ms (median) vs ~1.9 ms for RSA-1024, an ~80x increase for a 4x key size increase, and it is also the highest-variance operation (mean ~185 ms, min ~6 ms, max ~596 ms) because of the probabilistic prime search.
 - **ECC scaling between curves is linear in field size**: P-384 (384-bit field) is roughly 2x slower than P-256 (256-bit field) across all operations. This is expected since field arithmetic cost scales as O(n^2) with field element size.
 - **ECDSA verify takes ~2x the time of ECDSA sign**: this is because verification requires two scalar multiplications (u1*G + u2*Q) compared to one in signing (k*G), plus additional modular arithmetic.
 - **Low variance in ECC operations**: the box plots show very tight distributions for ECC, while RSA key generation has high variance due to the probabilistic nature of prime search.
 
+### Compiler Optimization Flags
+
+We also measured how the compiler optimization level affects ECC, by recompiling the engine with different `g++` flag sets and re-running the same operation (scalar multiplication and ECDH on secp256k1). Run it with:
+
+```bash
+make compare-compiler-flags        # writes results/compiler_flags.csv + chart_compiler_flags.png
+```
+
+<p align="center">
+   <img src="results/chart_compiler_flags.png" alt="ECC performance vs compiler flags" width="85%">
+</p>
+
+The expected pattern is a large jump from `-O0` to `-O1`/`-O2` and a near-plateau afterwards (`-O3`, `-Ofast`, `-march=native`). The reason is structural: most of the ECC cost is big-integer modular arithmetic delegated to **GMP**, which is linked already compiled with its own assembly and is therefore *unaffected* by the project's flags. The flags only optimize the C++ "glue" (coordinate logic, scalar-multiplication loops, type conversions). This is exactly why the project standardizes on `-O2`: it captures essentially all the achievable gain without the timing unpredictability of `-O3` or the loss of portability of `-march=native`. (`-Ofast` behaves like `-O3` here because integer crypto has no floating-point in its hot path, so `-ffast-math` does nothing.)
+
 ### OpenSSL Baseline Comparison
 
-To validate that our implementations produce reasonable performance numbers, we compare against OpenSSL 3.0 -- the industry-standard reference implementation that uses assembly-optimized routines, platform-specific SIMD instructions, and constant-time algorithms.
+To put our numbers in perspective, we compare against OpenSSL 3.0.2 -- a production reference implementation that uses assembly-optimized routines, platform-specific SIMD instructions, and constant-time algorithms. The comparison was run on the same machine via `openssl speed` (50s per operation).
 
-The following table shows OpenSSL results measured on the project's development hardware (run `openssl speed` to reproduce). The "Expected Factor" column indicates the typical ratio between our implementation and OpenSSL, which can be verified by running both benchmarks on the same machine.
+A caveat up front: this comparison is indicative, because `openssl speed` and our benchmark harness do not measure exactly the same work (see the interpretation below). The table reports our median (100 iterations, ECC in Jacobian coordinates) next to OpenSSL's measured throughput.
 
-| Operation | OpenSSL 3.0 | Expected Factor | Why |
-|-----------|-------------|-----------------|-----|
-| **RSA-2048 sign** | 166 us (6,036/s) | ~1-2x | Both use GMP for modular exponentiation |
-| **RSA-3072 sign** | 1,192 us (839/s) | ~1-2x | NTL's PowerMod wraps GMP, near-optimal |
-| **RSA-4096 sign** | 2,715 us (368/s) | ~1-2x | Minimal overhead from NTL layer |
-| **RSA-2048 verify** | 11 us (90,754/s) | ~1.5-2x | Small exponent e=65537 fast path |
-| **RSA-3072 verify** | 24 us (42,071/s) | ~1.5-2x | Same small-exponent optimization |
-| **RSA-4096 verify** | 41 us (24,429/s) | ~1.5-2x | |
-| **ECDSA P-256 sign** | 13 us (76,114/s) | ~30-50x | OpenSSL uses hand-tuned asm for P-256 |
-| **ECDSA P-256 verify** | 40 us (24,913/s) | ~40-60x | Hardcoded curve constants + Jacobian coords |
-| **ECDSA P-384 sign** | 530 us (1,887/s) | ~3-8x | Less aggressively optimized in OpenSSL |
-| **ECDSA P-384 verify** | 432 us (2,316/s) | ~8-15x | |
-| **ECDH P-256** | 30 us (32,994/s) | ~30-50x | Same scalar mult difference as ECDSA |
-| **ECDH P-384** | 500 us (2,000/s) | ~3-8x | |
+| Operation | Ours (us) | OpenSSL (us) | Ratio |
+|-----------|-----------|--------------|-------|
+| **RSA-3072 sign** | 1,089 | 1,192 | ours 1.09x faster* |
+| **RSA-3072 verify** | 22 | 24 | ours 1.08x faster* |
+| **RSA-4096 sign** | 2,490 | 2,695 | ours 1.08x faster* |
+| **RSA-4096 verify** | 38 | 41 | ours 1.08x faster* |
+| **ECDSA P-256 sign** | 441 | 13 | OpenSSL 34.4x faster |
+| **ECDSA P-256 verify** | 865 | 40 | OpenSSL 21.7x faster |
+| **ECDH P-256** | 431 | 30 | OpenSSL 14.2x faster |
+| **ECDSA P-384 sign** | 825 | 499 | OpenSSL 1.7x faster |
+| **ECDSA P-384 verify** | 1,632 | 404 | OpenSSL 4.0x faster |
+| **ECDH P-384** | 866 | 473 | OpenSSL 1.8x faster |
+
+<sub>The apparent RSA advantage is a measurement artifact, not real superiority</sub>
 
 
 
-> **To generate exact factors on your hardware**, run both benchmarks on the same machine:
+> **To regenerate these numbers on your hardware**, run both benchmarks on the same machine:
 > ```bash
-> bash scripts/run_benchmarks.sh 20       # Our implementation
-> bash scripts/compare_openssl.sh results 10  # OpenSSL reference
+> make benchmark           # Our implementation (full suite + charts)
+> make compare-openssl     # OpenSSL reference (50s per op)
 > ```
-> Then compare the CSV outputs in `results/`.
+> Then compare the CSV outputs in `results/` (`summary_latest.csv` vs `openssl_baseline.csv`).
 
 **Interpretation:**
 
-Our **RSA implementation is expected to be within 1-2x of OpenSSL**. This is because both implementations delegate the heavy modular exponentiation to the same underlying algorithm (Montgomery multiplication via GMP). NTL adds a thin wrapper over GMP but the core computation is identical, so the performance gap is minimal. This validates that our RSA benchmarks are representative of production-grade performance.
+**On RSA, the times are the same order of magnitude, but the comparison is not strictly fair.** At first glance our RSA times are comparable to OpenSSL's and even ~8-9% lower. This should *not* be read as our implementation being faster: it would be surprising for a teaching implementation to beat a production library, and a closer look shows the two are not measuring the same work. The reason both land in the same ballpark is that RSA private-key cost is dominated by CRT modular exponentiation, and both NTL/GMP and OpenSSL implement this with comparably mature techniques (Montgomery reduction, windowed exponentiation, assembly limb multiplication). Note that, contrary to a common assumption, **OpenSSL does not use GMP**: it has its own arbitrary-precision library (`BIGNUM`) with hand-written assembly. Two independent, well-optimized bignum engines performing similarly at these key sizes is exactly what we should expect, and that is the legitimate conclusion here.
 
-Our **ECC implementation is expected to be 3-60x slower than OpenSSL**, which is well-understood. OpenSSL's P-256 implementation uses handwritten assembly with platform specific optimizations (e.g., `ecp_nistp256.c` uses 64-bit limb arithmetic and precomputed tables), Jacobian projective coordinates that eliminate per-operation modular inversions, the wNAF windowed method for scalar multiplication reducing the number of point additions, and constant-time algorithms to prevent side channel attacks. Our implementation uses standard affine coordinates with NTL's generic field arithmetic, validating each intermediate point on the curve. The gap for P-384 (3-15x) is much smaller than for P-256 (30-60x) because OpenSSL has less aggressive, non-assembly optimizations for P-384.
+**Why our implementation appears faster.** The small edge does not reflect efficiency; the two measurements simply do not count the same work, and four factors all push in the same direction:
 
-**Conclusion**: The RSA vs ECC comparative ratios in our benchmarks are directionally correct. The absolute ECC times are slower than production but the *relative* comparison between RSA and ECC operations at equivalent security levels holds, because both algorithms are measured under the same conditions (same compiler, same library, same hardware).
+- **RSA blinding.** OpenSSL applies base blinding to private-key operations by default, as a timing/side-channel countermeasure (multiply by a random factor before the exponentiation, undo it after). These are extra modular multiplications that our textbook implementation does not perform, OpenSSL deliberately does *more* work for security.
+- **Padding & encoding.** OpenSSL's sign builds the `DigestInfo` structure and applies EMSA-PKCS#1 v1.5 padding; our measurement times essentially the bare `s = h^d mod n`.
+- **Abstraction layer.** OpenSSL 3.x routes operations through its provider architecture and the `EVP` API, adding per-call overhead (algorithm fetch, parameter handling) absent from our direct primitive call.
+- **Measurement harness.** `openssl speed` measures sustained throughput by counting operations in a fixed time window (including per-call setup); ours brackets only the operation with `std::chrono`.
+
+In short, our implementation looks faster because it measures *less* work and *without* the protections OpenSSL includes. The honest takeaway: we **cannot claim to beat OpenSSL on RSA**; we can say both are bignum-bound and comparable, and that our RSA modexp operates at the same order of efficiency as a production library.
+
+**On ECC, OpenSSL is much faster and the size of the gap is itself informative.** For P-256, OpenSSL is 14-34x faster because it ships hand-written assembly specifically for this curve (the most common on the Internet), with constant-time, heavily optimized field arithmetic. But for P-384 the gap collapses to 1.7-4x: with fewer curve-specific optimizations for this less common curve, OpenSSL's implementation comes much closer to a general-purpose one like ours. This contrast shows the ECC gap comes not from the algorithm but from the degree of low-level (curve-specific assembly) tuning, and that an NTL-based implementation reaches reasonable performance in the absence of such tuning. Our implementation uses affine/Jacobian coordinates over NTL's generic field arithmetic, validating intermediate points on the curve.
+
+**Conclusion**: The RSA vs ECC comparative ratios in our benchmarks are directionally correct. The absolute ECC times are slower than production, but the *relative* comparison between RSA and ECC at equivalent security levels holds, because both are measured under identical conditions (same compiler, same library, same hardware, same harness).
 
 <details>
 <summary>Reproducing the OpenSSL baseline</summary>
@@ -1068,7 +1120,7 @@ The benchmark engine implements several best practices for reproducible and stat
 
 **Reproducibility**: Using `-s fixed` (the default) seeds the RNG with a deterministic value, so the same key material is generated across runs. This eliminates variance from different key sizes or lucky/unlucky prime candidates. Use `-s random` for production-like measurements with natural variance.
 
-**Fair comparison**: Both RSA and ECC are compiled with the same flags (`-std=c++17 -O2`) and run on the same hardware in the same process. Note that compiler optimization affects ECC more than RSA (~1.4x speedup for ECC at -O2 vs -O0, but negligible impact on RSA) because RSA delegates its hot path to pre-compiled NTL/GMP library code while ECC has more custom C++ in its critical path.
+**Fair comparison**: Both RSA and ECC are compiled with the same flags and run on the same hardware in the same process. The headline benchmarks use `-O2` (without `-march=native`) for portability and comparability. Compiler optimization affects ECC more than RSA because RSA delegates its hot path to pre-compiled NTL/GMP library code while ECC has more custom C++ in its critical path -- however, the effect is bounded: most of the gain happens between `-O0` and `-O2`, and higher levels (`-O3`, `-Ofast`, `-march=native`) add little, because the arithmetic core lives in GMP (linked pre-compiled with its own assembly) and is untouched by the project's flags. This is quantified by the `make compare-compiler-flags` experiment.
 
 ### External Benchmarking Frameworks
 
