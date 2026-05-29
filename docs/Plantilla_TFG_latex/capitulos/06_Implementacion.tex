@@ -13,12 +13,12 @@
 El objetivo de la parte práctica de este trabajo es construir una suite de benchmarking que permita comparar, de forma reproducible y cuantificable, el rendimiento de RSA y ECC a lo largo de tres ejes ortogonales:
 
 \begin{enumerate}
-    \item \textbf{RSA frente a ECC}, a niveles de seguridad equivalentes según NIST SP~800-57~\cite{nist-sp800-57}.
+    \item \textbf{RSA frente a ECC}, a niveles de seguridad equivalentes según NIST SP 800-57 \cite{nist-sp800-57}.
     \item \textbf{Coordenadas afines frente a Jacobianas}, midiendo el impacto real de eliminar inversiones modulares.
     \item \textbf{Cuerpo primo $\mathbb{F}_p$ frente a cuerpo binario $\mathbb{F}_{2^m}$}, comparando la aritmética subyacente.
 \end{enumerate}
 
-La implementación se ha desarrollado íntegramente en C++17, utilizando la biblioteca NTL~\cite{shoup-ntl} para aritmética de precisión arbitraria y GMP~\cite{granlund-gmp} como motor de cálculo subyacente. Todo el entorno se ejecuta dentro de un contenedor Docker para garantizar la reproducibilidad de los resultados.
+La implementación se ha desarrollado íntegramente en C++17, utilizando la biblioteca NTL \cite{shoup-ntl} para aritmética de precisión arbitraria y GMP \cite{granlund-gmp} como motor de cálculo subyacente. Todo el entorno se ejecuta dentro de un contenedor Docker para garantizar la reproducibilidad de los resultados.
 
 En las secciones siguientes se describe la arquitectura del software, las decisiones de diseño tomadas, el entorno de ejecución, y los procedimientos de validación aplicados al generador de números aleatorios.
 
@@ -30,7 +30,7 @@ En las secciones siguientes se describe la arquitectura del software, las decisi
 \subsection{Estructura modular}
 \label{subsec:impl-modulos}
 
-El proyecto sigue una arquitectura modular en la que cada componente criptográfico reside en un par de ficheros (cabecera \texttt{.hpp} e implementación \texttt{.cpp}). La figura~\ref{fig:arquitectura} muestra el diagrama de dependencias.
+El proyecto sigue una arquitectura modular en la que cada componente criptográfico reside en un par de ficheros (cabecera \texttt{.hpp} e implementación \texttt{.cpp}). La figura \ref{fig:arquitectura} muestra el diagrama de dependencias.
 
 \begin{figure}[htbp]
 \centering
@@ -82,9 +82,9 @@ Los módulos del proyecto son los siguientes:
     
     \item[\texttt{ecc.hpp / ecc.cpp}] Implementa la criptografía de curvas elípticas sobre cuerpos primos. Incluye dos representaciones de puntos: coordenadas afines (\texttt{ECPoint}) y coordenadas Jacobianas (\texttt{JacobianPoint}). Soporta tres curvas estándar: NIST P-256, NIST P-384 y secp256k1. Implementa generación de claves, ECDH, y ECDSA (firma y verificación). Todas las operaciones aceptan un parámetro \texttt{use\_jacobian} que permite seleccionar la representación en tiempo de ejecución.
     
-    \item[\texttt{ecc\_binary.hpp / ecc\_binary.cpp}] Implementa curvas elípticas sobre cuerpos binarios $\mathbb{F}_{2^m}$ utilizando \texttt{NTL::GF2E} para la aritmética de polinomios. Soporta cinco curvas estándar SEC~2: sect163k1, sect233k1, sect283k1, sect233r1 y sect283r1. Incluye generación de claves y ECDH sobre cuerpos binarios.
+    \item[\texttt{ecc\_binary.hpp / ecc\_binary.cpp}] Implementa curvas elípticas sobre cuerpos binarios $\mathbb{F}_{2^m}$ utilizando \texttt{NTL::GF2E} para la aritmética de polinomios. Soporta cinco curvas estándar SEC 2: sect163k1, sect233k1, sect283k1, sect233r1 y sect283r1. Incluye generación de claves y ECDH sobre cuerpos binarios.
     
-    \item[\texttt{sha256.hpp / sha256.cpp}] Implementación completa de SHA-256 siguiendo FIPS~PUB~180-4~\cite{nist-fips180-4}. Se implementó desde cero (sin delegar en OpenSSL) por dos razones: integridad académica (comprender y documentar cada paso del algoritmo) y control total sobre el benchmarking (evitar que variaciones en la versión de OpenSSL afecten las mediciones).
+    \item[\texttt{sha256.hpp / sha256.cpp}] Implementación completa de SHA-256 siguiendo FIPS PUB 180-4 \cite{nist-fips180-4}. Se implementó desde cero (sin delegar en OpenSSL) por dos razones: integridad académica (comprender y documentar cada paso del algoritmo) y control total sobre el benchmarking (evitar que variaciones en la versión de OpenSSL afecten las mediciones).
     
     \item[\texttt{main.cpp}] Motor de benchmarking con cinco modos de ejecución, parseo de argumentos CLI mediante \texttt{getopt}, y generación de resultados en formato CSV.
 \end{description}
@@ -151,7 +151,7 @@ Una decisión fundamental del proyecto fue implementar primero la aritmética de
 \subsection{SHA-256 desde cero}
 \label{subsec:impl-sha256}
 
-La implementación de SHA-256 se realizó siguiendo paso a paso el estándar FIPS~PUB~180-4, sin utilizar la implementación de OpenSSL. Las razones son:
+La implementación de SHA-256 se realizó siguiendo paso a paso el estándar FIPS PUB 180-4, sin utilizar la implementación de OpenSSL. Las razones son:
 
 \begin{itemize}
     \item \textbf{Integridad académica:} En un TFG sobre criptografía, es importante demostrar la comprension de los algoritmos, no solo invocar bibliotecas de terceros.
@@ -163,16 +163,16 @@ La implementación de SHA-256 se realizó siguiendo paso a paso el estándar FIP
 \subsection{Uso de curvas estandarizadas}
 \label{subsec:impl-curvas-estandar}
 
-En lugar de generar curvas elípticas propias, el proyecto utiliza exclusivamente curvas estandarizadas publicadas por el NIST~\cite{nist-fips186-4} y SECG~\cite{sec2-v2}. Los parámetros del dominio $(p, a, b, G, n, h)$ están codificados directamente en \texttt{get\_curve\_params()} y \texttt{get\_binary\_curve\_params()}.
+En lugar de generar curvas elípticas propias, el proyecto utiliza exclusivamente curvas estandarizadas publicadas por el NIST \cite{nist-fips186-4} y SECG \cite{sec2-v2}. Los parámetros del dominio $(p, a, b, G, n, h)$ están codificados directamente en \texttt{get\_curve\_params()} y \texttt{get\_binary\_curve\_params()}.
 
 Esta decisión se justifica por:
 \begin{itemize}
     \item La generación de curvas seguras requiere algoritmos de conteo de puntos (Schoof--Elkies--Atkin) que están fuera del alcance de este trabajo.
-    \item Las curvas NIST y SEC~2 han sido auditadas extensamente por la comunidad criptográfica.
+    \item Las curvas NIST y SEC 2 han sido auditadas extensamente por la comunidad criptográfica.
     \item Usar curvas estándar permite comparar nuestros resultados con benchmarks de referencia (por ejemplo, OpenSSL).
 \end{itemize}
 
-No obstante, se implementa una validación parcial de los parámetros (sección~\ref{subsec:impl-validacion-params}) para verificar las propiedades que son computacionalmente viables.
+No obstante, se implementa una validación parcial de los parámetros (sección \ref{subsec:impl-validacion-params}) para verificar las propiedades que son computacionalmente viables.
 
 
 \subsection{Validación de parámetros del dominio}
@@ -187,9 +187,9 @@ La función \texttt{CurveParams::validate()} implementa las siguientes comprobac
     \item $n > 0$ y $h > 0$.
 \end{enumerate}
 
-De forma analoga, \texttt{BinaryCurveParams::validate()} comprueba que $\deg(f) = m$, que $b \neq 0$ (discriminante en característica~2), y que $n, h > 0$.
+De forma analoga, \texttt{BinaryCurveParams::validate()} comprueba que $\deg(f) = m$, que $b \neq 0$ (discriminante en característica 2), y que $n, h > 0$.
 
-Las verificaciones que \emph{no} se implementan ---primalidad de $n$, $nG = \mathcal{O}$, curva no anómala, grado de inmersión alto--- se describen como requisitos teóricos en la sección~\ref{subsec:ecc-parametros-dominio}. Su omisión esta justificada por el uso exclusivo de curvas pre-auditadas (véase la discusión en la sección~\ref{subsubsec:verificacion-params}).
+Las verificaciones que \emph{no} se implementan ---primalidad de $n$, $nG = \mathcal{O}$, curva no anómala, grado de inmersión alto--- se describen como requisitos teóricos en la sección \ref{subsec:ecc-parametros-dominio}. Su omisión esta justificada por el uso exclusivo de curvas pre-auditadas (véase la discusión en la sección \ref{subsubsec:verificacion-params}).
 
 
 % ============================================================================
@@ -199,7 +199,7 @@ Las verificaciones que \emph{no} se implementan ---primalidad de $n$, $nG = \mat
 \subsection{Lenguaje y bibliotecas}
 \label{subsec:impl-lenguaje}
 
-El cuadro~\ref{tab:herramientas} resume las herramientas principales del proyecto.
+El cuadro \ref{tab:herramientas} resume las herramientas principales del proyecto.
 
 \begin{table}[htbp]
 \centering
@@ -222,7 +222,7 @@ Pillow & $\geq$ 9.0 & Composición de collages \\
 \end{table}
 
 \paragraph{Eleccion de NTL.}
-Se eligió NTL (Number Theory Library) de Victor Shoup~\cite{shoup-ntl} como base aritmética por varias razones: proporciona tipos nativos para enteros de precisión arbitraria (\texttt{ZZ}), aritmética modular (\texttt{ZZ\_p}), y cuerpos binarios de extensión (\texttt{GF2E}); ofrece funciones criptográficas de bajo nivel (exponenciación modular, test de primalidad Miller-Rabin, generación de primos); y se construye sobre GMP, heredando sus optimizaciones a nivel de ensamblador para las operaciones aritméticas básicas.
+Se eligió NTL (Number Theory Library) de Victor Shoup \cite{shoup-ntl} como base aritmética por varias razones: proporciona tipos nativos para enteros de precisión arbitraria (\texttt{ZZ}), aritmética modular (\texttt{ZZ\_p}), y cuerpos binarios de extensión (\texttt{GF2E}); ofrece funciones criptográficas de bajo nivel (exponenciación modular, test de primalidad Miller-Rabin, generación de primos); y se construye sobre GMP, heredando sus optimizaciones a nivel de ensamblador para las operaciones aritméticas básicas.
 
 \paragraph{Nivel de optimización.}
 Se compila con \texttt{-O2} en lugar de \texttt{-O3} para mantener un equilibrio entre rendimiento y predictibilidad de los tiempos de ejecución. El nivel \texttt{-O3} puede activar vectorización y desenrollado de bucles que introduzcan variabilidad en las mediciones.
@@ -231,7 +231,7 @@ Se compila con \texttt{-O2} en lugar de \texttt{-O3} para mantener un equilibrio
 \subsection{Contenedorizacion con Docker}
 \label{subsec:impl-docker}
 
-Para garantizar la reproducibilidad de los resultados, el proyecto incluye un \texttt{Dockerfile} que define un entorno de compilación y ejecución completo basado en Ubuntu~24.04. El contenedor instala NTL, GMP, Python~3 con las bibliotecas de visualización, compila el proyecto, y permite ejecutar los benchmarks en un entorno controlado.
+Para garantizar la reproducibilidad de los resultados, el proyecto incluye un \texttt{Dockerfile} que define un entorno de compilación y ejecución completo basado en Ubuntu 24.04. El contenedor instala NTL, GMP, Python 3 con las bibliotecas de visualización, compila el proyecto, y permite ejecutar los benchmarks en un entorno controlado.
 
 El flujo de trabajo típico es:
 \begin{verbatim}
@@ -310,7 +310,7 @@ Esta abstracción permite medir cualquier operación criptográfica (generación
 \subsection{Operaciones medidas}
 \label{subsec:impl-operaciones}
 
-El cuadro~\ref{tab:operaciones} resume las operaciones medidas para cada algoritmo.
+El cuadro \ref{tab:operaciones} resume las operaciones medidas para cada algoritmo.
 
 \begin{table}[htbp]
 \centering
@@ -337,7 +337,7 @@ ECC (Jacobiano)  & Keygen           & Igual que afín, con \texttt{use\_jacobian
                  & ECDH             & Secreto compartido con aritmética Jacobiana \\
                  & ECDSA sign/verify & Firma y verificación con aritmética Jacobiana \\
 \hline
-ECC (binario)    & Keygen           & Generación sobre $\mathbb{F}_{2^m}$ (5 curvas SEC~2) \\
+ECC (binario)    & Keygen           & Generación sobre $\mathbb{F}_{2^m}$ (5 curvas SEC 2) \\
                  & Scalar mult      & Multiplicación escalar en cuerpo binario \\
                  & ECDH             & Secreto compartido sobre $\mathbb{F}_{2^m}$ \\
 \hline
@@ -346,7 +346,7 @@ ECC (binario)    & Keygen           & Generación sobre $\mathbb{F}_{2^m}$ (5 cu
 \label{tab:operaciones}
 \end{table}
 
-Todas las comparaciones RSA-ECC se realizan a niveles de seguridad equivalentes según NIST SP~800-57: RSA-3072 frente a P-256/secp256k1 (128 bits de seguridad) y RSA-4096 frente a P-384 (192 bits de seguridad). 
+Todas las comparaciones RSA-ECC se realizan a niveles de seguridad equivalentes según NIST SP 800-57: RSA-3072 frente a P-256/secp256k1 (128 bits de seguridad) y RSA-4096 frente a P-384 (192 bits de seguridad). 
 
 
 \subsection{Pipeline de visualización}
@@ -376,7 +376,7 @@ El script genera ficheros con timestamp (evitando sobreescrituras) y crea enlace
 \subsection{\texorpdfstring{Curvas sobre cuerpos primos $\mathbb{F}_p$}{Curvas sobre cuerpos primos Fp}}
 \label{subsec:impl-curvas-primas}
 
-Se implementaron tres curvas estándar, con parámetros tomados directamente de FIPS~186-4 y SEC~2:
+Se implementaron tres curvas estándar, con parámetros tomados directamente de FIPS 186-4 y SEC 2:
 
 \begin{table}[htbp]
 \centering
@@ -399,7 +399,7 @@ Las curvas NIST utilizan $a = -3$, lo que permite una optimización en la formul
 \subsection{\texorpdfstring{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}{Curvas sobre cuerpos binarios F2m}}
 \label{subsec:impl-curvas-binarias}
 
-Se implementaron cinco curvas del estándar SEC~2~\cite{sec2-v2}:
+Se implementaron cinco curvas del estándar SEC 2 \cite{sec2-v2}:
 
 \begin{table}[htbp]
 \centering
@@ -414,7 +414,7 @@ sect233r1 & 233 & 2 & $\sim$112 bits & $x^{233} + x^{74} + 1$ \\
 sect283r1 & 283 & 2 & $\sim$128 bits & $x^{283} + x^{12} + x^7 + x^5 + 1$ \\
 \hline
 \end{tabular}
-\caption{Curvas sobre cuerpos binarios implementadas (SEC~2).}
+\caption{Curvas sobre cuerpos binarios implementadas (SEC 2).}
 \label{tab:curvas-binarias-impl}
 \end{table}
 
@@ -430,13 +430,13 @@ Es importante señalar que esta implementación es un prototipo educativo y de b
 \begin{enumerate}
     \item \textbf{Resistencia a canales laterales.} El algoritmo \textit{double-and-add} tiene un flujo de ejecución que depende de los bits de la clave privada, lo que lo hace vulnerable a ataques de tiempo, consumo eléctrico y emision electromagnética. Una implementación de producción utilizaría la escalera de Montgomery o algoritmos de tiempo constante.
     
-    \item \textbf{Nonces ECDSA.} Los nonces $k$ se generan de forma aleatoria. Una implementación robusta utilizaría nonces deterministas según RFC~6979~\cite{rfc6979} para evitar los riesgos descritos en la sección~\ref{subsec:ecdsa-problemas}.
+    \item \textbf{Nonces ECDSA.} Los nonces $k$ se generan de forma aleatoria. Una implementación robusta utilizaría nonces deterministas según RFC 6979 \cite{rfc6979} para evitar los riesgos descritos en la sección \ref{subsec:ecdsa-problemas}.
     
-    \item \textbf{Derivación de clave (KDF).} El secreto compartido ECDH se deriva truncando la coordenada~$x$ del punto compartido, en lugar de usar un KDF estándar como HKDF (RFC~5869).
+    \item \textbf{Derivación de clave (KDF).} El secreto compartido ECDH se deriva truncando la coordenada $x$ del punto compartido, en lugar de usar un KDF estándar como HKDF (RFC 5869).
     
     \item \textbf{Esquemas de padding.} RSA se implementa sin padding (textbook RSA). Una implementación segura requeriría OAEP para cifrado y PSS para firmas.
     
-    \item \textbf{Validación incompleta de parámetros.} Como se detalla en la sección~\ref{subsec:impl-validacion-params}, no se verifica la primalidad de~$n$, $nG = \mathcal{O}$, ni las condiciones de inmersión y anomalía, confiando en los parámetros estandarizados.
+    \item \textbf{Validación incompleta de parámetros.} Como se detalla en la sección \ref{subsec:impl-validacion-params}, no se verifica la primalidad de $n$, $nG = \mathcal{O}$, ni las condiciones de inmersión y anomalía, confiando en los parámetros estandarizados.
 \end{enumerate}
 
 Estas limitaciones no afectan la validez de las comparaciones de rendimiento, que es el objetivo principal del proyecto, pero deben tenerse en cuenta si se considerase reutilizar el código en un contexto de seguridad real.

@@ -10,7 +10,7 @@
 \section{Introducción y motivación}
 \label{sec:ecc-intro}
 
-Los investigadores llevaban años buscando funciones más seguras para criptografía y en 1985 se propuso por primera vez el uso de curvas elípticas como base del problema del logaritmo discreto en un grupo~\cite{koblitz1987,miller1986}. Se cree que las curvas elípticas ofrecen un nivel de seguridad equivalente al de RSA pero con tamaños de clave mucho menores. Para ilustrar la diferencia en términos intuitivos, comparemos la energía necesaria para romper los diferentes sistemas con la cantidad de agua que esa energía podría hervir~\cite{rickard-ecc,lenstra2001selecting}:
+Los investigadores llevaban años buscando funciones más seguras para criptografía y en 1985 se propuso por primera vez el uso de curvas elípticas como base del problema del logaritmo discreto en un grupo \cite{koblitz1987,miller1986}. Se cree que las curvas elípticas ofrecen un nivel de seguridad equivalente al de RSA pero con tamaños de clave mucho menores. Para ilustrar la diferencia en términos intuitivos, comparemos la energía necesaria para romper los diferentes sistemas con la cantidad de agua que esa energía podría hervir \cite{rickard-ecc,lenstra2001selecting}:
 
 \begin{itemize}
     \item Romper una clave RSA de 228 bits requiere menos energía que la necesaria para hervir una cucharadita de agua.
@@ -18,7 +18,7 @@ Los investigadores llevaban años buscando funciones más seguras para criptogra
     \item Para obtener el mismo nivel de seguridad con RSA haría falta una clave de unos 2\,380 bits, lo cual es muy ineficiente en entornos con recursos limitados.
 \end{itemize}
 
-En la figura~\ref{fig:ecc-hierarchy} se muestra la jerarquía de la criptografía de las curvas elípticas, y cómo es necesario poder tener de base lo que hemos explicado en los capítulos anteriores.
+En la figura \ref{fig:ecc-hierarchy} se muestra la jerarquía de la criptografía de las curvas elípticas, y cómo es necesario poder tener de base lo que hemos explicado en los capítulos anteriores.
 
 \begin{figure}[htbp]
     \centering
@@ -30,9 +30,9 @@ En la figura~\ref{fig:ecc-hierarchy} se muestra la jerarquía de la criptografí
 \subsection{Historia}
 \label{subsec:ecc-historia}
 
-En 1997 Certicom lanzó el \emph{ECC Challenge} para evaluar la dificultad práctica del problema del logaritmo discreto en curvas elípticas~\cite{gaudry2007breaking}. Pocos años después, en 1998, el comité ANSI X9 publicó la norma X9.62 definiendo el algoritmo de firma ECDSA, marcando el primer estándar formal para firmas basadas en curvas elípticas~\cite{ansi-x962}. En el año 2000, el NIST incorporó curvas elípticas en el FIPS 186--2 (Digital Signature Standard), consolidando su uso en aplicaciones gubernamentales y financieras~\cite{nist-fips186-2}.
+En 1997 Certicom lanzó el \emph{ECC Challenge} para evaluar la dificultad práctica del problema del logaritmo discreto en curvas elípticas \cite{gaudry2007breaking}. Pocos años después, en 1998, el comité ANSI X9 publicó la norma X9.62 definiendo el algoritmo de firma ECDSA, marcando el primer estándar formal para firmas basadas en curvas elípticas \cite{ansi-x962}. En el año 2000, el NIST incorporó curvas elípticas en el FIPS 186--2 (Digital Signature Standard), consolidando su uso en aplicaciones gubernamentales y financieras \cite{nist-fips186-2}.
 
-En 2005 la NSA anunció la Suite B de algoritmos criptográficos, recomendando las curvas P-256, P-384 y P-521 para uso en comunicaciones seguras de nivel gubernamental~\cite{rfc5430}. Con la adopción de TLS~1.2 y la publicación del RFC~8422 en 2018, las curvas secp256r1 (también conocida como prime256v1) y X25519 se convirtieron en cimientos de la seguridad de Internet, al ofrecer un excelente equilibrio entre rendimiento y seguridad~\cite{rfc8422}. Más recientemente, TLS~1.3 (RFC~8446) ha consolidado aún más la posición de ECC al eliminar los \textit{cipher suites} basados exclusivamente en RSA para el intercambio de claves, favoreciendo ECDHE como mecanismo predeterminado~\cite{rfc8446}.
+En 2005 la NSA anunció la Suite B de algoritmos criptográficos, recomendando las curvas P-256, P-384 y P-521 para uso en comunicaciones seguras de nivel gubernamental \cite{rfc5430}. Con la adopción de TLS 1.2 y la publicación del RFC 8422 en 2018, las curvas secp256r1 (también conocida como prime256v1) y X25519 se convirtieron en cimientos de la seguridad de Internet, al ofrecer un excelente equilibrio entre rendimiento y seguridad \cite{rfc8422}. Más recientemente, TLS 1.3 (RFC 8446) ha consolidado aún más la posición de ECC al eliminar los \textit{cipher suites} basados exclusivamente en RSA para el intercambio de claves, favoreciendo ECDHE como mecanismo predeterminado \cite{rfc8446}.
 
 En la actualidad, la criptografía de curvas elípticas es omnipresente y continúa evolucionando. Sin embargo, no ha estado exenta de desafíos: se han descubierto ataques teóricos contra curvas mal escogidas, y hubo polémicas como la del generador Dual-EC-DRBG (que involucraba curvas elípticas y una posible puerta trasera). Aun así, las curvas bien elegidas siguen considerándose seguras. Un punto a futuro es la computación cuántica: si llegaran a construirse ordenadores cuánticos a gran escala, los algoritmos de Shor podrían resolver el ECDLP eficientemente, rompiendo ECC al igual que RSA. Por ello, existe una carrera por desarrollar criptografía poscuántica. Pero hasta la fecha, ECC sigue siendo segura frente a ataques clásicos conocidos y representa uno de los pilares de la criptografía de clave pública contemporánea.
 
@@ -43,18 +43,18 @@ En la actualidad, la criptografía de curvas elípticas es omnipresente y contin
 Gracias a sus ventajas en seguridad y eficiencia, ECC se ha incorporado en numerosas aplicaciones modernas. A continuación destacamos algunas de las más relevantes:
 
 \begin{description}
-    \item[Blockchain y Criptomonedas:] Las curvas elípticas son la columna vertebral de la seguridad en blockchain. Por ejemplo, Bitcoin y Ethereum emplean la curva estándar secp256k1 junto con el algoritmo de firma digital ECDSA para gestionar las claves públicas y firmas de transacciones~\cite{secp256k1-bitcoin}. Esto asegura que solo el poseedor de la clave privada correspondiente pueda autorizar movimientos de fondos.
+    \item[Blockchain y Criptomonedas:] Las curvas elípticas son la columna vertebral de la seguridad en blockchain. Por ejemplo, Bitcoin y Ethereum emplean la curva estándar secp256k1 junto con el algoritmo de firma digital ECDSA para gestionar las claves públicas y firmas de transacciones \cite{secp256k1-bitcoin}. Esto asegura que solo el poseedor de la clave privada correspondiente pueda autorizar movimientos de fondos.
     
-    \item[Certificados Digitales y TLS/SSL:] ECC se utiliza en certificados X.509 para establecer identidades seguras en Internet. Muchas Autoridades de Certificación ofrecen certificados TLS basados en curvas elípticas (ECDSA o ECDH) como alternativa a los tradicionales RSA. La principal ventaja es que un certificado ECC puede lograr el mismo nivel de seguridad que RSA con claves de menor tamaño, acelerando el \textit{handshake} SSL/TLS y reduciendo la carga en servidores y clientes~\cite{rfc4492,rfc5656}. Por ejemplo, un servidor web con un certificado ECDSA de 256 bits ofrece 128 bits de seguridad, equivalente a un RSA de 3072 bits~\cite{hankerson2004guide}.
+    \item[Certificados Digitales y TLS/SSL:] ECC se utiliza en certificados X.509 para establecer identidades seguras en Internet. Muchas Autoridades de Certificación ofrecen certificados TLS basados en curvas elípticas (ECDSA o ECDH) como alternativa a los tradicionales RSA. La principal ventaja es que un certificado ECC puede lograr el mismo nivel de seguridad que RSA con claves de menor tamaño, acelerando el \textit{handshake} SSL/TLS y reduciendo la carga en servidores y clientes \cite{rfc4492,rfc5656}. Por ejemplo, un servidor web con un certificado ECDSA de 256 bits ofrece 128 bits de seguridad, equivalente a un RSA de 3072 bits \cite{hankerson2004guide}.
     
     \item[Sistemas de Mensajería y Cifrado de Extremo a Extremo (E2EE):] Protocolos modernos de mensajería segura, como Signal, WhatsApp o el protocolo de doble-ratchet de Olvid, utilizan intercambios de clave basados en curvas elípticas (por ejemplo, X25519, que es una curva elíptica de Montgomery). Estas aplicaciones aprovechan ECC para generar secretos compartidos de forma rápida y con alta seguridad en cada sesión de chat.
     
     \item[Firmas Digitales y Autenticación:] Más allá de los certificados TLS, ECC sustenta esquemas de firma digital ampliamente usados, como ECDSA y variantes más recientes como EdDSA (por ejemplo Ed25519). Estos se emplean en autenticación de documentos, en el DNIe de algunos países, en pasaportes biométricos, en tokens de hardware, etc. Por su eficiencia, ECC permite firmas y verificaciones rápidas incluso en dispositivos de recursos limitados (tarjetas inteligentes, dispositivos embebidos).
     
-    \item[IoT y Dispositivos Embebidos:] En el Internet de las Cosas, donde muchos dispositivos tienen poca potencia de cómputo y batería limitada, ECC ha ganado protagonismo~\cite{hodges2001ecc}. La posibilidad de usar claves más cortas y operaciones más eficientes hace viable implementar criptografía robusta en sensores, actuadores y \textit{wearables}.
+    \item[IoT y Dispositivos Embebidos:] En el Internet de las Cosas, donde muchos dispositivos tienen poca potencia de cómputo y batería limitada, ECC ha ganado protagonismo \cite{hodges2001ecc}. La posibilidad de usar claves más cortas y operaciones más eficientes hace viable implementar criptografía robusta en sensores, actuadores y \textit{wearables}.
 \end{description}
 
-Además, las propiedades algebraicas de las curvas han sido la base para esquemas avanzados como sistemas de emparejamientos (\textit{pairing-based cryptography}), identidades basadas en curva (IBE) y firmas Schnorr y EdDSA, ampliando enormemente el catálogo de construcciones criptográficas eficientes~\cite{boneh2003ibe}.
+Además, las propiedades algebraicas de las curvas han sido la base para esquemas avanzados como sistemas de emparejamientos (\textit{pairing-based cryptography}), identidades basadas en curva (IBE) y firmas Schnorr y EdDSA, ampliando enormemente el catálogo de construcciones criptográficas eficientes \cite{boneh2003ibe}.
 
 
 % ============================================================================
@@ -68,7 +68,7 @@ La seguridad de todos los protocolos basados en curvas elípticas (ECDH, ECDSA, 
 
 \begin{definicion}[ECDLP]
 \label{def:ecdlp}
-Sea $E$ una curva elíptica definida sobre un cuerpo finito $\mathbb{F}_q$ y sea $P \in E(\mathbb{F}_q)$ un punto de orden primo $n$. Dado un punto $Q \in \langle P \rangle$ (el subgrupo cíclico generado por~$P$), el \emph{problema del logaritmo discreto en curvas elípticas} (ECDLP) consiste en encontrar el entero $d$, con $0 \leq d \leq n-1$, tal que
+Sea $E$ una curva elíptica definida sobre un cuerpo finito $\mathbb{F}_q$ y sea $P \in E(\mathbb{F}_q)$ un punto de orden primo $n$. Dado un punto $Q \in \langle P \rangle$ (el subgrupo cíclico generado por $P$), el \emph{problema del logaritmo discreto en curvas elípticas} (ECDLP) consiste en encontrar el entero $d$, con $0 \leq d \leq n-1$, tal que
 \[
     Q = d \cdot P = \underbrace{P + P + \cdots + P}_{d \text{ veces}}.
 \]
@@ -85,12 +85,12 @@ En curvas elípticas, no se conoce una versión efectiva del \textit{index calcu
     \item \textbf{Rho de Pollard}: complejidad $O(\sqrt{n})$ en tiempo con espacio $O(1)$.
 \end{itemize}
 
-Ambos son de complejidad \emph{exponencial completa} respecto al tamaño de la entrada ($\log n$ bits). Es decir, para una curva de $k$ bits de seguridad, el mejor ataque conocido requiere $O(2^{k/2})$ operaciones. Esto implica que una curva de 256 bits ofrece aproximadamente 128 bits de seguridad, mientras que un RSA de 3072 bits es necesario para alcanzar ese mismo nivel~\cite{hankerson2004guide,nist-sp800-57}.
+Ambos son de complejidad \emph{exponencial completa} respecto al tamaño de la entrada ($\log n$ bits). Es decir, para una curva de $k$ bits de seguridad, el mejor ataque conocido requiere $O(2^{k/2})$ operaciones. Esto implica que una curva de 256 bits ofrece aproximadamente 128 bits de seguridad, mientras que un RSA de 3072 bits es necesario para alcanzar ese mismo nivel \cite{hankerson2004guide,nist-sp800-57}.
 
 \subsubsection{Baby-step / Giant-step (Shanks)}
 \label{subsubsec:bsgs}
  
-El algoritmo de Shanks~\cite{hankerson2004guide} se basa en una idea elegante: descomponer el escalar desconocido $d$ en dos mitades y buscar una colisi\'on entre dos conjuntos precalculados.
+El algoritmo de Shanks \cite{hankerson2004guide} se basa en una idea elegante: descomponer el escalar desconocido $d$ en dos mitades y buscar una colisi\'on entre dos conjuntos precalculados.
  
 \paragraph{Idea.}
 Si escribimos $d = j \cdot m + i$ donde $m = \lceil \sqrt{n} \rceil$, con $0 \leq i < m$ y $0 \leq j < m$, entonces
@@ -155,7 +155,7 @@ Para los giant steps, calculamos $8P = (84, 37)$ y recorremos $S_j = Q - j \cdot
 \subsubsection{Método rho de Pollard}
 \label{subsubsec:pollard-rho}
 
-El rho de Pollard~\cite{pollard1978monte} alcanza la misma complejidad temporal que BSGS ($O(\sqrt{n})$) pero con requerimiento de memoria constante~$O(1)$, lo que lo convierte en el ataque más práctico contra el ECDLP~\cite{hankerson2004guide}. Su nombre proviene de la forma de la letra griega~$\rho$ que adopta la secuencia de puntos generada por el algoritmo.
+El rho de Pollard \cite{pollard1978monte} alcanza la misma complejidad temporal que BSGS ($O(\sqrt{n})$) pero con requerimiento de memoria constante $O(1)$, lo que lo convierte en el ataque más práctico contra el ECDLP \cite{hankerson2004guide}. Su nombre proviene de la forma de la letra griega $\rho$ que adopta la secuencia de puntos generada por el algoritmo.
 
 
 \paragraph{La paradoja del cumpleaños.}
@@ -163,13 +163,13 @@ Antes de describir el algoritmo, conviene entender la observación probabilísti
 
 Intuitivamente, como hay 365 días posibles, podríamos pensar que hacen falta muchas personas. Sin embargo, la respuesta es sorprendentemente baja: \textbf{basta con 23 personas}. Este resultado, conocido como la \emph{paradoja del cumpleaños}, se explica porque no buscamos que alguien comparta cumpleaños \emph{con una persona concreta}, sino que \emph{cualquier par} de personas coincida. Con $k$ personas, el número de pares posibles es $\binom{k}{2} = k(k-1)/2$, que crece cuadráticamente.
 
-La probabilidad exacta de que al menos dos personas de un grupo de~$k$ compartan cumpleaños (suponiendo $N = 365$ días equiprobables) se calcula como el complemento de que \emph{todos} tengan cumpleaños distintos:
+La probabilidad exacta de que al menos dos personas de un grupo de $k$ compartan cumpleaños (suponiendo $N = 365$ días equiprobables) se calcula como el complemento de que \emph{todos} tengan cumpleaños distintos:
 \[
     P(k) = 1 - \prod_{i=0}^{k-1} \frac{N - i}{N}
          = 1 - \frac{N}{N} \cdot \frac{N-1}{N} \cdot \frac{N-2}{N} \cdots \frac{N-k+1}{N}.
 \]
 
-El cuadro~\ref{tab:birthday} muestra los valores concretos.
+El cuadro \ref{tab:birthday} muestra los valores concretos.
 
 \begin{table}[htbp]
 \centering
@@ -188,21 +188,21 @@ El cuadro~\ref{tab:birthday} muestra los valores concretos.
 70  & 99.9\,\% \\
 \hline
 \end{tabular}
-\caption{Probabilidad de que al menos dos personas compartan cumpleaños en un grupo de~$k$ personas ($N = 365$ días).}
+\caption{Probabilidad de que al menos dos personas compartan cumpleaños en un grupo de $k$ personas ($N = 365$ días).}
 \label{tab:birthday}
 \end{table}
 
-El umbral del 50\,\% se alcanza con $k = 23 \approx \sqrt{\pi \cdot 365 / 2} \approx 1{,}25\sqrt{365}$. Esto no es casualidad: mediante una aproximación estándar ($\ln(1-x) \approx -x$ para $x$ pequeño), se demuestra que el número esperado de elementos que debemos elegir al azar de un conjunto de~$N$ para encontrar una colisión es
+El umbral del 50\,\% se alcanza con $k = 23 \approx \sqrt{\pi \cdot 365 / 2} \approx 1{,}25\sqrt{365}$. Esto no es casualidad: mediante una aproximación estándar ($\ln(1-x) \approx -x$ para $x$ pequeño), se demuestra que el número esperado de elementos que debemos elegir al azar de un conjunto de $N$ para encontrar una colisión es
 \begin{equation}
 \label{eq:birthday-bound}
     k \approx \sqrt{\frac{\pi N}{2}} \approx 1{,}25 \sqrt{N}.
 \end{equation}
 
-Nótese que este resultado es \emph{independiente} de qué elemento concreto se repita: solo depende del tamaño~$N$ del conjunto.
+Nótese que este resultado es \emph{independiente} de qué elemento concreto se repita: solo depende del tamaño $N$ del conjunto.
 
 
 \paragraph{De cumpleaños a curvas elípticas.}
-El ataque rho de Pollard traslada esta observación al grupo de puntos de una curva elíptica. Si el generador~$P$ tiene orden~$n$, el subgrupo $\langle P \rangle$ contiene exactamente $n$~puntos distintos. Si generamos una secuencia de puntos pseudoaleatorios en este grupo, por la cota~\eqref{eq:birthday-bound} esperamos encontrar una \emph{colisión} (dos índices $i \neq j$ con $x_i = x_j$) tras aproximadamente $\sqrt{\pi n/2} \approx 1{,}25\sqrt{n}$ pasos. Para una curva de 256~bits ($n \approx 2^{256}$), esto supone $\approx 2^{128}$ pasos, que es precisamente la seguridad que atribuimos a dicha curva. El cuadro~\ref{tab:birthday-ecc} muestra esta correspondencia.
+El ataque rho de Pollard traslada esta observación al grupo de puntos de una curva elíptica. Si el generador $P$ tiene orden $n$, el subgrupo $\langle P \rangle$ contiene exactamente $n$ puntos distintos. Si generamos una secuencia de puntos pseudoaleatorios en este grupo, por la cota \eqref{eq:birthday-bound} esperamos encontrar una \emph{colisión} (dos índices $i \neq j$ con $x_i = x_j$) tras aproximadamente $\sqrt{\pi n/2} \approx 1{,}25\sqrt{n}$ pasos. Para una curva de 256 bits ($n \approx 2^{256}$), esto supone $\approx 2^{128}$ pasos, que es precisamente la seguridad que atribuimos a dicha curva. El cuadro \ref{tab:birthday-ecc} muestra esta correspondencia.
 
 \begin{table}[htbp]
 \centering
@@ -225,9 +225,9 @@ Pero la paradoja del cumpleaños, por sí sola, solo dice cuántos pasos necesit
 
 
 \paragraph{El paseo pseudoaleatorio y el invariante.}
-La idea clave de Pollard es construir la secuencia de puntos de forma \emph{determinista} pero que se \emph{comporte} como aleatoria, manteniendo en todo momento un invariante que permita recuperar~$d$ al encontrar una colisión. Cada punto $R_i$ de la secuencia se escribe como $R_i = a_i P + b_i Q$ donde los coeficientes $a_i, b_i$ son conocidos.
+La idea clave de Pollard es construir la secuencia de puntos de forma \emph{determinista} pero que se \emph{comporte} como aleatoria, manteniendo en todo momento un invariante que permita recuperar $d$ al encontrar una colisión. Cada punto $R_i$ de la secuencia se escribe como $R_i = a_i P + b_i Q$ donde los coeficientes $a_i, b_i$ son conocidos.
 
-El siguiente punto se calcula aplicando una regla que depende solo del punto actual, particionando el grupo en tres subconjuntos según la coordenada~$x$ módulo~3:
+El siguiente punto se calcula aplicando una regla que depende solo del punto actual, particionando el grupo en tres subconjuntos según la coordenada $x$ módulo 3:
 
 \begin{center}
 \begin{tabular}{clccc}
@@ -241,13 +241,13 @@ $S_3$ & $x_R \equiv 2 \pmod{3}$ & $R + P$ & $a + 1$ & $b$ \\
 \end{tabular}
 \end{center}
 
-Todos los cálculos de coeficientes se realizan módulo~$n$. En los tres casos se preserva el invariante: si $R = aP + bQ$ antes del paso, el nuevo punto $R'$ también se expresa como $R' = a'P + b'Q$ con los coeficientes actualizados según la tabla.
+Todos los cálculos de coeficientes se realizan módulo $n$. En los tres casos se preserva el invariante: si $R = aP + bQ$ antes del paso, el nuevo punto $R'$ también se expresa como $R' = a'P + b'Q$ con los coeficientes actualizados según la tabla.
 
 \paragraph{¿Por qué estas tres operaciones?}
 La elección no es arbitraria. Las tres reglas cumplen propiedades esenciales:
 
 \begin{itemize}
-    \item \textbf{Preservan el invariante.} Cada regla actualiza $(a, b)$ de forma que $R' = a'P + b'Q$ sigue siendo cierto. Esto es imprescindible para poder extraer~$d$ al final.
+    \item \textbf{Preservan el invariante.} Cada regla actualiza $(a, b)$ de forma que $R' = a'P + b'Q$ sigue siendo cierto. Esto es imprescindible para poder extraer $d$ al final.
 
     \item \textbf{La partición debe ser aproximadamente equilibrada.} Si los tres subconjuntos $S_1, S_2, S_3$ contienen aproximadamente $n/3$ puntos cada uno, el paseo se comporta como una función aleatoria sobre el grupo. Usar $x_R \bmod 3$ produce una distribución razonablemente uniforme para la mayoría de las curvas.
 
@@ -257,11 +257,11 @@ La elección no es arbitraria. Las tres reglas cumplen propiedades esenciales:
 El punto inicial $R_0 = a_0 P + b_0 Q$ puede ser cualquier punto con coeficientes conocidos. La elección $a_0 = 1$, $b_0 = 0$ (es decir, $R_0 = P$) es simplemente la más sencilla.
 
 \paragraph{Nota sobre cuerpos binarios.}
-El algoritmo es \emph{idéntico} para curvas sobre $\mathbb{F}_{2^m}$: la partición se basa igualmente en la coordenada~$x$ del punto, las tres reglas ($+Q$, $2R$, $+P$) utilizan la aritmética de grupo de la curva (que en $\mathbb{F}_{2^m}$ emplea las fórmulas de la sección~\ref{subsec:ecc-campos-binarios}), y los coeficientes $(a, b)$ se actualizan módulo~$n$ de la misma manera. La única diferencia es que las operaciones de cuerpo subyacentes (suma~$=$~XOR, multiplicación de polinomios) son distintas, pero esto es transparente al nivel del algoritmo de Pollard.
+El algoritmo es \emph{idéntico} para curvas sobre $\mathbb{F}_{2^m}$: la partición se basa igualmente en la coordenada $x$ del punto, las tres reglas ($+Q$, $2R$, $+P$) utilizan la aritmética de grupo de la curva (que en $\mathbb{F}_{2^m}$ emplea las fórmulas de la sección \ref{subsec:ecc-campos-binarios}), y los coeficientes $(a, b)$ se actualizan módulo $n$ de la misma manera. La única diferencia es que las operaciones de cuerpo subyacentes (suma $=$ XOR, multiplicación de polinomios) son distintas, pero esto es transparente al nivel del algoritmo de Pollard.
 
 
 \paragraph{\texorpdfstring{Estructura $\rho$.}{Estructura rho.}}
-Dado que el grupo $\langle P \rangle$ es finito, la secuencia $x_0, x_1, x_2, \ldots$ necesariamente revisita algún punto, formando una cola de longitud~$\lambda$ seguida de un ciclo de longitud~$\mu$: se cumple $x_{\lambda + \mu} = x_\lambda$. Esta estructura se ilustra en la figura~\ref{fig:rho-shape}.
+Dado que el grupo $\langle P \rangle$ es finito, la secuencia $x_0, x_1, x_2, \ldots$ necesariamente revisita algún punto, formando una cola de longitud $\lambda$ seguida de un ciclo de longitud $\mu$: se cumple $x_{\lambda + \mu} = x_\lambda$. Esta estructura se ilustra en la figura \ref{fig:rho-shape}.
 
 \begin{figure}[htbp]
 \centering
@@ -304,18 +304,18 @@ Dado que el grupo $\langle P \rangle$ es finito, la secuencia $x_0, x_1, x_2, \l
 \node[right=2.5cm of x5, font=\small, text=red!70!black] {ciclo $\mu$};
 
 \end{tikzpicture}
-\caption{Estructura~$\rho$ de la secuencia. Los primeros $\lambda$ puntos (azul) forman la cola. A partir de~$x_\lambda$ la secuencia entra en un ciclo de longitud~$\mu$ (rojo), cumpliéndose $x_{\lambda+\mu} = x_\lambda$.}
+\caption{Estructura $\rho$ de la secuencia. Los primeros $\lambda$ puntos (azul) forman la cola. A partir de $x_\lambda$ la secuencia entra en un ciclo de longitud $\mu$ (rojo), cumpliéndose $x_{\lambda+\mu} = x_\lambda$.}
 \label{fig:rho-shape}
 \end{figure}
 
 
 \paragraph{Detección de ciclos: tortuga y liebre de Floyd.}
-Para detectar cuándo la secuencia se repite sin almacenar todos los puntos visitados, se emplean dos iteradores que recorren el \emph{mismo} paseo a velocidades distintas. Denotamos por~$f$ la aplicación de un paso del paseo (elegir partición según $x_R \bmod 3$, actualizar punto y coeficientes). Entonces:
+Para detectar cuándo la secuencia se repite sin almacenar todos los puntos visitados, se emplean dos iteradores que recorren el \emph{mismo} paseo a velocidades distintas. Denotamos por $f$ la aplicación de un paso del paseo (elegir partición según $x_R \bmod 3$, actualizar punto y coeficientes). Entonces:
 \begin{align}
     \text{Tortuga:} \quad t_i &= f(t_{i-1}) = x_i, \label{eq:tortuga}\\
     \text{Liebre:}  \quad \ell_i &= f(f(\ell_{i-1})) = x_{2i}. \label{eq:liebre}
 \end{align}
-La tortuga aplica~$f$ una vez por iteración (avanza un paso en la secuencia) y la liebre aplica~$f$ dos veces (avanza dos pasos). En cada iteración~$i$ se comprueba si $t_i = \ell_i$. Puesto que la liebre recorre la secuencia al doble de velocidad, eventualmente ``alcanzará'' a la tortuga dentro del ciclo.
+La tortuga aplica $f$ una vez por iteración (avanza un paso en la secuencia) y la liebre aplica $f$ dos veces (avanza dos pasos). En cada iteración $i$ se comprueba si $t_i = \ell_i$. Puesto que la liebre recorre la secuencia al doble de velocidad, eventualmente ``alcanzará'' a la tortuga dentro del ciclo.
 
 \paragraph{Extracción del logaritmo.}
 Cuando se produce la colisión $t_i = \ell_i$, la tortuga y la liebre se encuentran en el mismo punto de la curva, pero llegaron por caminos distintos y por tanto tienen coeficientes potencialmente diferentes:
@@ -336,7 +336,7 @@ Si $\gcd(b_\ell - b_t, n) = 1$ (lo cual ocurre con alta probabilidad cuando $n$ 
 
 
 \paragraph{Pseudocódigo.}
-El algoritmo~\ref{alg:pollard-rho} detalla el procedimiento completo con la lógica de partición expandida, mostrando explícitamente cómo la tortuga aplica un paso y la liebre dos en cada iteración.
+El algoritmo \ref{alg:pollard-rho} detalla el procedimiento completo con la lógica de partición expandida, mostrando explícitamente cómo la tortuga aplica un paso y la liebre dos en cada iteración.
 
 \begin{algorithm}[htbp]
 \caption{Método $\rho$ de Pollard para el ECDLP}
@@ -409,7 +409,7 @@ $i$ & Punto & $a_t$ & $b_t$ & Regla & Punto & $a_\ell$ & $b_\ell$ & $t_i\!=\!\el
 \end{small}
 \end{center}
 
-Veamos en detalle cómo se obtiene la fila $i = 1$. La tortuga parte de $t_0 = (1, 2)$; como $x_{t_0} = 1 \equiv 1 \pmod{3}$, estamos en $S_2$ (duplicar), así que $t_1 = 2 \cdot (1, 2) = (83, 29)$ y los coeficientes se duplican: $(a_t, b_t) = (2, 0)$. La liebre parte del mismo punto pero aplica el paseo \emph{dos veces}: primero obtiene $(83, 29)$ (igual que la tortuga), y después, como $83 \equiv 2 \pmod{3}$ ($S_3$), suma~$P$: $\ell_1 = (83, 29) + P = (78, 28)$ con $(a_\ell, b_\ell) = (2+1, 0) = (3, 0)$. La liebre ya está en $x_2$ de la secuencia mientras la tortuga está en $x_1$.
+Veamos en detalle cómo se obtiene la fila $i = 1$. La tortuga parte de $t_0 = (1, 2)$; como $x_{t_0} = 1 \equiv 1 \pmod{3}$, estamos en $S_2$ (duplicar), así que $t_1 = 2 \cdot (1, 2) = (83, 29)$ y los coeficientes se duplican: $(a_t, b_t) = (2, 0)$. La liebre parte del mismo punto pero aplica el paseo \emph{dos veces}: primero obtiene $(83, 29)$ (igual que la tortuga), y después, como $83 \equiv 2 \pmod{3}$ ($S_3$), suma $P$: $\ell_1 = (83, 29) + P = (78, 28)$ con $(a_\ell, b_\ell) = (2+1, 0) = (3, 0)$. La liebre ya está en $x_2$ de la secuencia mientras la tortuga está en $x_1$.
 
 En el paso $i = 13$ se produce la colisión: $t_{13} = \ell_{13} = (64, 48)$. Los coeficientes son:
 \[
@@ -417,7 +417,7 @@ En el paso $i = 13$ se produce la colisión: $t_{13} = \ell_{13} = (64, 48)$. Lo
     \text{Liebre: } (64, 48) = 16P + 33Q.
 \]
 
-Aplicando la ecuación~\eqref{eq:rho-recovery}:
+Aplicando la ecuación \eqref{eq:rho-recovery}:
 \begin{align*}
     a_t - a_\ell &= 29 - 16 = 13 \pmod{47}, \\
     b_\ell - b_t &= 33 - 29 = 4 \pmod{47}, \\
@@ -426,29 +426,29 @@ Aplicando la ecuación~\eqref{eq:rho-recovery}:
 \end{align*}
 Verificamos: $15 \cdot P = 15 \cdot (1, 2) = (87, 73) = Q$. \qed
 
-La secuencia pura generada por el paseo tiene cola $\lambda = 2$ (los puntos $x_0, x_1$ no se repiten) y ciclo $\mu = 13$ (desde $x_2$ hasta $x_{14}$, con $x_{15} = x_2$). La colisión de Floyd se produce en el paso~13 porque es el primer momento en que la tortuga (en $x_{13}$) y la liebre (en $x_{26}$, que por el ciclo coincide con $x_{13}$) se encuentran en el mismo punto. La figura~\ref{fig:rho-visual} muestra la visualización de este proceso.
+La secuencia pura generada por el paseo tiene cola $\lambda = 2$ (los puntos $x_0, x_1$ no se repiten) y ciclo $\mu = 13$ (desde $x_2$ hasta $x_{14}$, con $x_{15} = x_2$). La colisión de Floyd se produce en el paso 13 porque es el primer momento en que la tortuga (en $x_{13}$) y la liebre (en $x_{26}$, que por el ciclo coincide con $x_{13}$) se encuentran en el mismo punto. La figura \ref{fig:rho-visual} muestra la visualización de este proceso.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{imagenes/attack_pollard_rho.png}
-    \caption{Visualización del rho de Pollard sobre la curva $y^2 = x^3 + 2x + 1$ mod~89. Panel izquierdo: trayectoria pseudoaleatoria de la tortuga sobre la curva, coloreada por orden de aparición; la estrella marca la colisión en el paso~13. Panel derecho: estructura abstracta de~$\rho$ mostrando la cola ($\lambda = 2$, azul) y el ciclo ($\mu = 13$, rojo).}
+    \caption{Visualización del rho de Pollard sobre la curva $y^2 = x^3 + 2x + 1$ mod 89. Panel izquierdo: trayectoria pseudoaleatoria de la tortuga sobre la curva, coloreada por orden de aparición; la estrella marca la colisión en el paso 13. Panel derecho: estructura abstracta de $\rho$ mostrando la cola ($\lambda = 2$, azul) y el ciclo ($\mu = 13$, rojo).}
     \label{fig:rho-visual}
 \end{figure}
 
 
 \paragraph{Complejidad.}
-El número esperado de iteraciones hasta la colisión es $O(\sqrt{n})$ por la paradoja del cumpleaños (cuadro~\ref{tab:birthday-ecc}). Cada iteración consiste en una operación de grupo para la tortuga y dos para la liebre. Crucialmente, el método de Floyd solo almacena dos puntos y sus coeficientes en cada momento: espacio~$O(1)$. Esto supone una ventaja decisiva frente a BSGS, que necesita~$O(\sqrt{n})$ espacio para su tabla hash.
+El número esperado de iteraciones hasta la colisión es $O(\sqrt{n})$ por la paradoja del cumpleaños (cuadro \ref{tab:birthday-ecc}). Cada iteración consiste en una operación de grupo para la tortuga y dos para la liebre. Crucialmente, el método de Floyd solo almacena dos puntos y sus coeficientes en cada momento: espacio $O(1)$. Esto supone una ventaja decisiva frente a BSGS, que necesita $O(\sqrt{n})$ espacio para su tabla hash.
 
-Para una curva de 256~bits con $n \approx 2^{256}$, el ataque requiere $\approx 2^{128}$ operaciones, fuera del alcance computacional actual. El récord práctico fue la resolución de la curva ECC2K-130 (130~bits sobre cuerpo binario) en 2009, tras un esfuerzo de cálculo distribuido masivo~\cite{gaudry2007breaking}.
+Para una curva de 256 bits con $n \approx 2^{256}$, el ataque requiere $\approx 2^{128}$ operaciones, fuera del alcance computacional actual. El récord práctico fue la resolución de la curva ECC2K-130 (130 bits sobre cuerpo binario) en 2009, tras un esfuerzo de cálculo distribuido masivo \cite{gaudry2007breaking}.
 
 \begin{observacion}
-    El rho de Pollard es un \emph{algoritmo genérico}: no explota ninguna propiedad específica de las curvas elípticas, solo la estructura de grupo finito cíclico. Funciona de forma idéntica sobre cuerpos primos~$\mathbb{F}_p$ y cuerpos binarios~$\mathbb{F}_{2^m}$, ya que solo depende de la operación de grupo (suma de puntos), no de la aritmética del cuerpo subyacente. Esta genericidad es, paradójicamente, la razón por la que ECC es segura: a diferencia de los ataques \textit{index calculus} contra el DLP en~$\mathbb{F}_p^*$ (que explotan la estructura aritmética del cuerpo), no se conoce forma de acelerar el ataque en curvas elípticas más allá de~$O(\sqrt{n})$.
+    El rho de Pollard es un \emph{algoritmo genérico}: no explota ninguna propiedad específica de las curvas elípticas, solo la estructura de grupo finito cíclico. Funciona de forma idéntica sobre cuerpos primos $\mathbb{F}_p$ y cuerpos binarios $\mathbb{F}_{2^m}$, ya que solo depende de la operación de grupo (suma de puntos), no de la aritmética del cuerpo subyacente. Esta genericidad es, paradójicamente, la razón por la que ECC es segura: a diferencia de los ataques \textit{index calculus} contra el DLP en $\mathbb{F}_p^*$ (que explotan la estructura aritmética del cuerpo), no se conoce forma de acelerar el ataque en curvas elípticas más allá de $O(\sqrt{n})$.
 \end{observacion}
 
 \subsection{Comparativa de tamaños de clave}
 \label{subsec:ecc-comparativa-claves}
 
-La ausencia de ataques sub-exponenciales en curvas elípticas tiene una consecuencia práctica directa: ECC necesita claves drásticamente más pequeñas que RSA para ofrecer el mismo nivel de seguridad. El cuadro~\ref{tab:ecc-rsa-equiv} resume las equivalencias según el NIST SP~800-57~\cite{nist-sp800-57}.
+La ausencia de ataques sub-exponenciales en curvas elípticas tiene una consecuencia práctica directa: ECC necesita claves drásticamente más pequeñas que RSA para ofrecer el mismo nivel de seguridad. El cuadro \ref{tab:ecc-rsa-equiv} resume las equivalencias según el NIST SP 800-57 \cite{nist-sp800-57}.
 
 \begin{table}[htbp]
 \centering
@@ -463,7 +463,7 @@ La ausencia de ataques sub-exponenciales en curvas elípticas tiene una consecue
 256 & 15360 & 521 & 29.5:1 \\
 \hline
 \end{tabular}
-\caption{Equivalencia de niveles de seguridad entre RSA y ECC según NIST SP~800-57.}
+\caption{Equivalencia de niveles de seguridad entre RSA y ECC según NIST SP 800-57.}
 \label{tab:ecc-rsa-equiv}
 \end{table}
 
@@ -492,20 +492,20 @@ donde:
     \item $h = \#E(\mathbb{F}_p) / n$ es el \emph{cofactor}.
 \end{itemize}
 
-Para que los parámetros proporcionen seguridad criptográfica adecuada, deben satisfacer varios requisitos~\cite{sec2-v2,hankerson2004guide}:
+Para que los parámetros proporcionen seguridad criptográfica adecuada, deben satisfacer varios requisitos \cite{sec2-v2,hankerson2004guide}:
 
 \begin{enumerate}
     \item $n$ debe ser primo (o al menos tener un factor primo muy grande). Esto garantiza que el subgrupo $\langle G \rangle$ sea cíclico de orden primo, eliminando ataques basados en la estructura de subgrupos (Pohlig--Hellman).
     \item El cofactor $h$ debe ser pequeño (idealmente $h = 1$). Si $h > 1$, existen puntos de orden bajo que podrían utilizarse en ataques de curva inválida (\textit{invalid curve attacks}).
-    \item La curva no debe ser \emph{anómala}: $\#E(\mathbb{F}_p) \neq p$. Las curvas anómalas son vulnerables al ataque de Smart--Semaev--Satoh, que resuelve el ECDLP en tiempo lineal mediante un levantamiento $p$-ádico~\cite{smart1999anomalous}.
-    \item La curva no debe tener \emph{grado de inmersión} bajo: $p^k \not\equiv 1 \pmod{n}$ para $k$ pequeño (típicamente $k > 20$). Las curvas con grado de inmersión bajo son vulnerables a ataques de emparejamiento de Weil y Tate (ataque MOV/Frey--Rück), que reducen el ECDLP a un DLP en $\mathbb{F}_{p^k}^*$~\cite{menezes1993reducing}.
+    \item La curva no debe ser \emph{anómala}: $\#E(\mathbb{F}_p) \neq p$. Las curvas anómalas son vulnerables al ataque de Smart--Semaev--Satoh, que resuelve el ECDLP en tiempo lineal mediante un levantamiento $p$-ádico \cite{smart1999anomalous}.
+    \item La curva no debe tener \emph{grado de inmersión} bajo: $p^k \not\equiv 1 \pmod{n}$ para $k$ pequeño (típicamente $k > 20$). Las curvas con grado de inmersión bajo son vulnerables a ataques de emparejamiento de Weil y Tate (ataque MOV/Frey--Rück), que reducen el ECDLP a un DLP en $\mathbb{F}_{p^k}^*$ \cite{menezes1993reducing}.
     \item El discriminante de la curva debe ser no nulo: $\Delta = -16(4a^3 + 27b^2) \neq 0$.
 \end{enumerate}
 
 \subsection{Generación y verificación de parámetros de dominio}
 \label{subsec:ecc-gen-verificacion-params}
 
-Los parámetros del dominio $T = (p, a, b, G, n, h)$ pueden obtenerse de dos formas: adoptando una curva estandarizada (como hacemos en nuestra implementación) o generando parámetros nuevos siguiendo un procedimiento riguroso. En ambos casos, es fundamental verificar que los parámetros satisfacen los requisitos de seguridad. A continuación describimos ambos procesos, siguiendo la exposición de Hankerson, Menezes y Vanstone~\cite{hankerson2004guide}.
+Los parámetros del dominio $T = (p, a, b, G, n, h)$ pueden obtenerse de dos formas: adoptando una curva estandarizada (como hacemos en nuestra implementación) o generando parámetros nuevos siguiendo un procedimiento riguroso. En ambos casos, es fundamental verificar que los parámetros satisfacen los requisitos de seguridad. A continuación describimos ambos procesos, siguiendo la exposición de Hankerson, Menezes y Vanstone \cite{hankerson2004guide}.
 
 \subsubsection{\texorpdfstring{Generación de parámetros sobre $\mathbb{F}_p$}{Generacion de parametros sobre Fp}}
 \label{subsubsec:gen-params-fp}
@@ -513,13 +513,13 @@ Los parámetros del dominio $T = (p, a, b, G, n, h)$ pueden obtenerse de dos for
 El proceso de generación de una curva elíptica segura sobre un cuerpo primo $\mathbb{F}_p$ consta de los siguientes pasos:
 
 \begin{enumerate}
-    \item \textbf{Selección del primo~$p$.} Se elige un primo $p$ de tamaño adecuado al nivel de seguridad deseado (por ejemplo, 256~bits para 128~bits de seguridad). Para eficiencia, se prefieren primos con estructura especial que facilite la reducción modular, como los \emph{primos pseudo-Mersenne} usados por el NIST (e.g., $p_{256} = 2^{256} - 2^{224} + 2^{192} + 2^{96} - 1$).
+    \item \textbf{Selección del primo $p$.} Se elige un primo $p$ de tamaño adecuado al nivel de seguridad deseado (por ejemplo, 256 bits para 128 bits de seguridad). Para eficiencia, se prefieren primos con estructura especial que facilite la reducción modular, como los \emph{primos pseudo-Mersenne} usados por el NIST (e.g., $p_{256} = 2^{256} - 2^{224} + 2^{192} + 2^{96} - 1$).
     
-    \item \textbf{Selección de los coeficientes $a$ y $b$.} Se eligen $a, b \in \mathbb{F}_p$ tales que el discriminante $\Delta = -16(4a^3 + 27b^2) \neq 0$. Para curvas verificablemente aleatorias (\textit{verifiably random}), los coeficientes se derivan de una semilla~$s$ mediante una función hash: $b = H(s)$, publicando~$s$ para que cualquiera pueda verificar que no se seleccionó maliciosamente.
+    \item \textbf{Selección de los coeficientes $a$ y $b$.} Se eligen $a, b \in \mathbb{F}_p$ tales que el discriminante $\Delta = -16(4a^3 + 27b^2) \neq 0$. Para curvas verificablemente aleatorias (\textit{verifiably random}), los coeficientes se derivan de una semilla $s$ mediante una función hash: $b = H(s)$, publicando $s$ para que cualquiera pueda verificar que no se seleccionó maliciosamente.
     
-    \item \textbf{Conteo de puntos.} Se calcula $N = \#E(\mathbb{F}_p)$ mediante el algoritmo de Schoof--Elkies--Atkin (SEA), cuya complejidad es polinómica en~$\log p$~\cite{schoof1985elliptic}. Este es el paso computacionalmente más costoso del proceso de generación.
+    \item \textbf{Conteo de puntos.} Se calcula $N = \#E(\mathbb{F}_p)$ mediante el algoritmo de Schoof--Elkies--Atkin (SEA), cuya complejidad es polinómica en $\log p$ \cite{schoof1985elliptic}. Este es el paso computacionalmente más costoso del proceso de generación.
     
-    \item \textbf{Verificación del orden.} Se comprueba que $N$ tiene un factor primo grande~$n$ con cofactor pequeño: $N = hn$ con $h \leq 4$ (idealmente $h = 1$).
+    \item \textbf{Verificación del orden.} Se comprueba que $N$ tiene un factor primo grande $n$ con cofactor pequeño: $N = hn$ con $h \leq 4$ (idealmente $h = 1$).
     
     \item \textbf{Verificaciones de seguridad adicionales:}
     \begin{itemize}
@@ -528,7 +528,7 @@ El proceso de generación de una curva elíptica segura sobre un cuerpo primo $\
         \item (Opcional) El endomorfismo de la curva no tiene estructura explotable.
     \end{itemize}
     
-    \item \textbf{Selección del generador~$G$.} Se elige un punto aleatorio $P \in E(\mathbb{F}_p)$ y se calcula $G = hP$. Se verifica que $G \neq \mathcal{O}$, lo que garantiza que $G$ tiene orden~$n$.
+    \item \textbf{Selección del generador $G$.} Se elige un punto aleatorio $P \in E(\mathbb{F}_p)$ y se calcula $G = hP$. Se verifica que $G \neq \mathcal{O}$, lo que garantiza que $G$ tiene orden $n$.
 \end{enumerate}
 
 Si alguna verificación falla, se repite el proceso con nuevos coeficientes.
@@ -536,23 +536,23 @@ Si alguna verificación falla, se repite el proceso con nuevos coeficientes.
 \subsubsection{\texorpdfstring{Generación de parámetros sobre $\mathbb{F}_{2^m}$}{Generacion de parametros sobre F2m}}
 \label{subsubsec:gen-params-f2m}
 
-El proceso es análogo pero con diferencias propias de la característica~2:
+El proceso es análogo pero con diferencias propias de la característica 2:
 
 \begin{enumerate}
-    \item \textbf{Selección del grado~$m$.} Se elige $m$ primo o con propiedades adecuadas. Se prefieren valores para los que existan polinomios irreducibles trinomiales o pentanomiales, que permiten reducción eficiente.
+    \item \textbf{Selección del grado $m$.} Se elige $m$ primo o con propiedades adecuadas. Se prefieren valores para los que existan polinomios irreducibles trinomiales o pentanomiales, que permiten reducción eficiente.
     
-    \item \textbf{Selección del polinomio irreducible~$f(x)$.} Se elige un polinomio irreducible de grado~$m$ sobre $\mathbb{F}_2$, preferentemente trinomial ($x^m + x^k + 1$) por eficiencia.
+    \item \textbf{Selección del polinomio irreducible $f(x)$.} Se elige un polinomio irreducible de grado $m$ sobre $\mathbb{F}_2$, preferentemente trinomial ($x^m + x^k + 1$) por eficiencia.
     
     \item \textbf{Selección de los coeficientes.} Para la ecuación $y^2 + xy = x^3 + ax^2 + b$, se requiere $b \neq 0$ (condición de no singularidad). Las curvas de Koblitz fijan $a \in \{0, 1\}$ para obtener optimizaciones con el endomorfismo de Frobenius.
     
-    \item \textbf{Conteo de puntos y verificaciones.} Igual que en el caso primo, usando algoritmos adaptados a la característica~2.
+    \item \textbf{Conteo de puntos y verificaciones.} Igual que en el caso primo, usando algoritmos adaptados a la característica 2.
 \end{enumerate}
 
 
 \subsubsection{Verificación de parámetros de dominio}
 \label{subsubsec:verificacion-params}
 
-La verificación de parámetros de dominio es esencial cuando se reciben de un tercero o se adoptan de un estándar. El algoritmo~\ref{alg:verify-params} resume las comprobaciones necesarias para curvas sobre~$\mathbb{F}_p$~\cite{hankerson2004guide,sec1-v2}.
+La verificación de parámetros de dominio es esencial cuando se reciben de un tercero o se adoptan de un estándar. El algoritmo \ref{alg:verify-params} resume las comprobaciones necesarias para curvas sobre $\mathbb{F}_p$ \cite{hankerson2004guide,sec1-v2}.
 
 \begin{algorithm}[htbp]
 \caption{Verificación de parámetros de dominio $(p, a, b, G, n, h)$}
@@ -573,11 +573,11 @@ La verificación de parámetros de dominio es esencial cuando se reciben de un t
 \end{algorithm}
 
 \paragraph{Nuestra implementación.}
-En nuestro proyecto utilizamos exclusivamente curvas estandarizadas por el NIST~\cite{nist-fips186-4} y SECG~\cite{sec2-v2}, cuyos parámetros han sido auditados y verificados por la comunidad criptográfica. Nuestra función \texttt{CurveParams::validate()} implementa las comprobaciones~1--3 y 6 (parcialmente) del algoritmo~\ref{alg:verify-params}: discriminante no nulo, punto generador en la curva, y valores positivos de~$n$ y~$h$. Las verificaciones~4, 5, 7 y~8 no se implementan por ser redundantes con los parámetros de estándares publicados, pero se describen como requisitos teóricos. En un sistema que aceptase curvas arbitrarias definidas por el usuario, su implementación sería imprescindible.
+En nuestro proyecto utilizamos exclusivamente curvas estandarizadas por el NIST \cite{nist-fips186-4} y SECG \cite{sec2-v2}, cuyos parámetros han sido auditados y verificados por la comunidad criptográfica. Nuestra función \texttt{CurveParams::validate()} implementa las comprobaciones 1--3 y 6 (parcialmente) del algoritmo \ref{alg:verify-params}: discriminante no nulo, punto generador en la curva, y valores positivos de $n$ y $h$. Las verificaciones 4, 5, 7 y 8 no se implementan por ser redundantes con los parámetros de estándares publicados, pero se describen como requisitos teóricos. En un sistema que aceptase curvas arbitrarias definidas por el usuario, su implementación sería imprescindible.
 
-De forma análoga, \texttt{BinaryCurveParams::validate()} comprueba que el grado del polinomio irreducible coincide con~$m$, que $b \neq 0$ (discriminante no nulo en característica~2), y que $n$ y $h$ son positivos.
+De forma análoga, \texttt{BinaryCurveParams::validate()} comprueba que el grado del polinomio irreducible coincide con $m$, que $b \neq 0$ (discriminante no nulo en característica 2), y que $n$ y $h$ son positivos.
 
-La validación de claves públicas se realiza en el constructor de \texttt{ECPoint}, que verifica automáticamente $y^2 = x^3 + ax + b \pmod{p}$ al crear cualquier punto, lanzando una excepción si el punto no pertenece a la curva. Para las curvas con cofactor $h = 1$ (NIST P-256, P-384, secp256k1), esta verificación es suficiente, ya que todo punto no trivial de la curva tiene orden~$n$. Para curvas con $h > 1$ (como las binarias sect233k1 con $h = 4$), sería necesario verificar adicionalmente que $n \cdot Q = \mathcal{O}$ para garantizar la pertenencia al subgrupo correcto, lo que se documenta como limitación del prototipo.
+La validación de claves públicas se realiza en el constructor de \texttt{ECPoint}, que verifica automáticamente $y^2 = x^3 + ax + b \pmod{p}$ al crear cualquier punto, lanzando una excepción si el punto no pertenece a la curva. Para las curvas con cofactor $h = 1$ (NIST P-256, P-384, secp256k1), esta verificación es suficiente, ya que todo punto no trivial de la curva tiene orden $n$. Para curvas con $h > 1$ (como las binarias sect233k1 con $h = 4$), sería necesario verificar adicionalmente que $n \cdot Q = \mathcal{O}$ para garantizar la pertenencia al subgrupo correcto, lo que se documenta como limitación del prototipo.
 
 
 % ============================================================================
@@ -593,29 +593,29 @@ Dados los parámetros del dominio $T = (p, a, b, G, n, h)$, un par de claves ECC
     \item Seleccionar un entero aleatorio $d$ uniformemente distribuido en el rango $[1, n-1]$.
     \item Calcular el punto $Q = d \cdot G$.
 \end{enumerate}
-La clave privada es~$d$ y la clave pública es~$Q$.
+La clave privada es $d$ y la clave pública es $Q$.
 \end{definicion}
 
-Dado que $n$ es primo y $d \in [1, n-1]$, el punto $Q$ es un elemento no trivial de $\langle G \rangle$. Conocer $Q$ y $G$ no permite recuperar $d$ eficientemente, por la dificultad del ECDLP (definición~\ref{def:ecdlp}).
+Dado que $n$ es primo y $d \in [1, n-1]$, el punto $Q$ es un elemento no trivial de $\langle G \rangle$. Conocer $Q$ y $G$ no permite recuperar $d$ eficientemente, por la dificultad del ECDLP (definición \ref{def:ecdlp}).
 
 \paragraph{Requisitos del generador de números aleatorios.}
-La seguridad del par de claves depende críticamente de la calidad del generador de números aleatorios (RNG) utilizado para seleccionar~$d$. Si el RNG es predecible, sesgado o tiene baja entropía, un atacante podría reducir drásticamente el espacio de búsqueda de~$d$. En nuestra implementación, empleamos el RNG de NTL inicializado con una semilla de alta entropía, cuya calidad estadística fue validada en la fase~2 del proyecto mediante tests de uniformidad, autocorrelación y rachas (véase el capítulo de implementación).
+La seguridad del par de claves depende críticamente de la calidad del generador de números aleatorios (RNG) utilizado para seleccionar $d$. Si el RNG es predecible, sesgado o tiene baja entropía, un atacante podría reducir drásticamente el espacio de búsqueda de $d$. En nuestra implementación, empleamos el RNG de NTL inicializado con una semilla de alta entropía, cuya calidad estadística fue validada en la fase 2 del proyecto mediante tests de uniformidad, autocorrelación y rachas (véase el capítulo de implementación).
 
 \paragraph{Validación de la clave pública.}
-Al recibir una clave pública~$Q$ de un tercero, es imprescindible verificar que:
+Al recibir una clave pública $Q$ de un tercero, es imprescindible verificar que:
 \begin{enumerate}
     \item $Q \neq \mathcal{O}$ (no es el punto en el infinito).
     \item $Q$ pertenece a la curva: $Q_y^2 \equiv Q_x^3 + aQ_x + b \pmod{p}$.
     \item $Q$ pertenece al subgrupo correcto: $n \cdot Q = \mathcal{O}$.
 \end{enumerate}
-La tercera comprobación es especialmente importante cuando $h > 1$, para prevenir ataques de contribución de subgrupo pequeño~\cite{hankerson2004guide}.
+La tercera comprobación es especialmente importante cuando $h > 1$, para prevenir ataques de contribución de subgrupo pequeño \cite{hankerson2004guide}.
 
 
 % ============================================================================
 \section{Intercambio de claves: ECDH}
 \label{sec:ecdh}
 
-El protocolo de Diffie--Hellman sobre curvas elípticas (ECDH) es la adaptación directa del intercambio de claves Diffie--Hellman clásico (sección~\ref{sec:diffie_hellman}) al grupo de puntos de una curva elíptica. Su seguridad se fundamenta en el \emph{problema de Diffie--Hellman computacional en curvas elípticas} (ECDHP): dados $P$, $aP$ y $bP$, calcular $abP$.
+El protocolo de Diffie--Hellman sobre curvas elípticas (ECDH) es la adaptación directa del intercambio de claves Diffie--Hellman clásico (sección \ref{sec:diffie_hellman}) al grupo de puntos de una curva elíptica. Su seguridad se fundamenta en el \emph{problema de Diffie--Hellman computacional en curvas elípticas} (ECDHP): dados $P$, $aP$ y $bP$, calcular $abP$.
 
 \subsection{Protocolo básico}
 \label{subsec:ecdh-protocolo}
@@ -668,15 +668,15 @@ Alice calcula $S = 3 \cdot Q_B = 3 \cdot (80, 87) = (3, 91)$ y Bob calcula $S = 
 \subsection{Derivación de claves}
 \label{subsec:ecdh-kdf}
 
-En la práctica, la coordenada~$x$ del punto compartido $S$ no se utiliza directamente como clave simétrica, sino que se pasa por una \emph{función de derivación de clave} (KDF, \textit{Key Derivation Function}). Las razones son:
+En la práctica, la coordenada $x$ del punto compartido $S$ no se utiliza directamente como clave simétrica, sino que se pasa por una \emph{función de derivación de clave} (KDF, \textit{Key Derivation Function}). Las razones son:
 
 \begin{itemize}
-    \item La coordenada~$x$ puede tener bits con distribución no uniforme (por ejemplo, los bits más significativos pueden estar correlacionados con la estructura del cuerpo).
-    \item Se necesita adaptar la longitud del secreto al tamaño de la clave simétrica deseada (128, 192 o 256~bits para AES).
-    \item Un KDF aporta una capa adicional de seguridad: aunque se descubriese alguna debilidad parcial en la coordenada~$x$, la clave derivada permanece segura si el KDF es robusto.
+    \item La coordenada $x$ puede tener bits con distribución no uniforme (por ejemplo, los bits más significativos pueden estar correlacionados con la estructura del cuerpo).
+    \item Se necesita adaptar la longitud del secreto al tamaño de la clave simétrica deseada (128, 192 o 256 bits para AES).
+    \item Un KDF aporta una capa adicional de seguridad: aunque se descubriese alguna debilidad parcial en la coordenada $x$, la clave derivada permanece segura si el KDF es robusto.
 \end{itemize}
 
-En estándares como NIST SP~800-56A~\cite{nist-sp800-56a} se especifican KDFs basados en funciones hash, como HKDF (RFC~5869). En nuestra implementación educativa utilizamos directamente la coordenada~$x$ truncada al número de bits deseados, anotando esta simplificación como limitación del prototipo.
+En estándares como NIST SP 800-56A \cite{nist-sp800-56a} se especifican KDFs basados en funciones hash, como HKDF (RFC 5869). En nuestra implementación educativa utilizamos directamente la coordenada $x$ truncada al número de bits deseados, anotando esta simplificación como limitación del prototipo.
 
 
 \subsection{Variantes y extensiones}
@@ -685,9 +685,9 @@ En estándares como NIST SP~800-56A~\cite{nist-sp800-56a} se especifican KDFs ba
 Existen varias variantes del intercambio ECDH que mejoran distintos aspectos del protocolo:
 
 \begin{description}
-    \item[ECIES (\textit{Elliptic Curve Integrated Encryption Scheme}):] Combina ECDH con un cifrado simétrico y un MAC en un esquema de cifrado de clave pública completo. Definido en IEEE~P1363a e ISO~18033-2, es el análogo de ElGamal sobre curvas elípticas.
+    \item[ECIES (\textit{Elliptic Curve Integrated Encryption Scheme}):] Combina ECDH con un cifrado simétrico y un MAC en un esquema de cifrado de clave pública completo. Definido en IEEE P1363a e ISO 18033-2, es el análogo de ElGamal sobre curvas elípticas.
     
-    \item[X25519:] Diseñada por Bernstein~\cite{bernstein2006curve25519}, es una curva de Montgomery optimizada para intercambios Diffie--Hellman. Su aritmética se realiza exclusivamente sobre la coordenada~$x$ (usando la ``escalera de Montgomery''), lo que la hace intrínsecamente resistente a ciertos ataques de canal lateral de tiempo constante. Es la curva predeterminada en TLS~1.3 para intercambio de claves.
+    \item[X25519:] Diseñada por Bernstein \cite{bernstein2006curve25519}, es una curva de Montgomery optimizada para intercambios Diffie--Hellman. Su aritmética se realiza exclusivamente sobre la coordenada $x$ (usando la ``escalera de Montgomery''), lo que la hace intrínsecamente resistente a ciertos ataques de canal lateral de tiempo constante. Es la curva predeterminada en TLS 1.3 para intercambio de claves.
 \end{description}
 
 
@@ -695,7 +695,7 @@ Existen varias variantes del intercambio ECDH que mejoran distintos aspectos del
 \section{Firmas digitales: ECDSA}
 \label{sec:ecdsa}
 
-El \emph{Elliptic Curve Digital Signature Algorithm} (ECDSA) es la adaptación del algoritmo de firma digital DSA al contexto de curvas elípticas. Fue estandarizado en ANSI X9.62~\cite{ansi-x962} y posteriormente incorporado en FIPS~186--4~\cite{nist-fips186-4}. ECDSA proporciona autenticación, integridad y no repudio con claves significativamente más pequeñas que DSA o RSA.
+El \emph{Elliptic Curve Digital Signature Algorithm} (ECDSA) es la adaptación del algoritmo de firma digital DSA al contexto de curvas elípticas. Fue estandarizado en ANSI X9.62 \cite{ansi-x962} y posteriormente incorporado en FIPS 186--4 \cite{nist-fips186-4}. ECDSA proporciona autenticación, integridad y no repudio con claves significativamente más pequeñas que DSA o RSA.
 
 
 \subsection{Función hash: SHA-256}
@@ -703,13 +703,13 @@ El \emph{Elliptic Curve Digital Signature Algorithm} (ECDSA) es la adaptación d
 
 Toda firma digital opera sobre un \emph{resumen} (hash) del mensaje, no sobre el mensaje completo. Esto garantiza que la firma tenga tamaño fijo independientemente de la longitud del mensaje y que cualquier modificación del mensaje (por mínima que sea) invalide la firma.
 
-En nuestra implementación utilizamos SHA-256 (FIPS~PUB~180-4~\cite{nist-fips180-4}), que produce un resumen de 256~bits. Esta función cumple las propiedades de resistencia a preimagen, segunda preimagen y colisiones descritas en la sección~\ref{sec:hash-funciones}. Al operar con curvas de 256~bits (como NIST~P-256 o secp256k1), SHA-256 proporciona una correspondencia natural entre el tamaño del hash y el orden~$n$ del generador.
+En nuestra implementación utilizamos SHA-256 (FIPS PUB 180-4 \cite{nist-fips180-4}), que produce un resumen de 256 bits. Esta función cumple las propiedades de resistencia a preimagen, segunda preimagen y colisiones descritas en la sección \ref{sec:hash-funciones}. Al operar con curvas de 256 bits (como NIST P-256 o secp256k1), SHA-256 proporciona una correspondencia natural entre el tamaño del hash y el orden $n$ del generador.
 
 Formalmente, dado un mensaje $m$ de longitud arbitraria, denotamos su hash como
 \[
     e = H(m),
 \]
-donde $H$ es SHA-256 y $e$ se interpreta como un entero. Si la longitud en bits de~$n$ es $L_n$ y la del hash es $L_H$, se toman los $\min(L_n, L_H)$ bits más significativos de~$e$.
+donde $H$ es SHA-256 y $e$ se interpreta como un entero. Si la longitud en bits de $n$ es $L_n$ y la del hash es $L_H$, se toman los $\min(L_n, L_H)$ bits más significativos de $e$.
 
 
 \subsection{Generación de firma}
@@ -721,16 +721,16 @@ Dados los parámetros del dominio $T = (p, a, b, G, n, h)$ y un par de claves $(
     \item Calcular $e = H(m)$.
     \item Seleccionar un entero aleatorio $k \xleftarrow{\$} [1, n-1]$ (\emph{nonce} o valor efímero).
     \item Calcular el punto $R = k \cdot G = (x_R, y_R)$.
-    \item Calcular $r = x_R \bmod n$. Si $r = 0$, volver al paso~2.
+    \item Calcular $r = x_R \bmod n$. Si $r = 0$, volver al paso 2.
     \item Calcular
     \[
         s = k^{-1} (e + d \cdot r) \bmod n.
     \]
-    Si $s = 0$, volver al paso~2.
+    Si $s = 0$, volver al paso 2.
     \item La firma es el par $(r, s)$.
 \end{enumerate}
 
-El valor $k$ es un secreto temporal que \textbf{no debe revelarse} y \textbf{no debe reutilizarse}. La sección~\ref{subsec:ecdsa-problemas} detalla las consecuencias catastróficas de violar esta condición.
+El valor $k$ es un secreto temporal que \textbf{no debe revelarse} y \textbf{no debe reutilizarse}. La sección \ref{subsec:ecdsa-problemas} detalla las consecuencias catastróficas de violar esta condición.
 
 
 \subsection{Verificación de firma}
@@ -760,14 +760,14 @@ Por tanto,
 \[
     R' = u_1 \cdot G + u_2 \cdot Q = u_1 \cdot G + u_2 \cdot d \cdot G = (u_1 + u_2 d) \cdot G = k \cdot G = R.
 \]
-La coordenada~$x$ de $R'$ coincide con la de $R$, luego $v = x_{R'} \bmod n = x_R \bmod n = r$. \qed
+La coordenada $x$ de $R'$ coincide con la de $R$, luego $v = x_{R'} \bmod n = x_R \bmod n = r$. \qed
 
 
 \subsection{Problemas prácticos y vulnerabilidades}
 \label{subsec:ecdsa-problemas}
 
 \paragraph{\texorpdfstring{Reutilización del nonce $k$.}{Reutilizacion del nonce k.}}
-Si se utiliza el mismo valor~$k$ para firmar dos mensajes distintos $m_1$ y $m_2$, las firmas resultantes $(r, s_1)$ y $(r, s_2)$ comparten la misma coordenada~$r$ (puesto que $R = kG$ es idéntico). Un atacante que observe ambas firmas puede recuperar la clave privada $d$ de forma inmediata:
+Si se utiliza el mismo valor $k$ para firmar dos mensajes distintos $m_1$ y $m_2$, las firmas resultantes $(r, s_1)$ y $(r, s_2)$ comparten la misma coordenada $r$ (puesto que $R = kG$ es idéntico). Un atacante que observe ambas firmas puede recuperar la clave privada $d$ de forma inmediata:
 \[
     s_1 - s_2 = k^{-1}(e_1 - e_2) \pmod{n}
     \quad\Longrightarrow\quad
@@ -778,13 +778,13 @@ y una vez conocido $k$:
     d = \frac{s_1 k - e_1}{r} \pmod{n}.
 \]
 
-Este ataque no es teórico: en 2010, la clave privada de la consola PlayStation~3 de Sony fue comprometida exactamente por esta razón, al emplear un valor fijo de~$k$ en todas las firmas ECDSA del \textit{firmware}~\cite{ps3-ecdsa-fail}.
+Este ataque no es teórico: en 2010, la clave privada de la consola PlayStation 3 de Sony fue comprometida exactamente por esta razón, al emplear un valor fijo de $k$ en todas las firmas ECDSA del \textit{firmware} \cite{ps3-ecdsa-fail}.
 
 \paragraph{Nonces con baja entropía.}
-Incluso sin reutilizar $k$ exactamente, si el RNG que genera $k$ tiene sesgos o baja entropía, ataques de tipo \textit{lattice} (basados en retículos) pueden recuperar la clave privada a partir de un número moderado de firmas~\cite{howgrave2001lattice}. 
+Incluso sin reutilizar $k$ exactamente, si el RNG que genera $k$ tiene sesgos o baja entropía, ataques de tipo \textit{lattice} (basados en retículos) pueden recuperar la clave privada a partir de un número moderado de firmas \cite{howgrave2001lattice}. 
 
 \paragraph{RFC 6979: nonces determinísticos.}
-Para mitigar los riesgos asociados a la generación aleatoria de~$k$, el RFC~6979~\cite{rfc6979} propone un esquema determinístico: $k$ se calcula como $k = \text{HMAC-DRBG}(d, H(m))$, es decir, como función de la clave privada y el hash del mensaje. Así, el mismo mensaje siempre produce la misma firma (reproducibilidad), diferentes mensajes producen distintos $k$ (unicidad), y no se requiere un RNG externo en el momento de firmar.
+Para mitigar los riesgos asociados a la generación aleatoria de $k$, el RFC 6979 \cite{rfc6979} propone un esquema determinístico: $k$ se calcula como $k = \text{HMAC-DRBG}(d, H(m))$, es decir, como función de la clave privada y el hash del mensaje. Así, el mismo mensaje siempre produce la misma firma (reproducibilidad), diferentes mensajes producen distintos $k$ (unicidad), y no se requiere un RNG externo en el momento de firmar.
 
 
 % ============================================================================
@@ -794,7 +794,7 @@ Para mitigar los riesgos asociados a la generación aleatoria de~$k$, el RFC~697
 \subsection{Coordenadas afines frente a Jacobianas}
 \label{subsec:ecc-afines-jacobianas}
 
-Como se describió en la sección~\ref{sec:coord-proyectivas}, las fórmulas de suma y duplicación de puntos en coordenadas afines requieren una inversión modular por cada operación. Dado que la inversión en $\mathbb{F}_p$ tiene un coste equivalente a 80--100 multiplicaciones modulares para cuerpos de 256~bits~\cite{hankerson2004guide}, este es el cuello de botella principal.
+Como se describió en la sección \ref{sec:coord-proyectivas}, las fórmulas de suma y duplicación de puntos en coordenadas afines requieren una inversión modular por cada operación. Dado que la inversión en $\mathbb{F}_p$ tiene un coste equivalente a 80--100 multiplicaciones modulares para cuerpos de 256 bits \cite{hankerson2004guide}, este es el cuello de botella principal.
 
 \paragraph{Coste en coordenadas afines.}
 Para una multiplicación escalar de 256 bits mediante \textit{double-and-add}:
@@ -805,7 +805,7 @@ Para una multiplicación escalar de 256 bits mediante \textit{double-and-add}:
 \end{itemize}
 
 \paragraph{Coordenadas Jacobianas.}
-Las coordenadas Jacobianas (véase definición~\ref{def:coord-jacobi}) representan un punto afín $(x, y)$ como una terna $(X : Y : Z)$ donde $x = X/Z^2$, $y = Y/Z^3$. Las fórmulas de duplicación y suma se reescriben \emph{sin divisiones}:
+Las coordenadas Jacobianas (véase definición \ref{def:coord-jacobi}) representan un punto afín $(x, y)$ como una terna $(X : Y : Z)$ donde $x = X/Z^2$, $y = Y/Z^3$. Las fórmulas de duplicación y suma se reescriben \emph{sin divisiones}:
 
 \textbf{Duplicación} de $(X_1, Y_1, Z_1)$. Sea $a$ el coeficiente de la curva:
 \begin{align*}
@@ -815,7 +815,7 @@ Las coordenadas Jacobianas (véase definición~\ref{def:coord-jacobi}) represent
     Y_3 &= D(B - X_3) - C, \\
     Z_3 &= 2Y_1 Z_1.
 \end{align*}
-Coste: 4 multiplicaciones + 6 cuadrados en el caso general; con $a = -3$ (NIST P-256, P-384), el término $3X_1^2 + aZ_1^4$ se factoriza como $3(X_1 - Z_1^2)(X_1 + Z_1^2)$, ahorrando una multiplicación y reduciendo el coste a 4M + 4S~\cite{hankerson2004guide}.
+Coste: 4 multiplicaciones + 6 cuadrados en el caso general; con $a = -3$ (NIST P-256, P-384), el término $3X_1^2 + aZ_1^4$ se factoriza como $3(X_1 - Z_1^2)(X_1 + Z_1^2)$, ahorrando una multiplicación y reduciendo el coste a 4M + 4S \cite{hankerson2004guide}.
 
 \textbf{Suma} de $(X_1, Y_1, Z_1)$ y $(X_2, Y_2, Z_2)$:
 \begin{align*}
@@ -829,7 +829,7 @@ Coste: 4 multiplicaciones + 6 cuadrados en el caso general; con $a = -3$ (NIST P
 Coste: 12 multiplicaciones + 4 cuadrados.
 
 \paragraph{Ventaja clave: una única inversión final.}
-Durante toda la multiplicación escalar, las operaciones se realizan en coordenadas Jacobianas. Solo al final, cuando se necesita el resultado en forma afín $(x, y)$, se calcula una única inversión: $Z^{-1}$, y luego $x = X \cdot (Z^{-1})^2$, $y = Y \cdot (Z^{-1})^3$. De las $\sim$384 inversiones originales, pasamos a exactamente~1.
+Durante toda la multiplicación escalar, las operaciones se realizan en coordenadas Jacobianas. Solo al final, cuando se necesita el resultado en forma afín $(x, y)$, se calcula una única inversión: $Z^{-1}$, y luego $x = X \cdot (Z^{-1})^2$, $y = Y \cdot (Z^{-1})^3$. De las $\sim$384 inversiones originales, pasamos a exactamente 1.
 
 En nuestra implementación, las coordenadas Jacobianas proporcionaron un \textit{speedup} medible frente a las afines, cuyos resultados detallados se presentan en el capítulo de experimentación.
 
@@ -837,7 +837,7 @@ En nuestra implementación, las coordenadas Jacobianas proporcionaron un \textit
 \subsection{\texorpdfstring{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}{Curvas sobre cuerpos binarios F2m}}
 \label{subsec:ecc-campos-binarios}
 
-Las curvas elípticas también se definen sobre cuerpos binarios $\mathbb{F}_{2^m}$, donde los elementos son polinomios de grado menor que~$m$ con coeficientes en $\{0, 1\}$, y la aritmética se describe en la sección~\ref{sec:aritmetica-f2m}. La ecuación de Weierstrass toma una forma diferente en característica~2.
+Las curvas elípticas también se definen sobre cuerpos binarios $\mathbb{F}_{2^m}$, donde los elementos son polinomios de grado menor que $m$ con coeficientes en $\{0, 1\}$, y la aritmética se describe en la sección \ref{sec:aritmetica-f2m}. La ecuación de Weierstrass toma una forma diferente en característica 2.
 
 \paragraph{Ecuación no supersingular.}
 Para curvas no supersingulares sobre $\mathbb{F}_{2^m}$, la ecuación simplificada es
@@ -871,7 +871,7 @@ Las fórmulas de suma y duplicación difieren de las del caso primo:
 Nótese que todas las operaciones de cuerpo (suma, multiplicación, inversión) son operaciones sobre polinomios binarios. En particular, la suma es una operación XOR, sin propagación de acarreo, lo que la hace extremadamente eficiente en hardware.
 
 \paragraph{Curvas estándar implementadas.}
-En nuestra implementación incluimos cinco curvas estándar SEC~2~\cite{sec2-v2} sobre cuerpos binarios:
+En nuestra implementación incluimos cinco curvas estándar SEC 2 \cite{sec2-v2} sobre cuerpos binarios:
 
 \begin{table}[htbp]
 \centering
@@ -886,7 +886,7 @@ sect233r1 & $\mathbb{F}_{2^{233}}$ & $\sim$112 & Aleatoria \\
 sect283r1 & $\mathbb{F}_{2^{283}}$ & $\sim$128 & Aleatoria \\
 \hline
 \end{tabular}
-\caption{Curvas sobre cuerpos binarios implementadas (SEC~2).}
+\caption{Curvas sobre cuerpos binarios implementadas (SEC 2).}
 \label{tab:binary-curves}
 \end{table}
 
@@ -921,7 +921,7 @@ La multiplicación escalar $k \cdot P$ es la operación computacionalmente domin
 Para un escalar de $t$ bits, el algoritmo realiza $t$ duplicaciones y, en promedio, $t/2$ sumas, lo que da una complejidad de $O(t) = O(\log n)$ operaciones de grupo. Es esta eficiencia la que hace viable la criptografía de curvas elípticas: calcular $k \cdot P$ es rápido, pero recuperar $k$ dado $P$ y $kP$ requiere $O(\sqrt{n}) = O(2^{t/2})$ operaciones.
 
 \paragraph{Consideraciones de canal lateral.}
-El algoritmo~\ref{alg:double-and-add} tiene un flujo de ejecución que depende de los bits de~$k$: cuando $k_i = 0$ solo se duplica, y cuando $k_i = 1$ se duplica y se suma. Un atacante que mida tiempos de ejecución, consumo eléctrico o emisiones electromagnéticas puede distinguir ambos casos y reconstruir~$k$ bit a bit~\cite{kocher1999dpa}. Para mitigar esto, existen variantes de tiempo constante como la escalera de Montgomery o el algoritmo \textit{double-and-add-always}, que ejecutan el mismo número de operaciones independientemente de los bits de~$k$.
+El algoritmo \ref{alg:double-and-add} tiene un flujo de ejecución que depende de los bits de $k$: cuando $k_i = 0$ solo se duplica, y cuando $k_i = 1$ se duplica y se suma. Un atacante que mida tiempos de ejecución, consumo eléctrico o emisiones electromagnéticas puede distinguir ambos casos y reconstruir $k$ bit a bit \cite{kocher1999dpa}. Para mitigar esto, existen variantes de tiempo constante como la escalera de Montgomery o el algoritmo \textit{double-and-add-always}, que ejecutan el mismo número de operaciones independientemente de los bits de $k$.
 
 
 % ============================================================================
@@ -931,16 +931,16 @@ El algoritmo~\ref{alg:double-and-add} tiene un flujo de ejecución que depende d
 \subsection{Criterios de selección}
 \label{subsec:ecc-criterios}
 
-La elección de una curva elíptica para uso criptográfico no es trivial. Además de los requisitos de seguridad descritos en la sección~\ref{subsec:ecc-parametros-dominio}, la comunidad criptográfica evalúa los siguientes criterios adicionales:
+La elección de una curva elíptica para uso criptográfico no es trivial. Además de los requisitos de seguridad descritos en la sección \ref{subsec:ecc-parametros-dominio}, la comunidad criptográfica evalúa los siguientes criterios adicionales:
 
 \begin{enumerate}
     \item \textbf{Rendimiento.} Las curvas con primos especiales (pseudo-Mersenne, como $p = 2^{256} - 2^{224} + 2^{192} + 2^{96} - 1$ para NIST P-256) permiten reducciones modulares rápidas. El coeficiente $a = -3$ (usado en las curvas NIST) optimiza la fórmula de duplicación Jacobiana.
     
-    \item \textbf{Resistencia a ataques especializados.} Las curvas deben evitar ser anómalas ($\#E(\mathbb{F}_p) = p$) y tener grado de inmersión alto ($p^k \not\equiv 1 \pmod{n}$ para $k \leq 20$), como se discutió en la sección~\ref{subsec:ecc-parametros-dominio}.
+    \item \textbf{Resistencia a ataques especializados.} Las curvas deben evitar ser anómalas ($\#E(\mathbb{F}_p) = p$) y tener grado de inmersión alto ($p^k \not\equiv 1 \pmod{n}$ para $k \leq 20$), como se discutió en la sección \ref{subsec:ecc-parametros-dominio}.
     
     \item \textbf{Rigidez en la generación (\textit{nothing up my sleeve}).} La comunidad prefiere curvas cuyos parámetros se hayan generado de forma verificablemente aleatoria, sin posibilidad de insertar puertas traseras.
     
-    \item \textbf{Estandarización y auditoría.} Se prefieren curvas ampliamente auditadas por la comunidad académica e incluidas en estándares reconocidos (NIST, SECG, Brainpool, IETF CFRG)~\cite{ietf-cfrg}.
+    \item \textbf{Estandarización y auditoría.} Se prefieren curvas ampliamente auditadas por la comunidad académica e incluidas en estándares reconocidos (NIST, SECG, Brainpool, IETF CFRG) \cite{ietf-cfrg}.
 \end{enumerate}
 
 
@@ -950,22 +950,22 @@ La elección de una curva elíptica para uso criptográfico no es trivial. Adem�
 A continuación se describen las principales familias de curvas utilizadas en la práctica:
 
 \paragraph{Curvas NIST (P-256, P-384, P-521).}
-Publicadas en FIPS~186--4~\cite{nist-fips186-4} y NIST SP~800-186~\cite{nist-sp800-186}, las curvas NIST sobre cuerpos primos utilizan la forma corta de Weierstrass $y^2 = x^3 - 3x + b$ con primos diseñados para reducción rápida. Son las curvas más ampliamente desplegadas en Internet (TLS, SSH, S/MIME) y en aplicaciones gubernamentales. En nuestra implementación incluimos P-256 (128~bits de seguridad) y P-384 (192~bits de seguridad).
+Publicadas en FIPS 186--4 \cite{nist-fips186-4} y NIST SP 800-186 \cite{nist-sp800-186}, las curvas NIST sobre cuerpos primos utilizan la forma corta de Weierstrass $y^2 = x^3 - 3x + b$ con primos diseñados para reducción rápida. Son las curvas más ampliamente desplegadas en Internet (TLS, SSH, S/MIME) y en aplicaciones gubernamentales. En nuestra implementación incluimos P-256 (128 bits de seguridad) y P-384 (192 bits de seguridad).
 
 \paragraph{secp256k1 (Bitcoin).}
-Definida por SECG~\cite{sec2-v2}, esta curva utiliza la ecuación $y^2 = x^3 + 7$ sobre un cuerpo primo ($a = 0$, $b = 7$). El coeficiente $a = 0$ la convierte en una curva de Koblitz sobre $\mathbb{F}_p$, lo que permite ciertas optimizaciones en el endomorfismo GLV. Es la curva utilizada por Bitcoin y Ethereum para las firmas ECDSA de transacciones~\cite{secp256k1-bitcoin}. En nuestra implementación está incluida como una de las tres curvas principales.
+Definida por SECG \cite{sec2-v2}, esta curva utiliza la ecuación $y^2 = x^3 + 7$ sobre un cuerpo primo ($a = 0$, $b = 7$). El coeficiente $a = 0$ la convierte en una curva de Koblitz sobre $\mathbb{F}_p$, lo que permite ciertas optimizaciones en el endomorfismo GLV. Es la curva utilizada por Bitcoin y Ethereum para las firmas ECDSA de transacciones \cite{secp256k1-bitcoin}. En nuestra implementación está incluida como una de las tres curvas principales.
 
 \paragraph{Curve25519 y Ed25519.}
-Diseñadas por Bernstein~\cite{bernstein2006curve25519}, Curve25519 (para ECDH, usando X25519) y Ed25519 (para firmas, usando EdDSA) emplean una curva de Montgomery y su birrationalmente equivalente curva de Edwards, respectivamente, sobre el cuerpo $\mathbb{F}_{2^{255}-19}$. Su diseño prioriza la resistencia a implementaciones incorrectas: aritmética de tiempo constante, inmunidad a ataques de curva inválida (por diseño), y parámetros completamente rígidos. Son las curvas predeterminadas en TLS~1.3 y SSH moderno.
+Diseñadas por Bernstein \cite{bernstein2006curve25519}, Curve25519 (para ECDH, usando X25519) y Ed25519 (para firmas, usando EdDSA) emplean una curva de Montgomery y su birrationalmente equivalente curva de Edwards, respectivamente, sobre el cuerpo $\mathbb{F}_{2^{255}-19}$. Su diseño prioriza la resistencia a implementaciones incorrectas: aritmética de tiempo constante, inmunidad a ataques de curva inválida (por diseño), y parámetros completamente rígidos. Son las curvas predeterminadas en TLS 1.3 y SSH moderno.
 
 
 \subsection{Controversias y confianza}
 \label{subsec:ecc-controversias}
 
 \paragraph{Los \textit{seeds} de las curvas NIST.}
-Los coeficientes~$b$ de las curvas NIST se generaron aplicando SHA-1 a una semilla (\textit{seed}), lo que proporciona verificabilidad parcial: cualquiera puede comprobar que $b = \text{SHA-1}(\text{seed})$. Sin embargo, la semilla en sí no tiene justificación pública, lo que ha generado sospechas de que podría haberse seleccionado mediante búsqueda exhaustiva para producir una curva con alguna debilidad oculta. No existe evidencia de tal debilidad, pero la incertidumbre ha impulsado la adopción de curvas con parámetros completamente rígidos (como Curve25519).
+Los coeficientes $b$ de las curvas NIST se generaron aplicando SHA-1 a una semilla (\textit{seed}), lo que proporciona verificabilidad parcial: cualquiera puede comprobar que $b = \text{SHA-1}(\text{seed})$. Sin embargo, la semilla en sí no tiene justificación pública, lo que ha generado sospechas de que podría haberse seleccionado mediante búsqueda exhaustiva para producir una curva con alguna debilidad oculta. No existe evidencia de tal debilidad, pero la incertidumbre ha impulsado la adopción de curvas con parámetros completamente rígidos (como Curve25519).
 
 \paragraph{Dual EC DRBG.}
-El caso más grave de sospecha de puerta trasera en curvas elípticas fue el generador de números aleatorios Dual EC DRBG, estandarizado por el NIST en 2006 y retirado en 2014. Este generador utilizaba dos puntos $P$ y $Q$ de una curva elíptica, y se demostró~\cite{shumow2007dual-ec} que si se conoce la relación $Q = eP$ (es decir, el logaritmo discreto de~$Q$ respecto a~$P$), es posible predecir toda la salida futura del generador. Documentos filtrados por Snowden en 2013 sugirieron que la NSA había pagado a RSA Security para que Dual EC DRBG fuera el generador predeterminado en su biblioteca BSAFE.
+El caso más grave de sospecha de puerta trasera en curvas elípticas fue el generador de números aleatorios Dual EC DRBG, estandarizado por el NIST en 2006 y retirado en 2014. Este generador utilizaba dos puntos $P$ y $Q$ de una curva elíptica, y se demostró \cite{shumow2007dual-ec} que si se conoce la relación $Q = eP$ (es decir, el logaritmo discreto de $Q$ respecto a $P$), es posible predecir toda la salida futura del generador. Documentos filtrados por Snowden en 2013 sugirieron que la NSA había pagado a RSA Security para que Dual EC DRBG fuera el generador predeterminado en su biblioteca BSAFE.
 
 Este episodio, aunque no compromete la seguridad de las curvas elípticas per se, subraya la importancia de la transparencia y la rigidez en la generación de parámetros criptográficos, y es una de las razones por las que la comunidad ha favorecido curvas como Curve25519 con diseño completamente abierto.
