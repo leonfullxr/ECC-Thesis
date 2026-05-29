@@ -25,11 +25,13 @@ Las características del equipo sobre el que se ejecutaron los benchmarks se res
 \hline
 \textbf{Componente} & \textbf{Especificación} \\
 \hline
-CPU              & \textit{[AMD Ryzen 9 7950X 16-Core Processor (2 threads per core)]} \\
-Memoria RAM      & \textit{[64 GB DDR5]} \\
-Sistema operativo & Ubuntu 24.04 (contenedor Docker) \\
+CPU              & AMD Ryzen 9 7950X (16 núcleos / 32 hilos, hasta 5,88~GHz) \\
+Memoria RAM      & 64~GB (63\,396~MiB) \\
+SO anfitrión     & Debian 12 (\textit{bookworm}), kernel 6.12 \\
+SO del contenedor & Ubuntu 22.04 (Docker) \\
 Compilador       & g++ con \texttt{-std=c++17 -O2} \\
-NTL / GMP        & NTL $\geq$ 11.5 sobre GMP $\geq$ 6.2 \\
+NTL / GMP        & NTL 11.5.1 sobre GMP 6.3.0 \\
+OpenSSL          & 3.0.2 (solo para la comparativa de referencia) \\
 Iteraciones      & 100 por benchmark (3 de calentamiento descartadas) \\
 Semilla          & Fija (\texttt{seed} = 0) \\
 \hline
@@ -37,6 +39,8 @@ Semilla          & Fija (\texttt{seed} = 0) \\
 \caption{Entorno de ejecución de las mediciones experimentales.}
 \label{tab:res-hardware}
 \end{table}
+
+Cabe señalar que, aunque el procesador dispone de 16 núcleos, todos los benchmarks son de un solo hilo: la multiplicidad de núcleos no acelera cada operación individual, pero garantiza la ausencia de contención por parte de otros procesos durante la medición. Asimismo, los tiempos de referencia se obtuvieron con el nivel de optimización \texttt{-O2} (sin \texttt{-march=native}), para favorecer la portabilidad y la comparabilidad de los resultados; el efecto de otras opciones de compilación se estudia específicamente en la sección~\ref{sec:res-compilacion}.
 
 En total se midieron 72 benchmarks individuales, agrupados en las cuatro familias que corresponden a los modos del motor de medición: RSA (24 benchmarks), ECC sobre $\mathbb{F}_p$ en coordenadas afines (18), ECC sobre $\mathbb{F}_p$ en coordenadas Jacobianas (15) y ECC sobre $\mathbb{F}_{2^m}$ (15).
 
@@ -278,7 +282,7 @@ La comparación a 192~bits de seguridad requeriría enfrentar RSA-7680 con P-384
 \section{Comparación con una implementación de referencia (OpenSSL)}
 \label{sec:res-openssl}
 
-Para situar los resultados en perspectiva, se compararon los tiempos de la implementación propia con los de OpenSSL~3.0.2, una biblioteca de producción ampliamente utilizada. La comparación se realizó en la misma máquina mediante la utilidad \texttt{openssl speed}, con una duración de 50~segundos por operación. El cuadro~\ref{tab:res-openssl} recoge los resultados.
+Para situar los resultados en perspectiva, se compararon los tiempos de la implementación propia con los de OpenSSL~3.0.2, una biblioteca de producción ampliamente utilizada. La comparación se realizó en la misma máquina mediante la utilidad \texttt{openssl speed}, con una duración de 50~segundos por operación. Conviene advertir desde el principio que esta comparación es orientativa y no estrictamente equitativa, pues \texttt{openssl speed} y el motor de medición propio no contabilizan exactamente el mismo trabajo (una matización que se desarrolla más adelante). El cuadro~\ref{tab:res-openssl} recoge los resultados.
 
 \begin{table}[htbp]
 \centering
@@ -306,8 +310,18 @@ P-384 & ECDH      & 866 & 473 & OpenSSL $1{,}8\times$ más rápida \\
 
 Esta comparación arroja dos conclusiones de gran valor:
 
-\paragraph{En RSA, la implementación propia es competitiva.}
-Sorprendentemente, los tiempos de RSA de la implementación propia son comparables a los de OpenSSL, e incluso ligeramente mejores (en torno a un 8--9\%). La explicación es que ambas implementaciones delegan la exponenciación modular en GMP, que es donde se concentra la práctica totalidad del coste de RSA. Al compartir el mismo motor aritmético, las prestaciones convergen, y la pequeña diferencia se debe probablemente a la sobrecarga por operación que introduce el arnés de medición de OpenSSL. Este resultado valida la eficiencia de la implementación de RSA del proyecto.
+\paragraph{En RSA, los tiempos son del mismo orden, pero la comparación no es estrictamente equitativa.}
+A primera vista, los tiempos de RSA de la implementación propia resultan comparables a los de OpenSSL e incluso ligeramente inferiores (en torno a un 8--9\%). Conviene ser cauto antes de interpretar esto como una ventaja real: sería sorprendente que una implementación educativa superase a una biblioteca de producción tan optimizada, y un análisis detallado revela que la comparación no enfrenta exactamente el mismo trabajo. La razón de fondo por la que ambos tiempos caen en el mismo orden de magnitud es que el coste de las operaciones RSA con clave privada está dominado por la exponenciación modular con CRT, y tanto NTL/GMP como OpenSSL implementan esta operación con técnicas maduras y comparables (reducción de Montgomery, exponenciación por ventanas y multiplicación de enteros en ensamblador). Es importante subrayar que, en contra de lo que pudiera suponerse, \emph{OpenSSL no utiliza GMP}: dispone de su propia biblioteca de enteros de precisión arbitraria (\texttt{BIGNUM}) con rutinas en ensamblador. Que dos motores aritméticos independientes y bien optimizados rindan de forma similar a estos tamaños de clave es, por tanto, el resultado esperable, y constituye la conclusión legítima de esta comparación: la implementación propia de RSA opera al mismo orden de eficiencia que una de referencia.
+
+\paragraph{Por qué la implementación propia aparenta ser más rápida.}
+La pequeña diferencia a favor de la implementación propia no refleja una mayor eficiencia, sino que las dos mediciones no contabilizan el mismo trabajo. Intervienen al menos cuatro factores, todos en la misma dirección:
+\begin{itemize}
+    \item \textbf{Cegado (\textit{blinding}) de RSA.} OpenSSL aplica por defecto un cegado de base a las operaciones con clave privada como contramedida frente a ataques de canal lateral por temporización: multiplica por un factor aleatorio antes de la exponenciación y lo deshace después. Esto supone multiplicaciones modulares adicionales que la implementación propia, de tipo \textit{textbook}, no realiza. OpenSSL hace, deliberadamente, \emph{más} trabajo a cambio de seguridad.
+    \item \textbf{Relleno y codificación.} La operación de firma de OpenSSL construye la estructura \texttt{DigestInfo} y aplica el relleno EMSA-PKCS\#1 v1.5, mientras que la medición propia cronometra esencialmente la exponenciación desnuda $s = h^d \bmod n$.
+    \item \textbf{Capa de abstracción.} OpenSSL~3.x encamina las operaciones a través de su arquitectura de \textit{providers} y de la API \texttt{EVP}, lo que introduce una sobrecarga por llamada (resolución del algoritmo, gestión de parámetros) ausente en la invocación directa de la primitiva propia.
+    \item \textbf{Instrumento de medida.} La utilidad \texttt{openssl speed} mide el rendimiento sostenido contando operaciones en una ventana de tiempo fija, e incluye la preparación por llamada; la medición propia acota únicamente la operación con \texttt{std::chrono}.
+\end{itemize}
+En conjunto, la implementación propia parece más rápida porque mide \emph{menos} trabajo y \emph{sin} las protecciones que OpenSSL incorpora. La conclusión honesta es que no cabe afirmar que la implementación propia supere a OpenSSL en RSA; lo correcto es decir que ambas son comparables, al estar limitadas por la aritmética de enteros grandes, y que la diferencia observada se explica por las protecciones y la indirección adicionales de OpenSSL, junto con las distintas metodologías de medición. En la operación de verificación, que emplea el exponente público pequeño y no requiere cegado, la diferencia se reduce a unos pocos microsegundos atribuibles a la sobrecarga de la API y del instrumento de medida.
 
 \paragraph{En ECC, el margen frente a OpenSSL es grande pero revelador.}
 Para ECC, OpenSSL es mucho más rápida, pero el tamaño de la diferencia es en sí mismo informativo. Para P-256, OpenSSL es entre 14 y 34 veces más rápida, porque incorpora código ensamblador escrito a mano específicamente para esta curva, la más utilizada en Internet, con aritmética de cuerpo en tiempo constante y muy optimizada. Sin embargo, para P-384 la diferencia se reduce drásticamente, a un factor de entre 1,7 y 4: al disponer OpenSSL de menos optimizaciones específicas para esta curva menos común, su implementación se acerca a una de propósito general como la nuestra. Este contraste demuestra que la brecha de rendimiento en ECC no proviene del algoritmo en sí, sino del grado de optimización a bajo nivel (ensamblador específico por curva), y que una implementación basada en NTL alcanza un rendimiento razonable en ausencia de dicho ajuste fino.
@@ -315,7 +329,7 @@ Para ECC, OpenSSL es mucho más rápida, pero el tamaño de la diferencia es en 
 \section{Influencia de las opciones de compilación}
 \label{sec:res-compilacion}
 
-Todos los benchmarks anteriores se compilaron con el nivel de optimización \texttt{-O2}, según se justificó en la sección~\ref{subsec:impl-lenguaje}. Resulta natural preguntarse en qué medida la elección del nivel de optimización del compilador afecta al rendimiento de ECC, y por qué. Para responder a ello, se recompiló el módulo de ECC con distintos conjuntos de \textit{flags} de \texttt{g++} y se midió la misma operación (multiplicación escalar y ECDH sobre secp256k1) en cada caso, manteniendo fijo el resto del entorno. Los resultados se recogen en el cuadro~\ref{tab:res-compiler}.
+Todos los benchmarks anteriores se compilaron con el nivel de optimización \texttt{-O2}, según se justificó en la sección~\ref{subsec:impl-lenguaje}. Resulta natural preguntarse en qué medida la elección del nivel de optimización del compilador afecta al rendimiento de ECC, y por qué. Para responder a ello, se recompiló el módulo de ECC con distintos conjuntos de \textit{flags} de \texttt{g++} y se midió la misma operación (multiplicación escalar y ECDH sobre secp256k1) en cada caso, manteniendo fijo el resto del entorno. Los resultados se recogen en el cuadro~\ref{tab:res-compiler} y se representan en la figura~\ref{fig:res-compiler}.
 
 \begin{table}[htbp]
 \centering
@@ -336,6 +350,13 @@ Todos los benchmarks anteriores se compilaron con el nivel de optimización \tex
 \caption{Rendimiento de ECC (secp256k1, coordenadas afines) según las opciones de compilación. Datos obtenidos mediante el script \texttt{compare\_compiler\_flags.sh}.}
 \label{tab:res-compiler}
 \end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.85\textwidth]{imagenes/chart_compiler_flags.png}
+    \caption{Rendimiento de la multiplicación escalar y el ECDH sobre secp256k1 en función del nivel de optimización del compilador. La gráfica se genera con \texttt{visualize\_compiler\_flags.py} a partir de \texttt{compiler\_flags.csv}.}
+    \label{fig:res-compiler}
+\end{figure}
 
 % NOTA PARA EL AUTOR:
 % Ejecuta scripts/compare_compiler_flags.sh para rellenar la tabla anterior.
@@ -415,7 +436,7 @@ $\mathbb{F}_p$ frente a $\mathbb{F}_{2^m}$ & En software puro con NTL, los cuerp
 \hline
 Opciones de compilación & El salto de rendimiento se concentra entre \texttt{-O0} y \texttt{-O2}; a partir de ahí las ganancias son marginales, porque el núcleo aritmético reside en GMP, ajeno a los \textit{flags} del proyecto. \\
 \hline
-Referencia OpenSSL & En RSA, la implementación propia iguala a OpenSSL (ambas usan GMP); en ECC, OpenSSL es más rápida por su ensamblador específico, con una brecha que se estrecha en curvas menos optimizadas como P-384. \\
+Referencia OpenSSL & En RSA, la implementación propia alcanza el mismo orden de eficiencia que OpenSSL (ambas limitadas por la aritmética de enteros grandes, aunque con motores distintos); la pequeña diferencia aparente se debe al cegado, el relleno y la indirección que OpenSSL añade. En ECC, OpenSSL es más rápida por su ensamblador específico, con una brecha que se estrecha en curvas menos optimizadas como P-384. \\
 \hline
 \end{tabular}
 \caption{Síntesis de los hallazgos experimentales.}
