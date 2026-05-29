@@ -30,14 +30,13 @@
 *.exe
 *.out
 *.app
-./bin/*
+bin/*
 
 # Benchmark results
-./results/*
-./reports/*
+results/*
+reports/*
 benchmark_results_*.txt
 core
-./results/*.csv
 
 # LaTeX build artifacts
 *.aux
