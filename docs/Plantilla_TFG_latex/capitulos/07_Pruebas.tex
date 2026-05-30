@@ -10,14 +10,22 @@
 \section{Introducción}
 \label{sec:res-intro}
 
-Este capítulo presenta y analiza los resultados obtenidos al ejecutar la suite de benchmarking descrita en el capítulo \ref{ch:implementacion}. El objetivo no es solo exponer cifras de rendimiento, sino interpretarlas a la luz de los tres ejes de comparación que estructuran el análisis de este trabajo: RSA frente a ECC, coordenadas afines frente a Jacobianas, y cuerpos primos $\mathbb{F}_p$ frente a cuerpos binarios $\mathbb{F}_{2^m}$.
+Este capítulo presenta y analiza los resultados obtenidos al ejecutar los benchmarks descritos en el capítulo \ref{ch:implementacion}. El objetivo no es solo exponer cifras de rendimiento, 
+sino interpretarlas a la luz de los tres ejes de comparación que estructuran el análisis de este trabajo: RSA frente a ECC, coordenadas afines frente a Jacobianas, y cuerpos primos $\mathbb{F}_p$ 
+frente a cuerpos binarios $\mathbb{F}_{2^m}$.
 
-Todas las mediciones se obtuvieron con el protocolo detallado en la sección \ref{subsec:impl-metodologia}: tres iteraciones de calentamiento descartadas, seguidas de $N = 100$ iteraciones medidas con \texttt{std::chrono::high\_resolution\_clock} a resolución de microsegundos, empleando semilla fija (\texttt{seed} = 0) para garantizar la reproducibilidad. Salvo que se indique lo contrario, las tablas reportan la \emph{mediana} de las 100 iteraciones, por ser más robusta frente a valores atípicos que la media aritmética; la media, la desviación típica y los percentiles P5/P95 están disponibles en los ficheros CSV generados por la suite. Los tiempos se expresan en microsegundos ($\mu$s) en las tablas y, cuando favorece la legibilidad, en milisegundos (ms) en el texto.
+Todas las mediciones se obtuvieron con el protocolo detallado en la sección \ref{subsec:impl-metodologia}: tres iteraciones de calentamiento descartadas, seguidas de $N = 100$ iteraciones 
+medidas con \texttt{std::chrono::high\_resolution\_clock} a resolución de microsegundos, empleando semilla fija (\texttt{seed} = 0) para garantizar la reproducibilidad. Salvo que se indique 
+lo contrario, las tablas reportan la \emph{mediana} de las 100 iteraciones, por ser más fiable frente a valores atípicos que la media aritmética, la media, la desviación típica y los 
+percentiles P5/P95 están disponibles en los ficheros CSV generados por las ejecuciones. Los tiempos se expresan en microsegundos ($\mu$s) en las tablas y, cuando favorece la legibilidad, 
+en milisegundos (ms) en el texto.
 
 \section{Entorno de ejecución de las mediciones}
 \label{sec:res-entorno}
 
-Las características del equipo sobre el que se ejecutaron los benchmarks se resumen en el cuadro \ref{tab:res-hardware}. Es importante recordar que los tiempos absolutos dependen del hardware concreto; lo que resulta significativo y transferible entre máquinas son las \emph{relaciones} entre algoritmos (los factores de aceleración y proporciones), que constituyen el núcleo del análisis.
+Las características del equipo sobre el que se ejecutaron los benchmarks se resumen en el cuadro \ref{tab:res-hardware}. Es importante recordar que los tiempos absolutos dependen del 
+hardware concreto, lo que resulta significativo y transferible entre máquinas son las \emph{relaciones} entre algoritmos (los factores de aceleración y proporciones), que constituyen 
+el núcleo del análisis.
 
 \begin{table}[htbp]
 \centering
@@ -40,14 +48,18 @@ Semilla          & Fija (\texttt{seed} = 0) \\
 \label{tab:res-hardware}
 \end{table}
 
-Cabe señalar que, aunque el procesador dispone de 16 núcleos, todos los benchmarks son de un solo hilo: la multiplicidad de núcleos no acelera cada operación individual, pero garantiza la ausencia de contención por parte de otros procesos durante la medición. Asimismo, los tiempos de referencia se obtuvieron con el nivel de optimización \texttt{-O2} (sin \texttt{-march=native}), para favorecer la portabilidad y la comparabilidad de los resultados; el efecto de otras opciones de compilación se estudia específicamente en la sección \ref{sec:res-compilacion}.
+Cabe señalar que, aunque el procesador dispone de 16 núcleos, todos los benchmarks son de un solo hilo: la multiplicidad de núcleos no acelera cada operación individual, pero garantiza la 
+ausencia de contención por parte de otros procesos durante la medición. Asimismo, los tiempos de referencia se obtuvieron con el nivel de optimización \texttt{-O2} (sin \texttt{-march=native}), 
+para favorecer la portabilidad y la comparabilidad de los resultados; el efecto de otras opciones de compilación se estudia específicamente en la sección \ref{sec:res-compilacion}.
 
-En total se midieron 72 benchmarks individuales, agrupados en las cuatro familias que corresponden a los modos del motor de medición: RSA (24 benchmarks), ECC sobre $\mathbb{F}_p$ en coordenadas afines (18), ECC sobre $\mathbb{F}_p$ en coordenadas Jacobianas (15) y ECC sobre $\mathbb{F}_{2^m}$ (15).
+En total se midieron 72 benchmarks individuales, agrupados en las cuatro familias que corresponden a los modos del motor de medición: RSA (24 benchmarks), ECC sobre $\mathbb{F}_p$ en 
+coordenadas afines (18), ECC sobre $\mathbb{F}_p$ en coordenadas Jacobianas (15) y ECC sobre $\mathbb{F}_{2^m}$ (15).
 
 \section{Rendimiento de RSA}
 \label{sec:res-rsa}
 
-El cuadro \ref{tab:res-rsa} recoge los tiempos de las operaciones de RSA para los cuatro tamaños de clave evaluados, junto con su nivel de seguridad equivalente según NIST SP 800-57 \cite{nist-sp800-57}.
+El cuadro \ref{tab:res-rsa} recoge los tiempos de las operaciones de RSA para los cuatro tamaños de clave evaluados, junto con su nivel de seguridad equivalente según 
+NIST SP 800-57 \cite{nist-sp800-57}.
 
 \begin{table}[htbp]
 \centering
@@ -72,15 +84,23 @@ Verificación        & 3        & 10       & 22       & 38 \\
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\textwidth]{imagenes/chart_rsa_scaling.png}
-    \caption{Escalado de las operaciones de RSA con el tamaño de clave. Obsérvese la escala logarítmica del eje vertical: el coste de las operaciones con clave privada crece de forma marcadamente superlineal.}
+    \caption{Escalado de las operaciones de RSA con el tamaño de clave. Obsérvese la escala logarítmica del eje vertical: el coste de las operaciones con clave privada crece de forma lineal.}
     \label{fig:res-rsa-scaling}
 \end{figure}
 
-A partir de estos datos se pueden extraer tres observaciones relevantes. En primer lugar, existe una marcada asimetría entre las operaciones públicas y privadas. El cifrado y la verificación presentan tiempos de ejecución muy reducidos (3--38 $\mu$s) y prácticamente independientes del coste de la clave privada, dado que emplean el exponente público $e = 65537$, de tan solo 17 bits. En contraposición, las operaciones con clave privada (descifrado y firma) utilizan el exponente privado $d$, que posee la longitud completa del módulo, resultando ser entre uno y dos órdenes de magnitud más lentas. Esta asimetría es una característica definitoria de RSA que será determinante en su posterior comparación con ECC.
+A partir de estos datos se pueden extraer tres observaciones relevantes. En primer lugar, existe una marcada asimetría entre las operaciones públicas y privadas. El cifrado y la verificación 
+presentan tiempos de ejecución muy reducidos (3--38 $\mu$s) y prácticamente independientes del coste de la clave privada, dado que emplean el exponente público $e = 65537$, de tan solo 17 bits. 
+En contraposición, las operaciones con clave privada (descifrado y firma) utilizan el exponente privado $d$, que posee la longitud completa del módulo, resultando ser entre uno y dos órdenes de 
+magnitud más lentas. Esta asimetría es una característica de RSA que será determinante en su posterior comparación con ECC.
 
-En segundo lugar, se constata empíricamente la eficacia de la optimización mediante el Teorema Chino del Resto (CRT). El descifrado aplicando CRT es consistentemente unas $3{,}5$ veces más rápido que el descifrado directo (reduciendo el tiempo de $3\,792$ $\mu$s a $1\,089$ $\mu$s para claves de 3072 bits). Esto concuerda con el modelo teórico, ya que el CRT reemplaza una exponenciación módulo $n$ por dos exponenciaciones módulo $p$ y $q$, cada una con operandos de la mitad del tamaño original.
+En segundo lugar, se constata empíricamente la eficacia de la optimización mediante el Teorema Chino del Resto (CRT). El descifrado aplicando CRT es consistentemente unas $3{,}5$ veces más 
+rápido que el descifrado directo (reduciendo el tiempo de $3\,792$ $\mu$s a $1\,089$ $\mu$s para claves de 3072 bits). Esto concuerda con el modelo teórico, ya que el CRT reemplaza una 
+exponenciación módulo $n$ por dos exponenciaciones módulo $p$ y $q$, cada una con operandos de la mitad del tamaño original.
 
-Por último, destaca el crecimiento marcadamente superlineal y la alta varianza asociados a la generación de claves. Esta es la operación computacionalmente más costosa con diferencia y experimenta un crecimiento muy pronunciado: pasar de 1024 a 4096 bits multiplica el tiempo mediano por un factor cercano a 80. A esto se suma una considerable dispersión estadística (para 4096 bits, la mediana es de $\approx$156 ms frente a una media de $\approx$185 ms, con picos máximos cercanos a los 600 ms). Esta alta varianza es inherente a la naturaleza probabilística del algoritmo de generación, el cual evalúa candidatos aleatorios mediante el test de Miller-Rabin iterativamente hasta hallar dos primos probables. 
+Por último, destaca el crecimiento lineal y la alta varianza asociados a la generación de claves. Esta es la operación computacionalmente más costosa con diferencia y experimenta un crecimiento 
+muy pronunciado, ya que, pasar de 1024 a 4096 bits multiplica el tiempo mediano por un factor cercano a 80. A esto se suma una considerable dispersión estadística 
+(para 4096 bits, la mediana es de $\approx$156 ms frente a una media de $\approx$185 ms, con picos máximos cercanos a los 600 ms). Esta alta varianza es inherente a la naturaleza 
+probabilística del algoritmo de generación, el cual evalúa candidatos aleatorios mediante el test de Miller-Rabin iterativamente hasta hallar dos primos probables. 
 
 \section{Rendimiento de ECC sobre cuerpos primos}
 \label{sec:res-ecc-primo}
@@ -113,16 +133,25 @@ Verificación ECDSA     & 1\,436 & 1\,522 & 3\,193 \\
     \label{fig:res-ecc-curves}
 \end{figure}
 
-El análisis de estos resultados permite confirmar varias de las predicciones teóricas planteadas a lo largo del documento. Principalmente, se observa que la multiplicación escalar domina el coste computacional de ECC. Operaciones como la generación de claves, el acuerdo ECDH y la firma ECDSA presentan tiempos de ejecución casi idénticos dentro de cada curva (rondando los 722 $\mu$s para secp256k1), lo cual es previsible puesto que todas ellas consisten fundamentalmente en ejecutar una única multiplicación escalar $k \cdot P$ (véase la sección \ref{subsec:ecc-mult-escalar}).
+El análisis de estos resultados permite confirmar varias de las predicciones teóricas planteadas a lo largo del documento. Principalmente, se observa que la multiplicación escalar domina el 
+coste computacional de ECC. Operaciones como la generación de claves, el acuerdo ECDH y la firma ECDSA presentan tiempos de ejecución casi idénticos dentro de cada curva 
+(rondando los 722 $\mu$s para secp256k1), lo cual es previsible puesto que todas ellas consisten fundamentalmente en ejecutar una única multiplicación escalar $k \cdot P$ 
+(véase la sección \ref{subsec:ecc-mult-escalar}).
 
-Por otro lado, el coste de la verificación de firmas ECDSA resulta ser aproximadamente el doble que el de su generación (por ejemplo, $1\,436$ $\mu$s frente a $725$ $\mu$s en la curva secp256k1). Esta relación directa obedece a que el proceso de verificación exige calcular $u_1 G + u_2 Q$, es decir, resolver dos multiplicaciones escalares en lugar de una. 
+Por otro lado, el coste de la verificación de firmas ECDSA resulta ser aproximadamente el doble que el de su generación (por ejemplo, $1\,436$ $\mu$s frente a $725$ $\mu$s en la curva secp256k1). 
+Esta relación directa obedece a que el proceso de verificación exige calcular $u_1 G + u_2 Q$, es decir, resolver dos multiplicaciones escalares en lugar de una. 
 
-Asimismo, se evidencia el escalado del esfuerzo computacional respecto al tamaño del cuerpo matemático subyacente. Las operaciones sobre P-384 (cuerpo de 384 bits) son unas $2{,}1$ veces más lentas que sus equivalentes en curvas de 256 bits, debido a que el coste de la multiplicación escalar crece proporcionalmente con la longitud en bits del escalar y con la complejidad aritmética intrínseca de operar con primos de mayor tamaño. Finalmente, al comparar secp256k1 con P-256 a paridad de nivel de seguridad, la primera ofrece un rendimiento ligeramente superior. Esta mejora marginal se explica por la estructura de secp256k1 ($a = 0$), cuya ausencia del coeficiente $a$ en la ecuación de Weierstrass simplifica las fórmulas de suma y duplicación de puntos.
+Asimismo, se evidencia el escalado del esfuerzo computacional respecto al tamaño del cuerpo matemático subyacente. Las operaciones sobre P-384 (cuerpo de 384 bits) son unas $2{,}1$ veces más 
+lentas que sus equivalentes en curvas de 256 bits, debido a que el coste de la multiplicación escalar crece proporcionalmente con la longitud en bits del escalar y con la complejidad aritmética 
+de operar con primos de mayor tamaño. Finalmente, al comparar secp256k1 con P-256 a paridad de nivel de seguridad, la primera ofrece un rendimiento ligeramente superior. 
+Esta mejora marginal se explica por la estructura de secp256k1 ($a = 0$), cuya ausencia del coeficiente $a$ en la ecuación de Weierstrass simplifica las fórmulas de suma y duplicación de puntos.
 
 \section{Eje 2: coordenadas afines frente a Jacobianas}
 \label{sec:res-coordenadas}
 
-El segundo eje de comparación evalúa el impacto en el rendimiento al sustituir el sistema de coordenadas afines por coordenadas Jacobianas. La principal ventaja de estas últimas radica en mitigar el impacto de la costosa inversión modular durante cada iteración del grupo, difiriéndola a una única inversión global al término de la multiplicación escalar (sección \ref{subsec:ecc-afines-jacobianas}). El cuadro \ref{tab:res-jacobian} recoge esta comparativa.
+El segundo eje de comparación evalúa el impacto en el rendimiento al sustituir el sistema de coordenadas afines por coordenadas Jacobianas. La principal ventaja de estas últimas radica en 
+mitigar el impacto de la costosa inversión modular durante cada iteración del grupo, difiriéndola a una única inversión global al término de la multiplicación escalar 
+(sección \ref{subsec:ecc-afines-jacobianas}). El cuadro \ref{tab:res-jacobian} muestra esta comparativa.
 
 \begin{table}[htbp]
 \centering
@@ -153,7 +182,11 @@ P-384     & Verificación ECDSA     & 3\,193 & 1\,632 & $1{,}96\times$ \\
     \label{fig:res-affine-jacobian}
 \end{figure}
 
-La adopción de coordenadas Jacobianas proporciona una mejora sostenida en los tiempos de ejecución, arrojando factores de aceleración de entre $1{,}70\times$ y $1{,}96\times$, dependiendo de la curva y la operación concreta. Resulta especialmente interesante notar que este beneficio relativo se incrementa a medida que crece el tamaño del cuerpo: pasa de ser $\approx 1{,}72\times$ en curvas de 256 bits a bordear un factor de $2\times$ en P-384. Este comportamiento se alinea con la teoría matemática subyacente, dado que la inversión modular se encarece a un ritmo mayor que la multiplicación convencional al aumentar la longitud del primo, logrando así que su eliminación sistemática reporte mayores dividendos en cuerpos más grandes (véase la figura \ref{fig:res-jacobian-speedup}).
+La adopción de coordenadas Jacobianas proporciona una mejora sostenida en los tiempos de ejecución, arrojando factores de aceleración de entre $1{,}70\times$ y $1{,}96\times$, 
+dependiendo de la curva y la operación concreta. Resulta especialmente interesante notar que este beneficio se incrementa a medida que crece el tamaño del cuerpo, donde pasa de 
+ser $\approx 1{,}72\times$ en curvas de 256 bits a un factor de alrededor de $2\times$ en P-384. Este comportamiento se alinea con la teoría matemática subyacente, dado que la inversión 
+modular se encarece a un ritmo mayor que la multiplicación al aumentar la longitud del primo, logrando así que su eliminación sistemática reporte mayores dividendos en cuerpos más 
+grandes (véase la figura \ref{fig:res-jacobian-speedup}).
 
 \begin{figure}[htbp]
     \centering
@@ -162,12 +195,17 @@ La adopción de coordenadas Jacobianas proporciona una mejora sostenida en los t
     \label{fig:res-jacobian-speedup}
 \end{figure}
 
-Es pertinente señalar que el factor de aceleración promedio medido ($\approx 1{,}8\times$) es notable, pero más moderado que las estimaciones teóricas simplificadas que suelen presuponer que una inversión equivale al coste de 80--100 multiplicaciones. La causa de esta discrepancia radica en el alto grado de optimización de las rutinas de inversión de la biblioteca NTL/GMP subyacente. Al ser la inversión real comparativamente menos gravosa en este entorno de lo que dictan los modelos clásicos, el ahorro neto derivado de prescindir de ellas decrece de manera proporcional. Este fenómeno constituye uno de los hallazgos más ilustrativos de este análisis, ya que demuestra cómo las características de bajo nivel de la biblioteca aritmética utilizada tienen el potencial de alterar las predicciones basadas únicamente en el conteo teórico de operaciones lógicas.
+Cabe señalar que el factor de aceleración promedio medido ($\approx 1{,}8\times$) es notable, pero más moderado que las estimaciones teóricas simplificadas que suelen presuponer que una 
+inversión equivale al coste de 80--100 multiplicaciones. La causa de esta discrepancia radica en el alto grado de optimización de las rutinas de inversión de la biblioteca NTL/GMP. 
+Al ser la inversión real comparativamente menos costosa en este entorno de lo que dictan los modelos clásicos, el ahorro de prescindir de ellas decrece de manera proporcional. 
+Este fenómeno constituye uno de los hallazgos más ilustrativos de este análisis, ya que demuestra cómo las características de bajo nivel de la biblioteca aritmética utilizada tienen el 
+potencial de alterar las predicciones basadas únicamente en el conteo teórico de operaciones lógicas.
 
 \section{Eje 3: cuerpos primos frente a cuerpos binarios}
 \label{sec:res-campos}
 
-El tercer vector de análisis contrasta la aritmética construida sobre cuerpos primos $\mathbb{F}_p$ frente a los cuerpos binarios $\mathbb{F}_{2^m}$. En el cuadro \ref{tab:res-binarias} se detallan los tiempos obtenidos para cinco curvas estándar operando sobre cuerpos binarios.
+El tercer vector de análisis contrasta la aritmética construida sobre cuerpos primos $\mathbb{F}_p$ frente a los cuerpos binarios $\mathbb{F}_{2^m}$. En el cuadro \ref{tab:res-binarias} 
+se detallan los tiempos obtenidos para cinco curvas estándar operando sobre cuerpos binarios.
 
 \begin{table}[htbp]
 \centering
@@ -194,7 +232,10 @@ sect283r1 (128 b) & 1\,274 & 1\,241 & 1\,254 \\
     \label{fig:res-binary-curves}
 \end{figure}
 
-Para realizar una comparativa equitativa es imperativo analizar curvas con niveles de seguridad análogos. Tomando como referencia el nivel de 128 bits de seguridad, la curva binaria sect283k1 efectúa una multiplicación escalar en $1\,243$ $\mu$s, lo cual contrasta con los $722$ $\mu$s invertidos por la curva sobre el cuerpo primo secp256k1 (evaluada en coordenadas afines). Por consiguiente, bajo el entorno implementado, la aritmética binaria resulta ser $\approx 1{,}7$ veces más lenta, relación visible en la figura \ref{fig:res-prime-binary}.
+Para realizar una comparativa equitativa es imperativo analizar curvas con niveles de seguridad equivalentes. Tomando como referencia el nivel de 128 bits de seguridad, la curva binaria 
+sect283k1 efectúa una multiplicación escalar en $1\,243$ $\mu$s, lo cual contrasta con los $722$ $\mu$s invertidos por la curva sobre el cuerpo primo secp256k1 
+(evaluada en coordenadas afines). Por consiguiente, bajo el entorno implementado, la aritmética binaria resulta ser $\approx 1{,}7$ veces más lenta, relación visible en la 
+figura \ref{fig:res-prime-binary}.
 
 \begin{figure}[htbp]
     \centering
@@ -203,12 +244,18 @@ Para realizar una comparativa equitativa es imperativo analizar curvas con nivel
     \label{fig:res-prime-binary}
 \end{figure}
 
-No obstante, esta diferencia de rendimiento debe interpretarse con cautela, ya que constituye un efecto derivado de las abstracciones de software utilizadas en el proyecto y no una limitación matemática intrínseca de los cuerpos binarios. En concreto, las operaciones sobre $\mathbb{F}_p$ están respaldadas por el tipo \texttt{ZZ\_p} de NTL, el cual delega todo el cálculo pesado a las rutinas de ensamblador ultra-optimizadas de GMP. Por el contrario, la aritmética sobre $\mathbb{F}_{2^m}$ se gestiona mediante el módulo \texttt{GF2E}, cuya multiplicación polinómica no goza del mismo nivel de refinamiento en software genérico. En implementaciones de bajo nivel o que aprovechen soporte específico de hardware (como instrucciones de tipo \texttt{PCLMULQDQ} en CPUs modernas o síntesis directa en FPGAs), la ausencia de acarreos propia de los cuerpos binarios suele conferirles una ventaja competitiva de velocidad respecto a los cuerpos primos.
+No obstante, esta diferencia de rendimiento debe interpretarse con cautela, ya que constituye un efecto derivado de las abstracciones de software utilizadas en el proyecto y no una 
+limitación matemática intrínseca de los cuerpos binarios. En concreto, las operaciones sobre $\mathbb{F}_p$ están respaldadas por el tipo \texttt{ZZ\_p} de NTL, el cual delega todo el 
+cálculo pesado a las rutinas de ensamblador ultra-optimizadas de GMP. Por el contrario, la aritmética sobre $\mathbb{F}_{2^m}$ se gestiona mediante el módulo \texttt{GF2E}, cuya multiplicación 
+polinómica no posee el mismo nivel de refinamiento en software genérico. En implementaciones de bajo nivel o que aprovechen soporte específico de hardware 
+(como instrucciones de tipo \texttt{PCLMULQDQ} en CPUs modernas o síntesis directa en FPGAs), la ausencia de acarreos propia de los cuerpos binarios suele conferirles una ventaja competitiva 
+de velocidad respecto a los cuerpos primos.
 
 \section{Eje 1: RSA frente a ECC a seguridad equivalente}
 \label{sec:res-rsa-ecc}
 
-El núcleo central de la experimentación enfrenta a RSA con ECC operando bajo un mismo nivel de seguridad garantizado (128 bits). El cuadro \ref{tab:res-rsa-ecc} compara el rendimiento de RSA-3072 con el de secp256k1 en coordenadas Jacobianas, representando este último el escenario más optimizado dentro del alcance de esta memoria.
+El núcleo central de la experimentación enfrenta a RSA con ECC operando bajo un mismo nivel de seguridad garantizado (128 bits). El cuadro \ref{tab:res-rsa-ecc} compara el rendimiento de 
+RSA-3072 con el de secp256k1 en coordenadas Jacobianas, representando este último el escenario más optimizado dentro del alcance de esta memoria.
 
 \begin{table}[htbp]
 \centering
@@ -236,9 +283,16 @@ Cifrado / operación pública & 22   & --- & RSA muy rápida ($e$ pequeño) \\
     \label{fig:res-keygen}
 \end{figure}
 
-Estos datos matizan la creencia generalizada de que «ECC siempre es más rápida que RSA». La diferencia de rendimiento más notable se manifiesta en la generación de claves, donde ECC se muestra casi 140 veces más veloz que RSA. El origen de esta disparidad radica en que RSA requiere un algoritmo estocástico de búsqueda y comprobación de primalidad que penaliza fuertemente el rendimiento, mientras que ECC solo precisa generar un escalar aleatorio simple seguido de una multiplicación base. En protocolos modernos que dependen de generar pares de claves continuos (por ejemplo, esquemas que garanticen \textit{Perfect Forward Secrecy} o PFS en negociaciones TLS efímeras), esta ventaja de ECC es el factor habilitante.
+Estos datos matizan la creencia generalizada de que "ECC siempre es más rápida que RSA". La diferencia de rendimiento más notable se ve en la generación de claves, donde ECC se muestra casi 
+140 veces más veloz que RSA. El origen de esta disparidad radica en que RSA requiere un algoritmo estocástico de búsqueda y comprobación de primalidad que penaliza fuertemente el rendimiento, 
+mientras que ECC solo precisa generar un escalar aleatorio simple seguido de una multiplicación base. En protocolos modernos que dependen de generar pares de claves continuos 
+(por ejemplo, esquemas que garanticen \textit{Perfect Forward Secrecy} o PFS en negociaciones TLS efímeras), esta ventaja de ECC es el factor habilitante.
 
-Por otro lado, aunque ECC es capaz de emitir firmas digitales aproximadamente $2{,}6$ veces más rápido que RSA, esta última destaca abrumadoramente en el proceso inverso: RSA verifica firmas $\approx 38$ veces más rápido que ECC. Esto se debe, como se ha introducido anteriormente, a la asimetría algorítmica de RSA impulsada por el uso sistemático de exponentes públicos muy reducidos ($e=65537$). Por ende, la adopción de uno u otro criptosistema dependerá en última instancia del perfil de la carga de trabajo; un servidor que actúe como emisor masivo de firmas se decantará lógicamente por ECC, mientras que entornos con clientes embebidos de escasos recursos cuya labor principal sea validar cadenas de certificados podrían beneficiarse de la asimetría de verificación de RSA.
+Por otro lado, aunque ECC es capaz de emitir firmas digitales aproximadamente $2{,}6$ veces más rápido que RSA, esta última destaca en el proceso inverso, donde RSA verifica firmas 
+$\approx 38$ veces más rápido que ECC. Esto se debe, como se ha introducido anteriormente, a la asimetría algorítmica de RSA impulsada por el uso sistemático de exponentes públicos muy 
+reducidos ($e=65537$). Por ende, la adopción de uno u otro criptosistema dependerá en última instancia del perfil de la carga de trabajo. Por ejemplo, un servidor que actúe como emisor masivo de 
+firmas se decantará lógicamente por ECC, mientras que entornos con clientes embebidos de escasos recursos cuya labor principal sea validar cadenas de certificados podrían beneficiarse 
+de la asimetría de verificación de RSA.
 
 \begin{figure}[htbp]
     \centering
@@ -247,7 +301,11 @@ Por otro lado, aunque ECC es capaz de emitir firmas digitales aproximadamente $2
     \label{fig:res-sign-verify}
 \end{figure}
 
-No obstante, cabe destacar que la ventaja competitiva de RSA en las operaciones públicas decrece a medida que los requisitos de seguridad aumentan. Los tamaños de clave de RSA escalan geométricamente en relación con ECC para solventar incrementos equivalentes de seguridad (llegando a requerir módulos de 7680 bits frente a curvas de 384 bits). En niveles superiores, el coste exponencial de procesar módulos tan enormes acaba mermando incluso la celeridad de las verificaciones públicas, haciendo a ECC la única alternativa viable a largo plazo, como se ilustra en la evolución mostrada en la figura \ref{fig:res-speedup}. (Cabe añadir que no se ha analizado empíricamente la seguridad de 192 bits debido a que generar miles de claves RSA de 7680 bits con el objetivo de perfilar su varianza habría excedido los tiempos razonables de ejecución).
+No obstante, cabe destacar que la ventaja competitiva de RSA en las operaciones públicas decrece a medida que los requisitos de seguridad aumentan. Los tamaños de clave de RSA escalan 
+geométricamente en relación con ECC para solventar incrementos equivalentes de seguridad (llegando a requerir módulos de 7680 bits frente a curvas de 384 bits). En niveles superiores, 
+el coste exponencial de procesar módulos tan enormes acaba mermando incluso la celeridad de las verificaciones públicas, haciendo a ECC la única alternativa viable a largo plazo, 
+como se ilustra en la evolución mostrada en la figura \ref{fig:res-speedup}. (Cabe añadir que no se ha analizado empíricamente la seguridad de 192 bits debido a que generar miles de claves 
+RSA de 7680 bits con el objetivo de perfilar su varianza habría excedido los tiempos razonables de ejecución).
 
 \begin{figure}[htbp]
     \centering
@@ -259,7 +317,10 @@ No obstante, cabe destacar que la ventaja competitiva de RSA en las operaciones 
 \section{Comparación con una implementación de referencia (OpenSSL)}
 \label{sec:res-openssl}
 
-Para dotar de contexto y validar la robustez de los algoritmos implementados, se midieron los tiempos de la solución propuesta frente a la biblioteca de producción OpenSSL 3.0.2 mediante la utilidad nativa \texttt{openssl speed} (ejecutando en el mismo equipo en bloques de 50 segundos). Es fundamental señalar que los resultados presentados en el cuadro \ref{tab:res-openssl} deben interpretarse con matices técnicos, dado que la metodología de OpenSSL y la del motor de pruebas propio difieren internamente en el flujo de operaciones contabilizadas.
+Para dotar de contexto y validar la eficiencia de los algoritmos implementados, se midieron los tiempos de la solución propuesta frente a la biblioteca de producción OpenSSL 3.0.2 
+mediante la utilidad nativa \texttt{openssl speed} (ejecutando en el mismo equipo en bloques de 50 segundos). Es fundamental señalar que los resultados presentados en el 
+cuadro \ref{tab:res-openssl} deben interpretarse con matices técnicos, dado que la metodología de OpenSSL y la del motor de pruebas propio difieren internamente en el flujo de operaciones 
+contabilizadas.
 
 \begin{table}[htbp]
 \centering
@@ -285,21 +346,33 @@ P-384 & ECDH      & 866 & 473 & OpenSSL $1{,}8\times$ más rápida \\
 \label{tab:res-openssl}
 \end{table}
 
-A simple vista, el módulo de pruebas arroja tiempos para RSA ligeramente inferiores (en torno a un 8--9\%) a los medidos por OpenSSL. No obstante, interpretar estos datos empíricos como una presunta superioridad de esta solución educativa sobre el estándar industrial más consolidado constituiría un análisis erróneo. Ambos sistemas se sitúan en el mismo orden de magnitud porque la carga principal de las operaciones privadas recae sobre la exponenciación modular; un problema que tanto GMP como OpenSSL (que utiliza su propio motor numérico \texttt{BIGNUM} independiente de GMP) abordan con técnicas algorítmicas maduras y virtualmente idénticas (reducción de Montgomery, pre-cálculo en ventanas y paralelización a nivel de registros).
+A simple vista, el módulo de pruebas arroja tiempos para RSA ligeramente inferiores (en torno a un 8--9\%) a los medidos por OpenSSL. No obstante, interpretar estos datos empíricos como una 
+presunta superioridad de esta solución educativa sobre el estándar industrial más consolidado constituiría un análisis erróneo. Ambos sistemas se sitúan en el mismo orden de magnitud porque 
+la carga principal de las operaciones privadas recae sobre la exponenciación modular; un problema que tanto GMP como OpenSSL (que utiliza su propio motor numérico \texttt{BIGNUM} independiente 
+de GMP) abordan con técnicas algorítmicas ampliamente estudiadas y virtualmente idénticas (reducción de Montgomery, pre-cálculo en ventanas y paralelización a nivel de registros).
 
-La ligera desviación de latencia a favor del desarrollo propio radica en que su medición es algorítmicamente más simple o «desnuda», mientras que OpenSSL absorbe penalizaciones lógicas orientadas a su uso en producción. Esta discrepancia se fundamenta en los siguientes puntos:
+La ligera desviación de latencia a favor del desarrollo propio radica en que su medición es algorítmicamente más simple, mientras que OpenSSL absorbe penalizaciones lógicas orientadas a 
+su uso en producción. Esta discrepancia se fundamenta en los siguientes puntos:
 \begin{itemize}
-    \item \textbf{Ocultación o \textit{blinding} criptográfico:} OpenSSL mitiga vectores de ataque de canal lateral basados en tiempos de ejecución perturbando matemáticamente los factores privados antes de procesarlos. Estas operaciones de cegado exigen recursos extra de los que el algoritmo académico implementado en este TFG carece.
+    \item \textbf{Ocultación o \textit{blinding} criptográfico:} OpenSSL mitiga vectores de ataque de canal lateral basados en tiempos de ejecución perturbando matemáticamente los factores privados antes de procesarlos. Estas operaciones exigen recursos extra de los que el algoritmo académico implementado en este TFG carece.
     \item \textbf{Gestión de estructuras de relleno:} La firma en OpenSSL ensambla formalmente la estructura de control de resúmenes (DigestInfo) y aplica el entramado de relleno estándar EMSA-PKCS\#1 v1.5; en contraposición, el sistema propuesto se limita a monitorizar exclusivamente la exponenciación pura $s = h^d \bmod n$.
     \item \textbf{Sobrecarga arquitectónica:} OpenSSL 3.x dirige todas las peticiones a través de las capas de indirección dinámica dictaminadas por su ecosistema de \textit{providers} y objetos \texttt{EVP}, introduciendo una penalización por llamada (\textit{overhead}) inexistente en las invocaciones monolíticas aquí documentadas.
 \end{itemize}
 
-Por el contrario, al focalizar el análisis sobre el bloque funcional de curvas elípticas, OpenSSL marca distancias significativas. La implementación comercial ejecuta operaciones en la curva P-256 entre 14 y 34 veces más rápido, evidenciando el impacto cualitativo de incorporar optimizaciones desarrolladas específicamente a mano en ensamblador para curvas de alto despliegue comercial (incluyendo rutinas de latencia constante y multiplicaciones sin acarreos formales). Curiosamente, la brecha de rendimiento se desploma drásticamente al testear sobre P-384 (reduciéndose a un multiplicador de $1{,}7\times$ a $4\times$). Al tratarse de una curva con menor cuota de mercado, OpenSSL parece relegar su procesamiento a código aritmético más generalizado; esta convergencia final demuestra que las implementaciones de referencia extraen su liderazgo absoluto en ECC del trabajo exhaustivo de bajo nivel enfocado curva a curva, y no necesariamente de diferencias en los postulados matemáticos descritos en este documento.
+Por el contrario, al focalizar el análisis sobre el bloque funcional de curvas elípticas, OpenSSL marca distancias significativas. La implementación comercial ejecuta operaciones en la 
+curva P-256 entre 14 y 34 veces más rápido, evidenciando el impacto cualitativo de incorporar optimizaciones desarrolladas específicamente a mano en ensamblador para curvas de alto 
+despliegue comercial (incluyendo rutinas de latencia constante y multiplicaciones sin acarreos formales). Curiosamente, la brecha de rendimiento se desploma drásticamente al testear sobre 
+P-384 (reduciéndose a un multiplicador de $1{,}7\times$ a $4\times$). Al tratarse de una curva con menor cuota de mercado, OpenSSL parece relegar su procesamiento a código aritmético más 
+generalizado, ya que, esta convergencia final demuestra que las implementaciones de referencia extraen su liderazgo absoluto en ECC del trabajo exhaustivo de bajo nivel enfocado curva a curva, 
+y no necesariamente de diferencias en los postulados matemáticos descritos en este documento.
 
 \section{Influencia de las opciones de compilación}
 \label{sec:res-compilacion}
 
-Todos los benchmarks anteriores se compilaron bajo la directiva de optimización \texttt{-O2}, según se justificó en las decisiones de diseño metodológico descritas en el capítulo \ref{ch:implementacion}. Como ejercicio analítico para este trabajo, resulta de interés cuantificar cómo las distintas opciones del preprocesador afectan a las operaciones numéricas del núcleo de curvas elípticas. Para responder a esta premisa, se orquestó la recompilación iterativa del módulo ECC bajo seis grados de agresividad del compilador, evaluando su comportamiento frente a la curva secp256k1 en un entorno estrictamente aislado. Los resultados, sintetizados en el cuadro \ref{tab:res-compiler} y la figura \ref{fig:res-compiler}, exponen un comportamiento escalonado con claras zonas de saturación.
+Todos los benchmarks anteriores se compilaron bajo la directiva de optimización \texttt{-O2}, según se justificó en las decisiones de diseño metodológico descritas en el 
+capítulo \ref{ch:implementacion}. Como ejercicio analítico para este trabajo, resulta de interés cuantificar cómo las distintas opciones del preprocesador afectan a las operaciones numéricas 
+del núcleo de curvas elípticas. Para responder a esta premisa, se realizó la recompilación iterativa del módulo ECC bajo seis grados de agresividad del compilador, evaluando su comportamiento 
+frente a la curva secp256k1 en un entorno estrictamente aislado. Los resultados, sintetizados en el cuadro \ref{tab:res-compiler} y la figura \ref{fig:res-compiler}, exponen un comportamiento escalonado con claras zonas de saturación.
 
 \begin{table}[htbp]
 \centering
@@ -328,18 +401,29 @@ Todos los benchmarks anteriores se compilaron bajo la directiva de optimización
     \label{fig:res-compiler}
 \end{figure}
 
-Para interpretar estos resultados conviene entender el alcance operativo de cada nivel de directiva sobre las fuentes C++. El indicador inicial \texttt{-O0} instruye al preprocesador para desactivar cualquier intervención que no sea una traducción estricta e imperativa, manteniendo todas las redundancias originales (lo cual facilita las trazas de depuración a costa de maximizar las latencias, promediando aquí $\approx$976 $\mu$s). 
+Para interpretar estos resultados conviene entender el alcance operativo de cada nivel de directiva sobre las fuentes C++. El indicador inicial \texttt{-O0} instruye al preprocesador 
+para desactivar cualquier intervención que no sea una traducción estricta e imperativa, manteniendo todas las redundancias originales (lo cual facilita las trazas de 
+depuración a costa de maximizar las latencias, promediando aquí $\approx$976 $\mu$s). 
 
-La aplicación de los conjuntos de reglas \texttt{-O1} y \texttt{-O2} genera el mayor incremento marginal de desempeño. Estas directivas habilitan limpiezas de flujo estructural (eliminación de código inalcanzable), compactación heurística de llamadas (el \textit{inlining} de pequeñas rutinas analíticas) y reasignaciones algorítmicas de registros de CPU, logrando una aceleración inicial en torno al $1{,}31\times$ que justifica su selección como estándar para los informes oficiales de esta memoria.
+La aplicación de los conjuntos de reglas \texttt{-O1} y \texttt{-O2} genera el mayor incremento marginal de desempeño. Estas directivas habilitan limpiezas de flujo estructural 
+(eliminación de código inalcanzable), compactación heurística de llamadas (el \textit{inlining} de pequeñas rutinas analíticas) y reasignaciones algorítmicas de registros de CPU, 
+logrando una aceleración inicial en torno al $1{,}31\times$ que justifica su selección como estándar para los informes oficiales de esta memoria.
 
-Paradójicamente, escalar a perfiles de optimización agresivos concebidos para cálculo denso y punto flotante, tales como \texttt{-O3} o \texttt{-Ofast}, no reporta beneficios tangibles en los algoritmos criptográficos aquí desarrollados. Lejos de reducir tiempos, \texttt{-O3} llega incluso a penalizar las ejecuciones levemente (incrementando el ciclo de la multiplicación escalar a $769{,}0\,\mu$s). Este patrón ilustra en un entorno real el concepto de penalización por desbordamiento binario o \textit{code bloat}: el afán desenfrenado por desenrollar bucles agota rápidamente los márgenes de las memorias caché L1 de la CPU, forzando búsquedas en cachés superiores que lastran el flujo principal de ejecución. 
+Paradójicamente, escalar a perfiles de optimización agresivos concebidos para cálculo denso y punto flotante, tales como \texttt{-O3} o \texttt{-Ofast}, no presenta beneficios en los 
+algoritmos criptográficos aquí desarrollados. Lejos de reducir tiempos, \texttt{-O3} llega incluso a penalizar las ejecuciones levemente (incrementando el ciclo de la multiplicación 
+escalar a $769{,}0\,\mu$s). Este patrón ilustra en un entorno real el concepto de penalización por desbordamiento binario o \textit{code bloat}: el afán desenfrenado por 
+desenrollar bucles agota rápidamente los márgenes de las memorias caché L1 de la CPU, forzando búsquedas en cachés superiores que lastran el flujo principal de ejecución. 
 
-La estabilización asintótica descrita entre los distintos niveles obedece, en última instancia, al marco tecnológico donde realmente reside la presión computacional: la librería GMP. Dado que GMP no se recompila junto a este proyecto de fin de grado y es enlazada dinámicamente como un bloque ya pre-traducido mediante rutinas nativas altamente refinadas de su propio ecosistema, los marcadores como \texttt{-O2} o el intento de usar extensiones locales como \texttt{-march=native} solo logran limar asperezas residuales en la capa intermedia o de interfaz construida en C++; las operaciones medulares, en cambio, operan consistentemente dentro del sub-sistema opaco preconstruido por GMP. 
+Las diferencias observadas se deben al marco tecnológico donde realmente reside la presión computacional: la librería GMP. 
+Dado que GMP no se recompila junto a este proyecto de fin de grado y es enlazada dinámicamente como un bloque ya pre-traducido mediante rutinas nativas altamente refinadas de su propio 
+ecosistema, los marcadores como \texttt{-O2} o el intento de usar extensiones locales como \texttt{-march=native} solo muestran efectos residuales en la capa intermedia o de interfaz construida 
+en C++; las operaciones medulares, en cambio, operan consistentemente dentro del sub-sistema preconstruido por GMP. 
 
 \section{Distribución estadística de las mediciones}
 \label{sec:res-distribucion}
 
-Más allá de los valores centrales documentados, conviene examinar la dispersión empírica para validar la precisión estructural de la suite. Las figuras \ref{fig:res-dist-sign} y \ref{fig:res-dist-verify} acotan gráficamente la constancia operativa en los procesos de firma y validación.
+Más allá de los valores centrales documentados, conviene examinar la dispersión empírica para validar la precisión estructural de los resultados de los benchmarks. 
+Las figuras \ref{fig:res-dist-sign} y \ref{fig:res-dist-verify} acotan gráficamente la constancia operativa en los procesos de firma y validación.
 
 \begin{figure}[htbp]
     \centering
@@ -355,7 +439,9 @@ Más allá de los valores centrales documentados, conviene examinar la dispersi�
     \label{fig:res-dist-verify}
 \end{figure}
 
-Con 100 iteraciones instrumentadas por bloque, la inmensa mayoría de peticiones internas a ECC (así como los enrutamientos públicos hacia perfiles estáticos de RSA) describen distribuciones formales de varianza excepcionalmente ajustada (desviaciones típicas inferiores al 1\% de los parámetros referenciados). Tal nivel de precisión reafirma la solidez del flujo de pruebas orquestado a nivel de sistema operativo y valida las pre-cargas térmicas iniciales. Como única excepción a este patrón predecible perdura la mencionada generación asimétrica inicial de primos aleatorios para claves RSA.
+Con 100 iteraciones instrumentadas por bloque, la inmensa mayoría de peticiones internas a ECC describen distribuciones
+formales de varianza excepcionalmente ajustada (desviaciones típicas inferiores al 1\% de los parámetros referenciados). Tal nivel de precisión reafirma el rigor del flujo de pruebas 
+ejecutado a nivel de sistema operativo y valida las pre-cargas térmicas iniciales diseñadas para estabilizar el entorno de ejecución.
 
 \section{Resumen de resultados}
 \label{sec:res-resumen}
@@ -391,11 +477,13 @@ $\mathbb{F}_p$ frente a $\mathbb{F}_{2^m}$ & En software puro con NTL, los cuerp
 \hline
 Opciones de compilación & El salto de rendimiento se concentra entre \texttt{-O0} y \texttt{-O2}; a partir de ahí las ganancias son marginales, ya que el cálculo subyacente reside en el núcleo pre-compilado de GMP. \\
 \hline
-Referencia OpenSSL & En RSA, el código implementado alcanza el mismo orden de eficiencia base que OpenSSL; la pequeña diferencia de milisegundos es producto de las protecciones de \textit{blinding} criptográfico y las estructuras de relleno en los bloques comerciales. En ECC, OpenSSL aventaja claramente en curvas estándar mediante un exhaustivo ajuste a bajo nivel (ensamblador). \\
+Referencia OpenSSL & En RSA, el código implementado alcanza el mismo orden de eficiencia base que OpenSSL; la pequeña diferencia de milisegundos es producto de las protecciones de \textit{blinding} criptográfico y las estructuras de relleno en los bloques comerciales. En ECC, OpenSSL vence en curvas estándar mediante un exhaustivo ajuste a bajo nivel (ensamblador). \\
 \hline
 \end{tabular}
 \caption{Síntesis de los hallazgos experimentales.}
 \label{tab:res-summary}
 \end{table}
 
-En conjunto, los experimentos cumplen el objetivo planteado: cuantifican de forma reproducible las diferencias de rendimiento entre RSA y ECC, y caracterizan el impacto empírico de las decisiones de implementación estudiadas (sistema de coordenadas, representación algebraica de cuerpos finitos y banderas de pre-procesamiento binario). Las conclusiones globales que se derivan de estos resultados, junto con las líneas de trabajo futuro, se desarrollan en el capítulo \ref{ch:conclusiones}.
+En conjunto, los experimentos cumplen el objetivo planteado, donde cuantifican de forma reproducible las diferencias de rendimiento entre RSA y ECC, y caracterizan el impacto empírico de las 
+decisiones de implementación estudiadas (sistema de coordenadas, representación algebraica de cuerpos finitos, opciones de compilación y optimizaciones de bajo nivel). Las conclusiones globales que se 
+derivan de estos resultados, junto con las líneas de trabajo futuro, se desarrollan en el capítulo \ref{ch:conclusiones}.
