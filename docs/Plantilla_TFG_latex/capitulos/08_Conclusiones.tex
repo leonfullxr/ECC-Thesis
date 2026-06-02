@@ -53,8 +53,7 @@ Desde una perspectiva metodológica, la evolución de este proyecto ha proporcio
 Destaca, en primer término, el acierto de haber optado por un desarrollo incremental. Implementar y estabilizar inicialmente la aritmética en coordenadas afines proporcionó una línea base 
 fiable y auditable; introducir posteriormente las coordenadas Jacobianas permitió tratar la optimización matemática no como un dogma abstracto, sino como un experimento teórico y empírico. 
 
-De igual forma, la decisión de programar componentes complementarios desde cero ---como la función resumen SHA-256 siguiendo estrictamente el estándar FIPS PUB 180-4--- en lugar de importar 
-dependencias de terceros, garantizó un control absoluto sobre el flujo de ejecución, eliminando variables de latencia externas perjudiciales para la precisión de la medición.
+De igual forma, la decisión de programar componentes complementarios desde cero en lugar de importar dependencias de terceros, garantizó un control absoluto sobre el flujo de ejecución, eliminando variables de latencia externas perjudiciales para la precisión de la medición.
 
 Otro pilar fundamental del trabajo ha sido interiorizar que la reproducibilidad científica no es un elemento opcional. La organización del entorno de pruebas mediante Docker, combinada con la 
 fijación de semillas deterministas en los generadores pseudoaleatorios, fue indispensable para anular el ruido estadístico. La excepcional estabilidad temporal y baja varianza lograda en la 
@@ -67,7 +66,7 @@ Para contextualizar el alcance real de las métricas aportadas, es necesario enu
 
 \begin{enumerate}
     \item La implementación resultante tiene un propósito estrictamente analítico y educativo. No constituye una suite criptográfica apta para entornos de producción, ya que carece de contramedidas activas frente a ataques de canal lateral (por temporización o consumo energético), utiliza el algoritmo RSA en su variante básica sin relleno (\textit{textbook RSA}) y no emplea esquemas estandarizados de derivación de claves en los secretos compartidos.
-    \item Aunque las muestras recogidas ofrecen un alto grado de fiabilidad estadística, el alcance de los \textit{benchmarks} se ha limitado a un ecosistema de hardware específico (arquitectura x86-64). Las conclusiones derivadas del rendimiento de las bibliotecas podrían variar sensiblemente al migrar el código a arquitecturas ARM o sistemas embebidos.
+    \item Aunque las muestras recogidas ofrecen un alto grado de fiabilidad estadística, el alcance de los \textit{benchmarks} se ha limitado a un ecosistema de hardware específico (arquitectura x86-64). Las conclusiones derivadas del rendimiento de las bibliotecas podrían variar ligeramente al migrar el código a arquitecturas ARM o sistemas embebidos.
     \item Restricciones de viabilidad temporal impidieron la evaluación directa del umbral de los 192 bits de seguridad. La latencia requerida para generar y validar de forma fiable los módulos RSA de 7680 bits excedía los plazos razonables de ejecución de las pruebas.
     \item Las métricas obtenidas para las curvas de Koblitz y la aritmética binaria se calcularon exclusivamente operando en coordenadas afines, asumiendo la consecuente penalización por inversión, al no haberse portado el modelo Jacobiano proyectivo a los campos polinómicos.
 \end{enumerate}

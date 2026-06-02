@@ -283,7 +283,7 @@ Cifrado / operación pública & 22   & --- & RSA muy rápida ($e$ pequeño) \\
     \label{fig:res-keygen}
 \end{figure}
 
-Estos datos matizan la creencia generalizada de que "ECC siempre es más rápida que RSA". La diferencia de rendimiento más notable se ve en la generación de claves, donde ECC se muestra casi 
+Estos datos matizan la creencia generalizada de que ``ECC siempre es más rápida que RSA''. La diferencia de rendimiento más notable se ve en la generación de claves, donde ECC se muestra casi 
 140 veces más veloz que RSA. El origen de esta disparidad radica en que RSA requiere un algoritmo estocástico de búsqueda y comprobación de primalidad que penaliza fuertemente el rendimiento, 
 mientras que ECC solo precisa generar un escalar aleatorio simple seguido de una multiplicación base. En protocolos modernos que dependen de generar pares de claves continuos 
 (por ejemplo, esquemas que garanticen \textit{Perfect Forward Secrecy} o PFS en negociaciones TLS efímeras), esta ventaja de ECC es el factor habilitante.
@@ -303,7 +303,7 @@ de la asimetría de verificación de RSA.
 
 No obstante, cabe destacar que la ventaja competitiva de RSA en las operaciones públicas decrece a medida que los requisitos de seguridad aumentan. Los tamaños de clave de RSA escalan 
 geométricamente en relación con ECC para solventar incrementos equivalentes de seguridad (llegando a requerir módulos de 7680 bits frente a curvas de 384 bits). En niveles superiores, 
-el coste exponencial de procesar módulos tan enormes acaba mermando incluso la celeridad de las verificaciones públicas, haciendo a ECC la única alternativa viable a largo plazo, 
+el coste exponencial de procesar módulos tan enormes acaba introduce demasiado coste computacional, haciendo a ECC la única alternativa viable a largo plazo, 
 como se ilustra en la evolución mostrada en la figura \ref{fig:res-speedup}. (Cabe añadir que no se ha analizado empíricamente la seguridad de 192 bits debido a que generar miles de claves 
 RSA de 7680 bits con el objetivo de perfilar su varianza habría excedido los tiempos razonables de ejecución).
 

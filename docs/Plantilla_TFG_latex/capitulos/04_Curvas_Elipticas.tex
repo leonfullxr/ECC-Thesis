@@ -11,11 +11,12 @@ La figura~\ref{fig:ECDSA_esquema} muestra los bloques necesarios para entender e
     \label{fig:ECDSA_esquema}
 \end{figure}
 
-Este capítulo desarrolla los fundamentos teóricos necesarios para abordar el capítulo de criptografía y la implementación. La sección~\ref{sec:historia_curvas_elipticas} ofrece un breve recorrido histórico desde las integrales elípticas hasta su uso criptográfico moderno. La sección~\ref{sec:definicion_curvas_elipticas} introduce la definición formal de curva elíptica como modelo de Weierstrass generalizado, junto con sus invariantes asociados (discriminante, condición de no singularidad, punto en el infinito). En la sección~\ref{sec:simplificaciones_weierstrass_curvas_elipticas} se obtienen las formas simplificadas según la característica del cuerpo base, distinguiendo los casos \(\mathrm{char}(K)\neq2,3\), \(\mathrm{char}(K)=2\) y \(\mathrm{char}(K)=3\). La sección~\ref{sec:ley_de_grupo} construye la \emph{ley de grupo} sobre los puntos de la curva mediante la regla de la cuerda y la tangente, primero de forma geométrica y después en fórmulas algebraicas explícitas para cada caso. La sección~\ref{sec:curvas_sobre_cuerpos_finitos} estudia el comportamiento del grupo de puntos cuando el cuerpo base es finito \(\mathbb{F}_q\), incluyendo el teorema de Hasse sobre el orden del grupo. Finalmente, la sección~\ref{sec:representacion_puntos} introduce las \emph{coordenadas proyectivas} (estándar, Jacobianas, Chudnovsky y López–Dahab), motivadas por la necesidad de evitar la inversión modular en cada operación, lo cual conecta directamente con las decisiones de implementación detalladas en el capítulo~\ref{ch:implementacion}.
+Este capítulo desarrolla los fundamentos teóricos necesarios para abordar el capítulo de criptografía y la implementación. La sección~\ref{sec:historia_curvas_elipticas} ofrece un breve recorrido histórico desde las integrales elípticas hasta su uso criptográfico moderno. La sección~\ref{sec:definicion_curvas_elipticas} introduce la definición formal de curva elíptica como modelo de Weierstrass generalizado, junto con sus invariantes asociados (discriminante, condición de no singularidad, punto en el infinito). En la sección~\ref{sec:simplificaciones_weierstrass_curvas_elipticas} se obtienen las formas simplificadas según la característica del cuerpo base, distinguiendo los casos \(\mathrm{char}(K)\neq2,3\), \(\mathrm{char}(K)=2\) y \(\mathrm{char}(K)=3\). La sección~\ref{sec:ley_de_grupo} construye la \emph{ley de grupo} sobre los puntos de la curva mediante la regla de la cuerda y la tangente, primero de forma geométrica y después en fórmulas algebraicas explícitas para cada caso. La sección~\ref{sec:curvas_sobre_cuerpos_finitos} estudia el comportamiento del grupo de puntos cuando el cuerpo base es finito \(\mathbb{F}_q\), incluyendo el teorema de Hasse sobre el orden del grupo. Finalmente, la sección~\ref{sec:representacion_puntos} introduce las \emph{coordenadas proyectivas} (afines, Jacobianas, Chudnovsky y López–Dahab), motivadas por la necesidad de evitar la inversión modular en cada operación, lo cual conecta directamente con las decisiones de implementación detalladas en el capítulo~\ref{ch:implementacion}.
 
 
 \subsection{Historia}\label{sec:historia_curvas_elipticas}
-Las curvas elípticas nacen del problema de calcular la longitud de arco de una elipse, que John Wallis abordó en 1655, y se articulan primero como integrales elípticas gracias a los pioneros Giulio Fagnano y Leonhard Euler en la primera mitad del siglo XVIII. En 1786, Adrien-Marie Legendre sistematiza estas integrales en tres “tipos” y sienta las bases de las funciones elípticas. A finales de la década de 1820, Niels Abel y Carl Jacobi invierten estas integrales, dando lugar a la teoría clásica de funciones elípticas. A mediados del siglo XIX, Karl Weierstrass y Bernhard Riemann las conectan con la estructura algebraico‐geométrica que hoy reconocemos en la forma normal de Weierstrass. Finalmente, en el siglo XX, Louis Mordell y André Weil desarrollan la teoría aritmética de puntos racionales, abriendo paso a la geometría algebraica moderna.
+Las curvas elípticas nacen del problema de calcular la longitud de arco de una elipse, que John Wallis abordó en 1655, y se articulan primero como integrales elípticas gracias a los pioneros Giulio Fagnano y Leonhard Euler en la primera mitad del siglo XVIII. En 1786, Adrien-Marie Legendre sistematiza estas integrales en tres “tipos” y sienta las bases de las funciones elípticas. A finales de la década de 1820, Niels Abel y Carl Jacobi invierten estas integrales, dando lugar a la teoría clásica de funciones elípticas. A mediados del siglo XIX, Karl Weierstrass y Bernhard Riemann las conectan con la estructura algebraico‐geométrica que hoy reconocemos en la forma normal de Weierstrass. 
+Finalmente, en el siglo XX, Louis Mordell y André Weil desarrollan la teoría aritmética de puntos racionales, abriendo paso a la geometría algebraica moderna.
 
 \section{Definición de una curva elíptica}\label{sec:definicion_curvas_elipticas}
 \begin{definicion}[Curva elíptica sobre un cuerpo]\label{def:definicion_curvas_elipticas}
@@ -297,26 +298,8 @@ La razón de distinguir tres familias de ecuaciones simplificadas responde a la 
 La condición de \emph{supersingularidad} (discriminante especial, ver cada caso) refleja que el grupo de puntos de la curva tiene un anillo de endomorfismos más grande. Si bien ciertas construcciones pairing‐based usan curvas supersingulares (por sus endomorfismos explícitos), para ECC estándar se prefieren curvas \emph{ordinarias} (no supersingulares) para evitar ataques que explotan ese extra de simetría~\cite{waterhouse1969}.  
 
 \subsection{Ley de Grupo}\label{sec:ley_de_grupo}
-Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\mathcal{O}\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}. A continuación describimos primero la construcción geométrica y, después, distinguimos los casos algebraicos según la posición relativa de los dos operandos.
-
-\subsubsection*{Descripción geométrica}
-\begin{itemize}
-  \item \textbf{Identidad.} El punto en el infinito \(\mathcal{O}\) actúa como elemento neutro:
-    \[
-      P + \mathcal{O} \;=\; \mathcal{O} + P \;=\; P,\qquad\forall\,P\in E(K).
-    \]
-  \item \textbf{Opuesto.} Dado \(P=(x,y)\in E(K)\), su opuesto es \(-P=(x,-y)\) (la reflexión sobre el eje \(x\)), de modo que \(P + (-P) = \mathcal{O}\).
-  \item \textbf{Suma de puntos distintos (cuerda).} Para \(P\neq Q\) trazamos la recta secante que los une; ésta corta a la curva en un tercer punto \(R'\). Entonces
-    \[
-      P + Q \;=\; -R'
-    \]
-    es la reflexión de \(R'\) respecto al eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(a)).
-  \item \textbf{Duplicación (tangente).} Para \(P=Q\) trazamos la recta tangente a la curva en \(P\); ésta vuelve a cortar a la curva en un punto \(R'\). De forma análoga,
-    \[
-      2P \;=\; -R'
-    \]
-    es la reflexión de \(R'\) sobre el eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(b)).
-\end{itemize}
+Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\mathcal{O}\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}. 
+A continuación describimos la construcción geométrica junto con los casos algebraicos según la posición relativa de los dos operandos.
 
 \begin{figure}[H]
   \centering
