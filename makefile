@@ -20,8 +20,8 @@ CXXFLAGS := -std=c++17 $(OPT)
 INCLUDES := -Iinclude \
             -I$(PREFIX)/include
 LDFLAGS  := -L$(PREFIX)/lib \
-            -Wl,-rpath=$(PREFIX)/lib \
-            -lntl -lgmp -pthread
+            -Wl,-rpath=$(PREFIX)/lib
+LDLIBS   := -lntl -lgmp -pthread
 
 ######################### Python benchmark
 PYTHON        := python3
@@ -115,12 +115,12 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp | $(BUILD_DIR)
 # Main executable
 $(BIN_DIR)/bench: $(OBJS) | $(BIN_DIR)
 	@echo -e "$(LGFG)Linking bench...$(EC)"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(LDFLAGS) -o $@
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(LDFLAGS) $(LDLIBS) -o $@
 
 # RNG analysis tool
 $(BIN_DIR)/rng_analysis: $(SRC_DIR)/rng_analysis.cpp $(BUILD_DIR)/rng.o | $(BIN_DIR)
 	@echo -e "$(LGFG)Compiling RNG analysis tool...$(EC)"
-	@$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(LDFLAGS) -o $@
+	@$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(LDFLAGS) $(LDLIBS) -o $@
 
 # Dependencies (explicit)
 $(BUILD_DIR)/main.o: $(SRC_DIR)/main.cpp $(INCLUDE_DIR)/common.hpp $(INCLUDE_DIR)/rng.hpp $(INCLUDE_DIR)/rsa.hpp $(INCLUDE_DIR)/ecc.hpp
