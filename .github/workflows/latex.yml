@@ -30,9 +30,8 @@ jobs:
       - name: Compile LaTeX document
         uses: xu-cheng/latex-action@v3
         with:
-          # TODO: ajusta a la ruta real de tu fichero raiz .tex
-          root_file: docs/Plantilla_TFG_latex/proyecto.tex
-          working_directory: .
+          root_file: proyecto.tex
+          working_directory: docs/Plantilla_TFG_latex
           latexmk_use_xelatex: false   # pon true si tu plantilla usa XeLaTeX
 
       - name: Upload PDF artifact
