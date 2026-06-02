@@ -1,9 +1,7 @@
 \chapter{Teoría de las curvas elípticas}\label{chap:Curvas_elipticas}
 
 \section{Introducción y motivación}
-Los sistemas criptográficos basados en curvas elípticas dependen, en última instancia, de la aritmética de los puntos de la curva. Como se mostró en el capítulo~\ref{chap:Campos_finitos}, la eficiencia de estos esquemas se apoya directamente en la velocidad de los algoritmos de aritmética de curva, que a su vez se construyen sobre las operaciones del cuerpo subyacente: suma, multiplicación e inversión.
-
-La figura~\ref{fig:ECDSA_esquema} muestra los bloques necesarios para entender e implementar un protocolo como el algoritmo de firma digital sobre curvas elípticas (ECDSA). La aritmética de curvas no solo descansa en las operaciones del cuerpo, sino que en algunos casos también requiere aritmética de grandes enteros y operaciones modulares. ECDSA emplea, además, una función hash; pero los pasos computacionalmente más costosos son las propias operaciones sobre la curva.
+Los sistemas criptográficos basados en curvas elípticas dependen, en última instancia, de la aritmética de los puntos de la curva. Como se mostró en el capítulo~\ref{chap:Campos_finitos}, la eficiencia de estos esquemas se apoya directamente en la velocidad de los algoritmos de aritmética de curva, que a su vez se construyen sobre las operaciones del cuerpo subyacente: suma, multiplicación e inversión. Esta aritmética no solo descansa en dichas operaciones, sino que en algunos casos también requiere aritmética de grandes enteros y operaciones modulares; un protocolo como el algoritmo de firma digital sobre curvas elípticas (ECDSA) emplea, además, una función hash. No obstante, los pasos computacionalmente más costosos son las propias operaciones sobre la curva, como ilustra la figura~\ref{fig:ECDSA_esquema}, que muestra los bloques necesarios para entender e implementar dicho protocolo.
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{imagenes/ECDSA_esquema.png}
@@ -11,11 +9,12 @@ La figura~\ref{fig:ECDSA_esquema} muestra los bloques necesarios para entender e
     \label{fig:ECDSA_esquema}
 \end{figure}
 
-Este capítulo desarrolla los fundamentos teóricos necesarios para abordar el capítulo de criptografía y la implementación. La sección~\ref{sec:historia_curvas_elipticas} ofrece un breve recorrido histórico desde las integrales elípticas hasta su uso criptográfico moderno. La sección~\ref{sec:definicion_curvas_elipticas} introduce la definición formal de curva elíptica como modelo de Weierstrass generalizado, junto con sus invariantes asociados (discriminante, condición de no singularidad, punto en el infinito). En la sección~\ref{sec:simplificaciones_weierstrass_curvas_elipticas} se obtienen las formas simplificadas según la característica del cuerpo base, distinguiendo los casos \(\mathrm{char}(K)\neq2,3\), \(\mathrm{char}(K)=2\) y \(\mathrm{char}(K)=3\). La sección~\ref{sec:ley_de_grupo} construye la \emph{ley de grupo} sobre los puntos de la curva mediante la regla de la cuerda y la tangente, primero de forma geométrica y después en fórmulas algebraicas explícitas para cada caso. La sección~\ref{sec:curvas_sobre_cuerpos_finitos} estudia el comportamiento del grupo de puntos cuando el cuerpo base es finito \(\mathbb{F}_q\), incluyendo el teorema de Hasse sobre el orden del grupo. Finalmente, la sección~\ref{sec:representacion_puntos} introduce las \emph{coordenadas proyectivas} (estándar, Jacobianas, Chudnovsky y López–Dahab), motivadas por la necesidad de evitar la inversión modular en cada operación, lo cual conecta directamente con las decisiones de implementación detalladas en el capítulo~\ref{ch:implementacion}.
+Este capítulo desarrolla los fundamentos teóricos necesarios para abordar el capítulo de criptografía y la implementación. La sección~\ref{sec:historia_curvas_elipticas} ofrece un breve recorrido histórico desde las integrales elípticas hasta su uso criptográfico moderno. La sección~\ref{sec:definicion_curvas_elipticas} introduce la definición formal de curva elíptica como modelo de Weierstrass generalizado, junto con sus invariantes asociados (discriminante, condición de no singularidad, punto en el infinito). En la sección~\ref{sec:simplificaciones_weierstrass_curvas_elipticas} se obtienen las formas simplificadas según la característica del cuerpo base, distinguiendo los casos \(\mathrm{char}(K)\neq2,3\), \(\mathrm{char}(K)=2\) y \(\mathrm{char}(K)=3\). La sección~\ref{sec:ley_de_grupo} construye la \emph{ley de grupo} sobre los puntos de la curva mediante la regla de la cuerda y la tangente, primero de forma geométrica y después en fórmulas algebraicas explícitas para cada caso. La sección~\ref{sec:curvas_sobre_cuerpos_finitos} estudia el comportamiento del grupo de puntos cuando el cuerpo base es finito \(\mathbb{F}_q\), incluyendo el teorema de Hasse sobre el orden del grupo. Finalmente, la sección~\ref{sec:representacion_puntos} introduce las \emph{coordenadas proyectivas} (afines, Jacobianas, Chudnovsky y López–Dahab), motivadas por la necesidad de evitar la inversión modular en cada operación, lo cual conecta directamente con las decisiones de implementación detalladas en el capítulo~\ref{ch:implementacion}.
 
 
 \subsection{Historia}\label{sec:historia_curvas_elipticas}
-Las curvas elípticas nacen del problema de calcular la longitud de arco de una elipse, que John Wallis abordó en 1655, y se articulan primero como integrales elípticas gracias a los pioneros Giulio Fagnano y Leonhard Euler en la primera mitad del siglo XVIII. En 1786, Adrien-Marie Legendre sistematiza estas integrales en tres “tipos” y sienta las bases de las funciones elípticas. A finales de la década de 1820, Niels Abel y Carl Jacobi invierten estas integrales, dando lugar a la teoría clásica de funciones elípticas. A mediados del siglo XIX, Karl Weierstrass y Bernhard Riemann las conectan con la estructura algebraico‐geométrica que hoy reconocemos en la forma normal de Weierstrass. Finalmente, en el siglo XX, Louis Mordell y André Weil desarrollan la teoría aritmética de puntos racionales, abriendo paso a la geometría algebraica moderna.
+Las curvas elípticas nacen del problema de calcular la longitud de arco de una elipse, que John Wallis abordó en 1655, y se articulan primero como integrales elípticas gracias a los pioneros Giulio Fagnano y Leonhard Euler en la primera mitad del siglo XVIII. En 1786, Adrien-Marie Legendre sistematiza estas integrales en tres “tipos” y sienta las bases de las funciones elípticas. A finales de la década de 1820, Niels Abel y Carl Jacobi invierten estas integrales, dando lugar a la teoría clásica de funciones elípticas. A mediados del siglo XIX, Karl Weierstrass y Bernhard Riemann las conectan con la estructura algebraico‐geométrica que hoy reconocemos en la forma normal de Weierstrass. 
+Finalmente, en el siglo XX, Louis Mordell y André Weil desarrollan la teoría aritmética de puntos racionales, abriendo paso a la geometría algebraica moderna.
 
 \section{Definición de una curva elíptica}\label{sec:definicion_curvas_elipticas}
 \begin{definicion}[Curva elíptica sobre un cuerpo]\label{def:definicion_curvas_elipticas}
@@ -297,26 +296,18 @@ La razón de distinguir tres familias de ecuaciones simplificadas responde a la 
 La condición de \emph{supersingularidad} (discriminante especial, ver cada caso) refleja que el grupo de puntos de la curva tiene un anillo de endomorfismos más grande. Si bien ciertas construcciones pairing‐based usan curvas supersingulares (por sus endomorfismos explícitos), para ECC estándar se prefieren curvas \emph{ordinarias} (no supersingulares) para evitar ataques que explotan ese extra de simetría~\cite{waterhouse1969}.  
 
 \subsection{Ley de Grupo}\label{sec:ley_de_grupo}
-Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\mathcal{O}\) (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}. A continuación describimos primero la construcción geométrica y, después, distinguimos los casos algebraicos según la posición relativa de los dos operandos.
+Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\mathcal{O}\) 
+(punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}.
 
-\subsubsection*{Descripción geométrica}
-\begin{itemize}
-  \item \textbf{Identidad.} El punto en el infinito \(\mathcal{O}\) actúa como elemento neutro:
-    \[
-      P + \mathcal{O} \;=\; \mathcal{O} + P \;=\; P,\qquad\forall\,P\in E(K).
-    \]
-  \item \textbf{Opuesto.} Dado \(P=(x,y)\in E(K)\), su opuesto es \(-P=(x,-y)\) (la reflexión sobre el eje \(x\)), de modo que \(P + (-P) = \mathcal{O}\).
-  \item \textbf{Suma de puntos distintos (cuerda).} Para \(P\neq Q\) trazamos la recta secante que los une; ésta corta a la curva en un tercer punto \(R'\). Entonces
-    \[
-      P + Q \;=\; -R'
-    \]
-    es la reflexión de \(R'\) respecto al eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(a)).
-  \item \textbf{Duplicación (tangente).} Para \(P=Q\) trazamos la recta tangente a la curva en \(P\); ésta vuelve a cortar a la curva en un punto \(R'\). De forma análoga,
-    \[
-      2P \;=\; -R'
-    \]
-    es la reflexión de \(R'\) sobre el eje \(x\) (véase la figura~\ref{fig:grupo_elipticas}(b)).
-\end{itemize}
+La idea geométrica es sencilla y constituye el corazón de toda la aritmética de curva, por lo que conviene entenderla bien:, porque es la operación 
+elemental que después se repite miles de veces en la multiplicación escalar (sección~\ref{subsec:ecc-mult-escalar}) y, por tanto, la que domina el 
+coste de cualquier protocolo basado en ECC. Para \emph{sumar} dos puntos distintos \(P\) y \(Q\) se traza la recta (la \emph{cuerda}) que los une. 
+Dado que la ecuación de Weierstrass es cúbica en \(x\), una recta no vertical corta a la curva exactamente en un tercer punto, 
+al que llamamos \(R'\) que el resultado de la suma se define como el reflejo de \(R'\) respecto al eje de simetría de la curva 
+(el eje de abscisas en la forma corta), de modo que \(R = P+Q\). Cuando los dos sumandos coinciden (\(P = Q\)) no existe una cuerda que los una, 
+así que se emplea la recta \emph{tangente} a la curva en \(P\) (su segundo corte con la curva), una vez reflejado, proporciona la duplicación \(2P\). 
+La figura~\ref{fig:grupo_elipticas} ilustra ambas situaciones, que son las dos únicas que requieren cálculo real y el resto de casos 
+(operar con el neutro o con un punto y su opuesto) se resuelven de forma directa.
 
 \begin{figure}[H]
   \centering
@@ -334,28 +325,28 @@ Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de pun
   \label{fig:grupo_elipticas}
 \end{figure}
 
-\subsubsection*{Casos algebraicos para calcular \(P + Q\)}
-Sean \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) dos puntos de \(E(K)\). El cálculo de \(R = P+Q\) se descompone en los cinco casos disjuntos siguientes:
+\noindent Esta misma construcción geométrica, al traducirla a coordenadas, se descompone en un número finito de casos disjuntos según la posición relativa 
+de los dos operandos. Sean \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) dos puntos de \(E(K)\); el cálculo de \(R = P+Q\) distingue:
 
 \begin{enumerate}
-  \item \textbf{Caso 1: alguno de los operandos es \(\mathcal{O}\).} Si \(P=\mathcal{O}\), entonces \(R = Q\); análogamente si \(Q=\mathcal{O}\), entonces \(R = P\).
+  \item \textbf{Caso 1: alguno de los operandos es \(\mathcal{O}\).} Como \(\mathcal{O}\) es el elemento neutro, si \(P=\mathcal{O}\) entonces \(R = Q\), y análogamente \(R = P\) si \(Q=\mathcal{O}\).
 
-  \item \textbf{Caso 2: \(Q = -P\) (puntos opuestos).} Si \(x_1 = x_2\) y \(y_2 = -y_1 - a_1 x_1 - a_3\) (en la forma corta, simplemente \(y_2 = -y_1\)), entonces los puntos son inversos y
+  \item \textbf{Caso 2: \(Q = -P\) (puntos opuestos).} Geométricamente, \(P\) y \(-P\) tienen la misma abscisa, de modo que la recta que los une es \emph{vertical} y no posee un tercer corte afín con la curva: dicho corte es precisamente el punto en el infinito. Algebraicamente esto ocurre cuando \(x_1 = x_2\) y \(y_2 = -y_1 - a_1 x_1 - a_3\) (en la forma corta, simplemente \(y_2 = -y_1\)), y entonces
     \[
       R \;=\; P + (-P) \;=\; \mathcal{O}.
     \]
 
-  \item \textbf{Caso 3: \(P\neq Q\) y \(x_1\neq x_2\) (suma genérica con cuerda).} Se calcula la pendiente de la cuerda y se obtiene el tercer punto.
+  \item \textbf{Caso 3: \(P\neq Q\) y \(x_1\neq x_2\) (suma genérica con cuerda).} Es el caso de la cuerda descrito arriba: se calcula la pendiente \(\lambda\) de la recta que une \(P\) y \(Q\), se obtiene el tercer corte y se refleja para hallar \(R = P+Q\).
 
-  \item \textbf{Caso 4: \(P = Q\) y \(y_1\neq 0\) (duplicación con tangente).} Se calcula la pendiente de la tangente y se obtiene la duplicación \(2P\).
+  \item \textbf{Caso 4: \(P = Q\) y \(y_1\neq 0\) (duplicación con tangente).} Aquí se emplea la pendiente \(\lambda\) de la recta tangente en \(P\); su segundo corte, reflejado, proporciona \(2P\).
 
-  \item \textbf{Caso 5: \(P = Q\) y \(2y_1 + a_1 x_1 + a_3 = 0\) (tangente vertical).} En la forma corta esto equivale a \(y_1 = 0\). En tal situación la tangente es vertical y
+  \item \textbf{Caso 5: \(P = Q\) y \(2y_1 + a_1 x_1 + a_3 = 0\) (tangente vertical).} En la forma corta esto equivale a \(y_1 = 0\). La tangente es entonces vertical y, como en el caso 2, no tiene un tercer corte afín, por lo que
     \[
       R \;=\; 2P \;=\; \mathcal{O}.
     \]
 \end{enumerate}
 
-\noindent Los casos 3 y 4 son los únicos que requieren aritmética no trivial en el cuerpo: las fórmulas concretas se exponen a continuación, primero para característica \(\neq 2,3\) y después para cuerpos binarios.
+\noindent Como se anticipaba, solo los casos 3 y 4 requieren aritmética no trivial en el cuerpo; ambos siguen el mismo patrón ---calcular una pendiente \(\lambda\), de ella la nueva abscisa \(x_3\) y, finalmente, la ordenada \(y_3\)--- y se diferencian únicamente en cómo se obtiene \(\lambda\) (por diferencia de puntos en la cuerda o por derivación en la tangente). Las fórmulas concretas se exponen a continuación, primero para característica \(\neq 2,3\) y después para cuerpos binarios.
 
 \subsubsection*{Propiedades del grupo abeliano}
 El conjunto de puntos de la curva, junto con la operación $+$ y el elemento neutro $\mathcal{O}$, forma un \emph{grupo abeliano} que denotamos
@@ -420,6 +411,18 @@ las operaciones en coordenadas afines \((x,y)\) sobre \(K\) se concretan, según
     \]
     Entonces \(2P = (x_3,y_3)\).
 \end{enumerate}
+
+\noindent Conviene detenerse en el origen de estas fórmulas, pues constituyen la operación que se ejecuta repetidamente en la multiplicación escalar. 
+La pendiente \(\lambda\) no es más que la traducción algebraica de la recta empleada en la construcción geométrica. 
+En la \emph{suma} (caso~3), \(\lambda = (y_2-y_1)/(x_2-x_1)\) es sencillamente la pendiente de la cuerda que une \(P\) y \(Q\). 
+En la \emph{duplicación} (caso~4), al coincidir los puntos se toma la tangente, cuya pendiente se obtiene derivando implícitamente la 
+ecuación \(y^2 = x^3 + ax + b\): de \(2y\,y' = 3x^2 + a\) se despeja \(y' = (3x_1^2 + a)/(2y_1)\). Una vez fijada la recta \(y = \lambda x + c\), 
+sustituirla en la curva produce una cúbica en \(x\) cuyas tres raíces son \(x_1\), \(x_2\) (o \(x_1\) doble, en la duplicación) y la abscisa del tercer corte. 
+La suma de las raíces equivale al coeficiente de \(x^2\) cambiado de signo, y en la forma corta dicho coeficiente es nulo, 
+se obtiene directamente \(x_3 = \lambda^2 - x_1 - x_2\) (respectivamente \(x_3 = \lambda^2 - 2x_1\)). 
+Finalmente, el paso \(y_3 = \lambda(x_1 - x_3) - y_1\) implementa la \emph{reflexión} respecto al eje de abscisas que define la suma. 
+En resumen, cada operación de grupo se reduce a una inversión (la que aparece en el denominador de \(\lambda\)), unas pocas multiplicaciones y varias sumas 
+en el cuerpo; es precisamente el coste de esa inversión el que motivará el uso de coordenadas proyectivas en la sección~\ref{sec:representacion_puntos}.
 
 \subsubsection*{Ley de grupo en cuerpos binarios}
 

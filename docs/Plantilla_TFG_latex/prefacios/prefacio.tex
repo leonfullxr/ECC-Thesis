@@ -19,15 +19,17 @@ Leon Elliott Fuller\\
 \end{center}
 
 %\vspace{0.7cm}
-\noindent{\textbf{Palabras clave}: curvas elípticas, criptografía, aritmética de campo finito, NTL, C++, benchmarking, Docker, ECDH, ECDSA, ECC, RSA}\\
+\noindent{\textbf{Palabras clave}: curvas elípticas, criptografía, aritmética de campos finitos, coordenadas Jacobianas, campos binarios, NTL, GMP, C++, benchmarking, Docker, ECDH, ECDSA, ECC, RSA, SHA-256}\\
 
 \vspace{0.7cm}
 \noindent{\textbf{Resumen}}\\
-En 1985 Neal Koblitz y Victor Miller propusieron de forma independiente el uso de curvas elípticas en criptografía. Hoy en día, los esquemas basados en curvas elípticas (ECC) se han consolidado como una alternativa eficiente a RSA, pues ofrecen niveles de seguridad comparables con tamaños de clave sensiblemente menores. Esto los hace ideales para dispositivos con recursos limitados y para aplicaciones que requieren alto rendimiento.
+En 1985 Neal Koblitz y Victor Miller propusieron de forma independiente el uso de curvas elípticas en criptografía. Hoy en día, los esquemas basados en curvas elípticas (ECC) se han consolidado como una alternativa eficiente a RSA, pues ofrecen niveles de seguridad comparables con tamaños de clave notablemente menores, lo que los hace idóneos para dispositivos con recursos limitados y para aplicaciones que requieren alto rendimiento.
 
-En este trabajo profundizaremos en los fundamentos de ECC y describiremos los principales protocolos Elliptic Curve Diffie–Hellman (ECDH) y Elliptic Curve Digital Signature Algorithm (ECDSA). A continuación analizaremos tanto los ataques clásicos al problema del logaritmo discreto en curvas elípticas como las amenazas cuánticas, en particular el algoritmo de Shor, que podría comprometer ECC en la era de los ordenadores cuánticos.
+Más allá de los fundamentos teóricos, este trabajo desarrolla una implementación completa en C++17 de ambos criptosistemas y un estudio comparativo sistemático de su rendimiento. La implementación, construida sobre las bibliotecas NTL y GMP, incluye RSA con descifrado acelerado mediante el Teorema del Resto Chino, los protocolos Elliptic Curve Diffie-Hellman (ECDH) y Elliptic Curve Digital Signature Algorithm (ECDSA), una función resumen SHA-256 desarrollada desde cero conforme a la norma FIPS PUB 180-4 y la aritmética de curvas tanto sobre campos primos $\mathbb{F}_p$ como sobre campos binarios $\mathbb{F}_{2^m}$.
 
-Por último, se realizarán comparaciones de tiempo con respecto a la generación de claves entre RSA y ECC.
+El análisis empírico se articula en torno a tres ejes de comparación. En primer lugar, RSA frente a ECC a niveles de seguridad equivalentes según el estándar NIST SP 800-57. En segundo lugar, coordenadas afines frente a coordenadas Jacobianas proyectivas, que eliminan las costosas inversiones modulares. En tercer lugar, campos primos frente a campos binarios. Las mediciones abarcan la generación de claves, la firma y verificación, y la multiplicación escalar, y se obtienen en un entorno determinista y reproducible mediante contenedores Docker y un generador de números aleatorios con semilla fija.
+
+En el plano teórico se estudian el problema del logaritmo discreto en curvas elípticas (ECDLP) y los principales ataques clásicos que lo abordan, como son la paradoja del cumpleaños, el algoritmo rho de Pollard y el método de Pohlig-Hellman, así como la amenaza cuántica que el algoritmo de Shor supone para la criptografía de clave pública actual.
 
 \cleardoublepage
 
@@ -43,15 +45,17 @@ Por último, se realizarán comparaciones de tiempo con respecto a la generació
 \end{center}
 
 %\vspace{0.7cm}
-\noindent{\textbf{Keywords}: elliptic curves, cryptography, quantum computing, ECDH, ECDSA, ECC, RSA}\\
+\noindent{\textbf{Keywords}: elliptic curves, cryptography, finite field arithmetic, Jacobian coordinates, binary fields, NTL, GMP, C++, benchmarking, Docker, ECDH, ECDSA, ECC, RSA, SHA-256}\\
 
 \vspace{0.7cm}
 \noindent{\textbf{Abstract}}\\
-In 1985 Neal Koblitz and Victor Miller independently proposed the use of elliptic curves in cryptography. Today, elliptic curve schemes (ECC) have become a highly efficient alternative to RSA, offering comparable security with significantly smaller key sizes. This makes them ideal for resource-constrained devices and high-performance applications.
+In 1985 Neal Koblitz and Victor Miller independently proposed the use of elliptic curves in cryptography. Today, elliptic curve schemes (ECC) have become a highly efficient alternative to RSA, offering comparable security with significantly smaller key sizes, which makes them ideal for resource-constrained devices and high-performance applications.
 
-In this work we dive into the fundamentals of ECC and describe the main protocols used, such as Elliptic Curve Diffie–Hellman (ECDH) and Elliptic Curve Digital Signature Algorithm (ECDSA). We then analyze both classical attacks on the elliptic curve discrete logarithm problem and quantum threats, in particular Shor’s algorithm, which could compromise ECC in the era of quantum computers.
+Beyond the theoretical foundations, this work develops a complete C++17 implementation of both cryptosystems together with a systematic empirical study of their performance. Built on the NTL and GMP libraries, the implementation includes RSA with Chinese Remainder Theorem-accelerated decryption, the Elliptic Curve Diffie-Hellman (ECDH) and Elliptic Curve Digital Signature Algorithm (ECDSA) protocols, a SHA-256 hash function written from scratch in accordance with FIPS PUB 180-4, and curve arithmetic over both prime fields $\mathbb{F}_p$ and binary fields $\mathbb{F}_{2^m}$.
 
-Finally, we present timing comparisons for key generation between RSA and ECC.
+The empirical analysis is organized around three comparison axes. First, RSA versus ECC at equivalent security levels following the NIST SP 800-57 recommendation. Secondly, affine versus Jacobian projective coordinates, which eliminate costly modular inversions. Lastly, prime versus binary fields. Measurements span key generation, signing and verification, and scalar multiplication, all obtained in a deterministic and reproducible environment based on Docker containers and a fixed-seed random number generator.
+
+On the theoretical side, we study the elliptic curve discrete logarithm problem (ECDLP) and the main classical attacks against it, such as the birthday paradox, Pollard's rho algorithm and the Pohlig-Hellman method, as well as the quantum threat that Shor's algorithm poses to present-day public-key cryptography.
 
 \chapter*{}
 \thispagestyle{empty}
@@ -68,7 +72,7 @@ de Ingenierías Informática y de Telecomunicación de la Universidad de Granada
 \vspace{2cm}
 
 \begin{flushright}
-Granada a X de mayo de 2025.
+Granada a X de junio de 2026.
 \end{flushright}
 
 
@@ -93,7 +97,7 @@ que corresponda.
 
 \vspace{0.5cm}
 
-Y para que conste, expiden y firman el presente informe en Granada a X de mayo de 2025.
+Y para que conste, expiden y firman el presente informe en Granada a X de junio de 2026.
 
 \vspace{1cm}
 

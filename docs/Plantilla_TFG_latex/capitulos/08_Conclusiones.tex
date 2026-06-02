@@ -1,0 +1,93 @@
+% capitulo8_conclusiones.tex
+% Capitulo 8: Conclusiones y trabajo futuro
+%
+% Autor: Leon Elliott Fuller
+% Fecha: Mayo 2026
+
+\chapter{Conclusiones y trabajo futuro}
+\label{ch:conclusiones}
+
+\section{Conclusiones generales}
+\label{sec:conc-generales}
+
+El objetivo central de este Trabajo de Fin de Grado era diseñar, implementar y evaluar de forma reproducible el rendimiento relativo entre la criptografía RSA y la de curvas elípticas (ECC). Este análisis se ha articulado sobre tres principios: la comparativa directa a niveles de seguridad equivalentes, el impacto del uso de coordenadas Jacobianas frente a las afines, y el contraste entre operar sobre cuerpos primos $\mathbb{F}_p$ frente a cuerpos binarios $\mathbb{F}_{2^m}$. Como se ha demostrado empíricamente en el capítulo \ref{ch:resultados}, este propósito se ha cumplido.
+
+El desarrollo del proyecto integra dos componentes que se retroalimentan. Por un lado, se ha elaborado un marco teórico sólido que abarca los fundamentos de los cuerpos finitos (capítulo \ref{chap:Campos_finitos}), la teoría de curvas elípticas (capítulo \ref{chap:Curvas_elipticas}) y la arquitectura de los criptosistemas evaluados junto a sus vectores de ataque (capítulo \ref{ch:ecc}). Por otro, esta base matemática se ha materializado en una implementación completa en C++17 (capítulo \ref{ch:implementacion}), resultando en un \textit{benchmarking} capaz de auditar ambos sistemas sobre un motor aritmético común (NTL/GMP) dentro de un entorno estrictamente reproducible mediante contenedores Docker.
+
+\section{Principales hallazgos}
+\label{sec:conc-hallazgos}
+
+A partir de las pruebas ejecutadas, se han extraído diversas conclusiones cuantitativas que matizan algunas concepciones generales de la criptografía aplicada.
+
+En primer lugar, se ha evidenciado que la supuesta superioridad absoluta de ECC sobre RSA es, en la práctica, una simplificación. Si bien los datos confirman que ECC domina 
+con una gran diferencia en la generación de claves (siendo casi 140 veces más rápida con la misma seguridad) y ofrece una notable agilidad en la firma, RSA conserva una ventaja 
+sustancial en los procesos de verificación, llegando a ser cerca de 38 veces más rápido gracias al uso de exponentes públicos de tamaño reducido. En consecuencia, la selección 
+debe orientarse al caso de uso: ECC es la opción natural para entornos con alta rotación de claves efímeras y emisión de firmas, mientras que RSA mantiene su vigencia en escenarios 
+donde la carga principal recae sobre la validación masiva de certificados por parte de clientes.
+
+En segundo lugar, el análisis del sistema de coordenadas demostró empíricamente que la transición hacia representaciones Jacobianas aporta una mejora de rendimiento real, aunque acotada. 
+Al diferir la costosa inversión modular matemática, se obtuvieron factores de aceleración de entre $1{,}7\times$ y $2\times$, siendo el beneficio mayor cuanto más grande es el cuerpo evaluado. 
+Resulta revelador que este incremento sea más conservador que el proyectado por los modelos puramente teóricos. Esta discrepancia subraya que las bibliotecas subyacentes altamente optimizadas 
+(como GMP) mitigan parcialmente el coste relativo de operaciones complejas como la inversión, recordando la necesidad de validar las hipótesis teóricas sobre el hardware y software de destino.
+
+Respecto a la tipología del cuerpo algebraico, las pruebas en software puro mostraron a los cuerpos primos como una opción $\approx 1{,}7$ veces más rápida que los binarios al mismo nivel de 
+seguridad. No obstante, se ha concluido que este comportamiento es una consecuencia directa del diseño del software (la delegación en rutinas numéricas optimizadas de \texttt{ZZ\_p} frente al 
+tratamiento polinómico de \texttt{GF2E}) y no refleja una inferioridad intrínseca de $\mathbb{F}_{2^m}$. En arquitecturas con soporte de hardware dedicado, esta métrica muy probablemente se 
+invertiría.
+
+Adicionalmente, la validación cruzada con OpenSSL demostró que el módulo desarrollado para este trabajo opera en márgenes de eficiencia comparables a los de una biblioteca de grado comercial 
+en lo que respecta al motor de precisión arbitraria. Las diferencias sustanciales de velocidad observadas a favor de OpenSSL en curvas específicas como P-256 no provienen de mejoras algorítmicas 
+de alto nivel, sino de un trabajo de traducción manual a código ensamblador (\textit{assembly}) optimizado para procesadores modernos, algo que escapa al alcance de este TFG pero que contextualiza 
+correctamente los resultados obtenidos.
+
+Finalmente, el análisis de las directivas de compilación arrojó que el margen de maniobra del compilador sobre este tipo de implementaciones criptográficas es limitado. La estabilización del 
+rendimiento a partir del nivel de optimización \texttt{-O2} evidencia que el cuello de botella real de ejecución reside en el núcleo precompilado de GMP. Esto justifica técnica y analíticamente 
+la elección de \texttt{-O2} como estándar del proyecto, logrando un balance óptimo entre rendimiento y portabilidad, evitando las anomalías derivadas de un desenrollado excesivo de bucles 
+(\textit{code bloat}) en directivas más agresivas.
+
+\section{Lecciones aprendidas}
+\label{sec:conc-lecciones}
+
+Desde una perspectiva metodológica, la evolución de este proyecto ha proporcionado aprendizajes de gran valor formativo que trascienden los resultados numéricos. 
+
+Destaca, en primer término, el acierto de haber optado por un desarrollo incremental. Implementar y estabilizar inicialmente la aritmética en coordenadas afines proporcionó una línea base 
+fiable y auditable; introducir posteriormente las coordenadas Jacobianas permitió tratar la optimización matemática no como un dogma abstracto, sino como un experimento teórico y empírico. 
+
+De igual forma, la decisión de programar componentes complementarios desde cero en lugar de importar dependencias de terceros, garantizó un control absoluto sobre el flujo de ejecución, eliminando variables de latencia externas perjudiciales para la precisión de la medición.
+
+Otro pilar fundamental del trabajo ha sido interiorizar que la reproducibilidad científica no es un elemento opcional. La organización del entorno de pruebas mediante Docker, combinada con la 
+fijación de semillas deterministas en los generadores pseudoaleatorios, fue indispensable para anular el ruido estadístico. La excepcional estabilidad temporal y baja varianza lograda en la 
+inmensa mayoría de las trazas de ejecución reflejan el esfuerzo dedicado a la estandarización del entorno.
+
+\section{Limitaciones del trabajo}
+\label{sec:conc-limitaciones}
+
+Para contextualizar el alcance real de las métricas aportadas, es necesario enumerar con rigor académico las fronteras y limitaciones asumidas durante el diseño de la solución:
+
+\begin{enumerate}
+    \item La implementación resultante tiene un propósito estrictamente analítico y educativo. No constituye una suite criptográfica apta para entornos de producción, ya que carece de contramedidas activas frente a ataques de canal lateral (por temporización o consumo energético), utiliza el algoritmo RSA en su variante básica sin relleno (\textit{textbook RSA}) y no emplea esquemas estandarizados de derivación de claves en los secretos compartidos.
+    \item Aunque las muestras recogidas ofrecen un alto grado de fiabilidad estadística, el alcance de los \textit{benchmarks} se ha limitado a un ecosistema de hardware específico (arquitectura x86-64). Las conclusiones derivadas del rendimiento de las bibliotecas podrían variar ligeramente al migrar el código a arquitecturas ARM o sistemas embebidos.
+    \item Restricciones de viabilidad temporal impidieron la evaluación directa del umbral de los 192 bits de seguridad. La latencia requerida para generar y validar de forma fiable los módulos RSA de 7680 bits excedía los plazos razonables de ejecución de las pruebas.
+    \item Las métricas obtenidas para las curvas de Koblitz y la aritmética binaria se calcularon exclusivamente operando en coordenadas afines, asumiendo la consecuente penalización por inversión, al no haberse portado el modelo Jacobiano proyectivo a los campos polinómicos.
+\end{enumerate}
+
+\section{Trabajo futuro}
+\label{sec:conc-futuro}
+
+La base metodológica y el código funcional consolidados en este proyecto abren la puerta a diversas líneas de investigación y desarrollo iterativo.
+
+Una primera línea de continuidad natural implica profundizar en la optimización a bajo nivel de la aritmética de curva. Queda pendiente evaluar experimentalmente el impacto de algoritmos avanzados 
+de multiplicación escalar, como el método de la Forma No Adyacente (NAF) o la escalera de Montgomery, siendo esta última especialmente interesante por dotar al código de resistencia contra ataques 
+de temporización. Además, sería de gran interés técnico reevaluar el módulo de cuerpos binarios activando instrucciones de hardware nativas como \texttt{PCLMULQDQ}, para aislar así las limitaciones 
+reales del software de las ventajas teóricas del campo algebraico.
+
+El \textit{software} desarrollado podría evolucionar hacia un estándar pre-comercial incorporando los esquemas de relleno criptográfico OAEP y PSS para RSA, implementando la generación determinista 
+de \textit{nonces} para ECDSA según el RFC 6979, e integrando curvas modernas de alto rendimiento como Curve25519 y Ed25519, las cuales se están imponiendo como el estándar en los nuevos 
+protocolos de red.
+
+Por último, el propio marco de \textit{benchmarking} resulta fácilmente escalable. Teniendo en cuenta la vulnerabilidad estructural tanto de RSA como de ECC frente al algoritmo cuántico de Shor, la ampliación natural de este trabajo sería incorporar familias de criptografía post-cuántica (PQC). Poder estudiar el posible reemplazo de ECC en favor de algoritmos PQC cerraría el círculo de la motivación histórica planteada en los primeros capítulos de esta memoria.
+
+\section{Reflexión final}
+\label{sec:conc-reflexion}
+
+Este Trabajo de Fin de Grado ha recorrido la extensa trayectoria que separa la abstracción matemática de los cuerpos finitos de la ejecución binaria en el procesador. El fruto de este esfuerzo se materializa en dos vertientes: un documento académico que consolida la teoría subyacente y una herramienta de \textit{software} pragmática que permite auditarla. La lección más valiosa obtenida tras meses de desarrollo no reside en ninguna métrica de latencia aislada, sino en la comprensión profunda de que toda decisión arquitectónica en ciberseguridad es un ejercicio de equilibrio. Elegir un criptosistema, un tamaño de clave o un sistema de coordenadas implica siempre asumir compromisos entre agilidad, seguridad frente a criptoanálisis y requisitos de hardware; compromisos que, como se ha demostrado, solo pueden resolverse con rigor combinando el diseño algebraico con una evaluación empírica meticulosa. 
