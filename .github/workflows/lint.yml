@@ -18,12 +18,58 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check C++ formatting
+        with:
+          fetch-depth: 0
+      - name: Detect changed C/C++ files
+        id: changed-cpp
+        shell: bash
+        run: |
+          set -euo pipefail
+          zero_sha='0000000000000000000000000000000000000000'
+
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base_sha='${{ github.event.pull_request.base.sha }}'
+            head_sha='${{ github.event.pull_request.head.sha }}'
+          else
+            base_sha='${{ github.event.before }}'
+            head_sha='${{ github.sha }}'
+          fi
+
+          if [ "$base_sha" != "$zero_sha" ] && git cat-file -e "$base_sha^{commit}" 2>/dev/null; then
+            mapfile -t files < <(
+              git diff --name-only --diff-filter=ACMR "$base_sha" "$head_sha" \
+                | grep -E '^(src|include)/.+\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$' || true
+            )
+          else
+            mapfile -t files < <(
+              git diff-tree --no-commit-id --name-only --diff-filter=ACMR -r "$head_sha" \
+                | grep -E '^(src|include)/.+\.(c|cc|cpp|cxx|h|hh|hpp|hxx)$' || true
+            )
+          fi
+
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo "has_files=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          printf 'Changed C/C++ files:\n%s\n' "${files[@]}"
+          include_regex="$(
+            printf '%s\n' "${files[@]}" \
+              | python3 -c 'import re, sys; files = [line.strip() for line in sys.stdin if line.strip()]; print(r"^\./(" + "|".join(re.escape(path) for path in files) + r")$")'
+          )"
+          echo "has_files=true" >> "$GITHUB_OUTPUT"
+          echo "include_regex=$include_regex" >> "$GITHUB_OUTPUT"
+      # Si aun no has normalizado el codigo, esto marcara muchos ficheros.
+      # Ejecuta una vez "clang-format -i <ficheros>" en local antes de exigirlo.
+      - name: Check changed C++ formatting
+        if: steps.changed-cpp.outputs.has_files == 'true'
         uses: jidicula/clang-format-action@v4.13.0
         with:
           clang-format-version: '17'
-          # Si aun no has normalizado el codigo, esto marcara muchos ficheros.
-          # Ejecuta una vez "clang-format -i <ficheros>" en local antes de exigirlo.
+          include-regex: ${{ steps.changed-cpp.outputs.include_regex }}
+      - name: Skip clang-format (no changed C/C++ files)
+        if: steps.changed-cpp.outputs.has_files != 'true'
+        run: echo "No changed C/C++ files to check."
 
   cppcheck:
     name: cppcheck
