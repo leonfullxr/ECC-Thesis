@@ -52,10 +52,17 @@ jobs:
             exit 0
           fi
 
-          printf 'Changed C/C++ files:\n%s\n' "${files[@]}"
+          printf 'Changed C/C++ files:\n'
+          printf '%s\n' "${files[@]}"
+          changed_files="$(printf '%s\n' "${files[@]}")"
           include_regex="$(
-            printf '%s\n' "${files[@]}" \
-              | python3 -c 'import re, sys; files = [line.strip() for line in sys.stdin if line.strip()]; print(r"^\./(" + "|".join(re.escape(path) for path in files) + r")$")'
+            CHANGED_FILES="$changed_files" python3 - <<'PY'
+          import os
+          import re
+
+          files = [line for line in os.environ["CHANGED_FILES"].splitlines() if line]
+          print(r"^\./(" + "|".join(re.escape(path) for path in files) + r")$")
+          PY
           )"
           echo "has_files=true" >> "$GITHUB_OUTPUT"
           echo "include_regex=$include_regex" >> "$GITHUB_OUTPUT"
