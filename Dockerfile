@@ -1,5 +1,5 @@
 # Dockerfile
-FROM ubuntu:22.04
+FROM ubuntu:26.04
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
 ENV DEBIAN_FRONTEND=noninteractive
