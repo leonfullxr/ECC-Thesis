@@ -128,7 +128,7 @@ Verificación ECDSA     & 1\,436 & 1\,522 & 3\,193 \\
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{imagenes/chart_ecc_curves.png}
+    \includegraphics[width=\textwidth]{imagenes/chart_ecc_curves.png}
     \caption{Comparativa de operaciones entre las curvas sobre cuerpos primos.}
     \label{fig:res-ecc-curves}
 \end{figure}
@@ -177,7 +177,7 @@ P-384     & Verificación ECDSA     & 3\,193 & 1\,632 & $1{,}96\times$ \\
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{imagenes/chart_affine_vs_jacobian.png}
+    \includegraphics[width=\textwidth]{imagenes/chart_affine_vs_jacobian.png}
     \caption{Comparativa de rendimiento entre coordenadas afines y Jacobianas.}
     \label{fig:res-affine-jacobian}
 \end{figure}
@@ -239,7 +239,7 @@ figura \ref{fig:res-prime-binary}.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{imagenes/chart_prime_vs_binary.png}
+    \includegraphics[width=\textwidth]{imagenes/chart_prime_vs_binary.png}
     \caption{Comparativa de rendimiento entre cuerpos primos y binarios a niveles de seguridad equivalentes.}
     \label{fig:res-prime-binary}
 \end{figure}
@@ -278,7 +278,7 @@ Cifrado / operación pública & 22   & --- & RSA muy rápida ($e$ pequeño) \\
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{imagenes/chart_keygen_comparison.png}
+    \includegraphics[width=\textwidth]{imagenes/chart_keygen_comparison.png}
     \caption{Comparativa de tiempos de generación de claves entre RSA y ECC a niveles de seguridad equivalentes.}
     \label{fig:res-keygen}
 \end{figure}
@@ -296,7 +296,7 @@ de la asimetría de verificación de RSA.
 
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.85\textwidth]{imagenes/chart_sign_verify_comparison.png}
+    \includegraphics[width=\textwidth]{imagenes/chart_sign_verify_comparison.png}
     \caption{Comparativa de las operaciones de firma y verificación entre RSA y ECC.}
     \label{fig:res-sign-verify}
 \end{figure}
@@ -448,16 +448,16 @@ ejecutado a nivel de sistema operativo y valida las pre-cargas térmicas inicial
 
 La figura \ref{fig:res-collage} ofrece una panorámica conjunta de los principales resultados, la figura \ref{fig:res-summary-table} resume en forma de tabla los tiempos de todas las operaciones, y el cuadro \ref{tab:res-summary} sintetiza los hallazgos a lo largo de los tres ejes de comparación.
 
-\begin{figure}[htbp]
+\begin{figure}[p]
     \centering
-    \includegraphics[width=\textwidth]{imagenes/collage_comparison.png}
+    \includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{imagenes/collage_comparison.png}
     \caption{Panorámica comparativa de los resultados de rendimiento.}
     \label{fig:res-collage}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[p]
     \centering
-    \includegraphics[width=0.9\textwidth]{imagenes/chart_summary_table.png}
+    \includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{imagenes/chart_summary_table.png}
     \caption{Tabla-resumen de los tiempos medidos para todas las operaciones y configuraciones.}
     \label{fig:res-summary-table}
 \end{figure}
