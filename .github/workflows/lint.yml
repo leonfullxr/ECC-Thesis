@@ -1,0 +1,65 @@
+# Lint - analisis estatico de C++, scripts y Python
+# Leon Elliott Fuller - 2026-06-02
+
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  clang-format:
+    name: clang-format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check C++ formatting
+        uses: jidicula/clang-format-action@v4.13.0
+        with:
+          clang-format-version: '17'
+          # Si aun no has normalizado el codigo, esto marcara muchos ficheros.
+          # Ejecuta una vez "clang-format -i <ficheros>" en local antes de exigirlo.
+
+  cppcheck:
+    name: cppcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+      - name: Run cppcheck (informativo)
+        # error-exitcode=0 -> no rompe el build. Cambia a 1 para exigirlo.
+        run: |
+          cppcheck --std=c++17 \
+                   --enable=warning,performance,portability \
+                   --inline-suppr --error-exitcode=0 \
+                   --suppress=missingIncludeSystem \
+                   . 2>&1 | tee cppcheck.log
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          severity: warning
+
+  python:
+    name: Python (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Lint Python scripts (informativo)
+        run: |
+          pip install ruff
+          ruff check . || true

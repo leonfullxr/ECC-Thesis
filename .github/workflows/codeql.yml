@@ -1,0 +1,48 @@
+# CodeQL - analisis de seguridad para C/C++ y Python
+# Especialmente pertinente en un proyecto de criptografia.
+# Leon Elliott Fuller - 2026-06-02
+
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '23 4 * * 1'   # lunes 04:23 UTC
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: c-cpp
+            build-mode: none
+          - language: python
+            build-mode: none
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      # NOTA: se usa build-mode "none" (analisis sin compilar) para evitar
+      # depender de la toolchain (NTL/GMP) que vive dentro de la imagen Docker.
+      # Si quieres un analisis C/C++ mas profundo, cambia a build-mode: manual,
+      # instala libgmp-dev y libntl-dev en el runner y compila con make aqui.
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"

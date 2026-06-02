@@ -1,0 +1,43 @@
+# Thesis (LaTeX) - compila el PDF de la memoria y lo sube como artifact
+# Leon Elliott Fuller - 2026-06-02
+
+name: Thesis (LaTeX)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**/*.tex'
+      - '**/*.bib'
+      - '.github/workflows/latex.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**/*.tex'
+      - '**/*.bib'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Compile thesis PDF
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile LaTeX document
+        uses: xu-cheng/latex-action@v3
+        with:
+          # TODO: ajusta a la ruta real de tu fichero raiz .tex
+          root_file: docs/Plantilla_TFG_latex/proyecto.tex
+          working_directory: .
+          latexmk_use_xelatex: false   # pon true si tu plantilla usa XeLaTeX
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: thesis-pdf
+          # TODO: ajusta el nombre del PDF resultante
+          path: '**/proyecto.pdf'
+          if-no-files-found: error
