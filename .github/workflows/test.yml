@@ -1,33 +1,41 @@
 name: Docker Test
+
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
   pull_request:
-    types:
-      - closed
-    branches:
-      - main
+    branches: [main]
+    # tipos por defecto (opened, synchronize, reopened): valida el PR ANTES del merge
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
   test:
-    # run on any push → main, OR on a PR-closed that was merged
-    if: ${{ github.event_name == 'push'
-        || (github.event_name == 'pull_request'
-            && github.event.pull_request.merged == true) }}
     runs-on: ubuntu-latest
-
     steps:
-    - name: Check out repo-code
-      uses: actions/checkout@v4
+      - name: Check out repo
+        uses: actions/checkout@v4
 
-    - name: Pull Docker image
-      run: docker pull leonfullxr/ecc-benchmarks:latest
+      - name: Pull Docker image
+        run: docker pull leonfullxr/ecc-benchmarks:latest
 
-    - name: Run Docker container
-      run: |
-        docker run --rm \
-          -v "${{ github.workspace }}":/workspace \
-          -w /workspace \
-          leonfullxr/ecc-benchmarks:latest \
-          sh -c "mkdir -p bin && make"
+      - name: Build + smoke test
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}":/workspace \
+            -w /workspace \
+            leonfullxr/ecc-benchmarks:latest \
+            sh -c "mkdir -p bin && make && ./bin/bench -h"
+
+      - name: Reproducibility check (fixed seed)
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}":/workspace \
+            -w /workspace \
+            leonfullxr/ecc-benchmarks:latest \
+            bash scripts/test_reproducibility.sh

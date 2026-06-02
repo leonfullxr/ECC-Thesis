@@ -1,0 +1,64 @@
+# CI - build, smoke test, reproducibility and sanitizers
+# Leon Elliott Fuller - 2026-06-02
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    # tipos por defecto (opened, synchronize, reopened): valida el PR ANTES del merge
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build & test (Docker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull benchmark image
+        run: docker pull leonfullxr/ecc-benchmarks:latest
+
+      - name: Build + smoke test
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}":/workspace -w /workspace \
+            leonfullxr/ecc-benchmarks:latest \
+            sh -c "mkdir -p bin && make && ./bin/bench -h"
+
+      - name: Reproducibility check (fixed seed)
+        # asume el layout documentado scripts/ ; ajusta la ruta si difiere
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}":/workspace -w /workspace \
+            leonfullxr/ecc-benchmarks:latest \
+            bash scripts/test_reproducibility.sh
+
+  sanitizers:
+    name: ASan + UBSan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build with ASan/UBSan and run a smoke case
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}":/workspace -w /workspace \
+            leonfullxr/ecc-benchmarks:latest \
+            sh -c '
+              set -e
+              make clean || true
+              mkdir -p bin
+              make CXXFLAGS="-std=c++17 -g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined" \
+                   LDFLAGS="-fsanitize=address,undefined"
+              ASAN_OPTIONS=detect_leaks=1 UBSAN_OPTIONS=print_stacktrace=1 \
+                ./bin/bench -a RSA -b 1024 -i 1 -s fixed
+            '
