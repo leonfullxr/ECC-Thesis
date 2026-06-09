@@ -22,7 +22,7 @@ jobs:
     name: Build & test (Docker)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Pull benchmark image
         run: docker pull leonfullxr/ecc-benchmarks:latest
@@ -46,7 +46,7 @@ jobs:
     name: ASan + UBSan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Build with ASan/UBSan and run a smoke case
         run: |
