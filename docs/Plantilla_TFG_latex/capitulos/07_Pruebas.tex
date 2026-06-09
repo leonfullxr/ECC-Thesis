@@ -361,7 +361,7 @@ su uso en producción. Esta discrepancia se fundamenta en los siguientes puntos:
 
 Por el contrario, al focalizar el análisis sobre el bloque funcional de curvas elípticas, OpenSSL marca distancias significativas. La implementación comercial ejecuta operaciones en la 
 curva P-256 entre 14 y 34 veces más rápido, evidenciando el impacto cualitativo de incorporar optimizaciones desarrolladas específicamente a mano en ensamblador para curvas de alto 
-despliegue comercial (incluyendo rutinas de latencia constante y multiplicaciones sin acarreos formales). Curiosamente, la brecha de rendimiento se desploma drásticamente al testear sobre 
+despliegue comercial (incluyendo rutinas de latencia constante y multiplicaciones sin acarreos formales). Curiosamente, la brecha de rendimiento se desploma drásticamente al probar sobre 
 P-384 (reduciéndose a un multiplicador de $1{,}7\times$ a $4\times$). Al tratarse de una curva con menor cuota de mercado, OpenSSL parece relegar su procesamiento a código aritmético más 
 generalizado, ya que, esta convergencia final demuestra que las implementaciones de referencia extraen su liderazgo absoluto en ECC del trabajo exhaustivo de bajo nivel enfocado curva a curva, 
 y no necesariamente de diferencias en los postulados matemáticos descritos en este documento.
@@ -449,8 +449,18 @@ ejecutado a nivel de sistema operativo y valida las pre-cargas térmicas inicial
 La figura \ref{fig:res-collage} ofrece una panorámica conjunta de los principales resultados, la figura \ref{fig:res-summary-table} resume en forma de tabla los tiempos de todas las operaciones, y el cuadro \ref{tab:res-summary} sintetiza los hallazgos a lo largo de los tres ejes de comparación.
 
 \begin{figure}[p]
-    \centering
-    \includegraphics[width=\textwidth,height=0.92\textheight,keepaspectratio]{imagenes/collage_comparison.png}
+    % Collage apaisado: lo ampliamos dejando que invada los margenes y lo centramos
+    % respecto a la PAGINA fisica (no solo al bloque de texto). El desplazamiento al
+    % centro depende de si la pagina es par o impar (documento a doble cara).
+    \checkoddpage
+    \ifoddpage
+      \edef\figcenter{\the\dimexpr0.5\paperwidth-1in-\oddsidemargin\relax}%
+    \else
+      \edef\figcenter{\the\dimexpr0.5\paperwidth-1in-\evensidemargin\relax}%
+    \fi
+    \noindent\hspace*{\figcenter}\makebox[0pt]{%
+        \includegraphics[width=\dimexpr\paperwidth-60pt\relax,height=0.92\textheight,keepaspectratio]%
+        {imagenes/collage_comparison.png}}\par
     \caption{Panorámica comparativa de los resultados de rendimiento.}
     \label{fig:res-collage}
 \end{figure}

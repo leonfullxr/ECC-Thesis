@@ -23,7 +23,7 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{tikz}
-\usetikzlibrary{positioning,decorations.pathreplacing,arrows,arrows.meta,babel}
+\usetikzlibrary{positioning,decorations.pathreplacing,arrows,arrows.meta,babel,shapes.multipart,fit,backgrounds}
 \usepackage{amsmath}
 \usepackage{amsthm}
 \usepackage{graphicx}
@@ -45,6 +45,10 @@
 %\RequirePackage[Glenn]{fncychap}
 \usepackage{fancyhdr}
 \usepackage{graphicx}
+\usepackage{changepage}   % \checkoddpage / \ifoddpage para centrar figuras anchas en la pagina
+\strictpagecheck
+\newsavebox{\arqbox}      % caja para capturar la figura de arquitectura antes de escalarla
+                          % (evita el choque de \resizebox con los caracteres activos de babel spanish)
 \usepackage{afterpage}
 \usepackage{colortbl}
 \usepackage{longtable}
@@ -55,7 +59,8 @@
 % ********************************************************************
 % Re-usable information
 % ********************************************************************
-\newcommand{\myTitle}{Análisis Comparativo de Rendimiento entre ECC y RSA en Entornos Deterministas\xspace}
+%\newcommand{\myTitle}{Análisis Comparativo de Rendimiento entre ECC y RSA en Entornos Deterministas\xspace}
+\newcommand{\myTitle}{Curvas Elípticas en Criptografía\xspace}
 \newcommand{\myDegree}{Grado en Ingeniería Informática\xspace}
 \newcommand{\myName}{Leon Elliott Fuller\xspace}
 \newcommand{\myProf}{Jesús García Miranda\xspace}

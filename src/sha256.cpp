@@ -6,7 +6,6 @@
 //
 // Autor: Leon Elliott Fuller
 // Fecha: 2026-02-28
-// TODO: Quitar los numeros magicos de las funciones logicas y ponerlos como constantes
 
 #include "sha256.hpp"
 #include <iostream>
@@ -54,13 +53,47 @@ const std::array<uint32_t, 8> SHA256_H0 = {
 };
 
 // ============================================================================
+// PARAMETROS ESTRUCTURALES (FIPS PUB 180-4)
+// ============================================================================
+// Constantes con nombre para evitar "numeros magicos" repartidos por el codigo.
+namespace {
+
+// --- Geometria de palabra y bloque ---
+constexpr unsigned WORD_BITS     = 32;                        // bits por palabra de SHA-256
+constexpr unsigned BITS_PER_BYTE = 8;
+constexpr size_t   WORD_BYTES    = WORD_BITS / BITS_PER_BYTE; // 4 bytes por palabra
+constexpr size_t   BLOCK_BYTES   = 64;                        // 512 bits por bloque de procesamiento
+constexpr size_t   LENGTH_BYTES  = 8;                         // campo de longitud (64 bits) al final del padding
+constexpr size_t   LENGTH_MOD    = BLOCK_BYTES - LENGTH_BYTES;// 56: congruencia objetivo del padding (mod BLOCK_BYTES)
+
+// --- Tamaños de los arreglos del algoritmo ---
+constexpr size_t   STATE_WORDS    = 8;   // variables de trabajo a..h y estado del hash
+constexpr size_t   BLOCK_WORDS    = 16;  // palabras leidas directamente del bloque (W[0..15])
+constexpr size_t   SCHEDULE_WORDS = 64;  // tamaño del message schedule W
+constexpr size_t   ROUNDS         = 64;  // rondas de compresion
+
+// --- Bytes especiales del padding ---
+constexpr uint8_t  PADDING_BYTE = 0x80;  // bit '1' inicial del padding, seguido de ceros
+constexpr uint32_t BYTE_MASK    = 0xFF;
+
+// --- Cantidades de rotacion/desplazamiento de las funciones logicas (Seccion 4.1.2) ---
+constexpr unsigned BIG_SIGMA0_ROTR[3]   = {  2, 13, 22 };  // Σ0(x)
+constexpr unsigned BIG_SIGMA1_ROTR[3]   = {  6, 11, 25 };  // Σ1(x)
+constexpr unsigned SMALL_SIGMA0_ROTR[2] = {  7, 18 };      // σ0(x)
+constexpr unsigned SMALL_SIGMA0_SHR     = 3;               // σ0(x)
+constexpr unsigned SMALL_SIGMA1_ROTR[2] = { 17, 19 };      // σ1(x)
+constexpr unsigned SMALL_SIGMA1_SHR     = 10;              // σ1(x)
+
+} // namespace (anonimo)
+
+// ============================================================================
 // SHA256Digest - IMPLEMENTACION
 // ============================================================================
 
 std::string SHA256Digest::to_hex() const {
     std::ostringstream oss;
-    for (size_t i = 0; i < 32; ++i) {
-        oss << std::hex << std::setfill('0') << std::setw(2) 
+    for (size_t i = 0; i < bytes.size(); ++i) {
+        oss << std::hex << std::setfill('0') << std::setw(2)
             << static_cast<unsigned int>(bytes[i]);
     }
     return oss.str();
@@ -70,12 +103,12 @@ BigInt SHA256Digest::to_bigint() const {
     // Construir BigInt a partir de los bytes del digest (big-endian)
     BigInt result;
     result = 0;
-    
-    for (size_t i = 0; i < 32; ++i) {
-        result <<= 8;
+
+    for (size_t i = 0; i < bytes.size(); ++i) {
+        result <<= BITS_PER_BYTE;
         result += bytes[i];
     }
-    
+
     return result;
 }
 
@@ -92,7 +125,7 @@ void SHA256Digest::print() const {
 // ============================================================================
 
 uint32_t SHA256::rotr(uint32_t x, unsigned int n) {
-    return (x >> n) | (x << (32 - n));
+    return (x >> n) | (x << (WORD_BITS - n));
 }
 
 uint32_t SHA256::shr(uint32_t x, unsigned int n) {
@@ -108,19 +141,19 @@ uint32_t SHA256::maj(uint32_t x, uint32_t y, uint32_t z) {
 }
 
 uint32_t SHA256::sigma0(uint32_t x) {
-    return rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22);
+    return rotr(x, BIG_SIGMA0_ROTR[0]) ^ rotr(x, BIG_SIGMA0_ROTR[1]) ^ rotr(x, BIG_SIGMA0_ROTR[2]);
 }
 
 uint32_t SHA256::sigma1(uint32_t x) {
-    return rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25);
+    return rotr(x, BIG_SIGMA1_ROTR[0]) ^ rotr(x, BIG_SIGMA1_ROTR[1]) ^ rotr(x, BIG_SIGMA1_ROTR[2]);
 }
 
 uint32_t SHA256::lsigma0(uint32_t x) {
-    return rotr(x, 7) ^ rotr(x, 18) ^ shr(x, 3);
+    return rotr(x, SMALL_SIGMA0_ROTR[0]) ^ rotr(x, SMALL_SIGMA0_ROTR[1]) ^ shr(x, SMALL_SIGMA0_SHR);
 }
 
 uint32_t SHA256::lsigma1(uint32_t x) {
-    return rotr(x, 17) ^ rotr(x, 19) ^ shr(x, 10);
+    return rotr(x, SMALL_SIGMA1_ROTR[0]) ^ rotr(x, SMALL_SIGMA1_ROTR[1]) ^ shr(x, SMALL_SIGMA1_SHR);
 }
 
 // ============================================================================
@@ -132,35 +165,35 @@ std::vector<uint8_t> SHA256::pad_message(const uint8_t* data, size_t length) {
     // Mensaje + 1 byte (0x80) + padding zeros + 8 bytes (longitud)
     // Total debe ser múltiplo de 64 bytes (512 bits)
     
-    size_t bit_length = length * 8;  // Longitud del mensaje en bits
-    
-    // Necesitamos espacio para: mensaje + 1 byte + 8 bytes de longitud
-    // Redondeado al próximo múltiplo de 64
-    size_t padded_length = length + 1;  // +1 para el byte 0x80
-    
-    // Añadir zeros hasta que padded_length ≡ 56 (mod 64)
-    // (56 = 64 - 8, dejamos 8 bytes para la longitud)
-    while (padded_length % 64 != 56) {
+    size_t bit_length = length * BITS_PER_BYTE;  // Longitud del mensaje en bits
+
+    // Necesitamos espacio para: mensaje + 1 byte + LENGTH_BYTES de longitud
+    // Redondeado al próximo múltiplo de BLOCK_BYTES
+    size_t padded_length = length + 1;  // +1 para el byte PADDING_BYTE
+
+    // Añadir zeros hasta que padded_length ≡ LENGTH_MOD (mod BLOCK_BYTES)
+    // (LENGTH_MOD = BLOCK_BYTES - LENGTH_BYTES, dejamos sitio para la longitud)
+    while (padded_length % BLOCK_BYTES != LENGTH_MOD) {
         padded_length++;
     }
-    
-    padded_length += 8;  // 8 bytes para la longitud en bits (big-endian)
-    
+
+    padded_length += LENGTH_BYTES;  // bytes para la longitud en bits (big-endian)
+
     // Crear mensaje con padding
     std::vector<uint8_t> padded(padded_length, 0);
-    
+
     // Copiar mensaje original
     std::memcpy(padded.data(), data, length);
-    
-    // Añadir bit '1' (como byte 0x80)
-    padded[length] = 0x80;
-    
+
+    // Añadir bit '1' (como byte PADDING_BYTE)
+    padded[length] = PADDING_BYTE;
+
     // Añadir longitud original en bits (64 bits, big-endian)
     // Los bytes de padding intermedio ya son 0
     uint64_t bit_len_be = bit_length;
-    for (int i = 0; i < 8; ++i) {
-        padded[padded_length - 1 - i] = static_cast<uint8_t>(bit_len_be & 0xFF);
-        bit_len_be >>= 8;
+    for (size_t i = 0; i < LENGTH_BYTES; ++i) {
+        padded[padded_length - 1 - i] = static_cast<uint8_t>(bit_len_be & BYTE_MASK);
+        bit_len_be >>= BITS_PER_BYTE;
     }
     
     return padded;
@@ -171,19 +204,20 @@ std::vector<uint8_t> SHA256::pad_message(const uint8_t* data, size_t length) {
 // ============================================================================
 
 void SHA256::process_block(const uint8_t* block, uint32_t state[8]) {
-    // 1. Preparar el message schedule W[0..63]
-    uint32_t W[64];
-    
-    // W[0..15] = palabras del bloque (big-endian)
-    for (int t = 0; t < 16; ++t) {
-        W[t] = (static_cast<uint32_t>(block[t * 4]) << 24) |
-               (static_cast<uint32_t>(block[t * 4 + 1]) << 16) |
-               (static_cast<uint32_t>(block[t * 4 + 2]) << 8) |
-               (static_cast<uint32_t>(block[t * 4 + 3]));
+    // 1. Preparar el message schedule W[0..SCHEDULE_WORDS-1]
+    uint32_t W[SCHEDULE_WORDS];
+
+    // W[0..BLOCK_WORDS-1] = palabras del bloque (big-endian)
+    for (size_t t = 0; t < BLOCK_WORDS; ++t) {
+        W[t] = 0;
+        for (size_t j = 0; j < WORD_BYTES; ++j) {
+            W[t] = (W[t] << BITS_PER_BYTE) |
+                   static_cast<uint32_t>(block[t * WORD_BYTES + j]);
+        }
     }
-    
-    // W[16..63] = σ1(W[t-2]) + W[t-7] + σ0(W[t-15]) + W[t-16]
-    for (int t = 16; t < 64; ++t) {
+
+    // W[BLOCK_WORDS..SCHEDULE_WORDS-1] = σ1(W[t-2]) + W[t-7] + σ0(W[t-15]) + W[t-16]
+    for (size_t t = BLOCK_WORDS; t < SCHEDULE_WORDS; ++t) {
         W[t] = lsigma1(W[t - 2]) + W[t - 7] + lsigma0(W[t - 15]) + W[t - 16];
     }
     
@@ -197,8 +231,8 @@ void SHA256::process_block(const uint8_t* block, uint32_t state[8]) {
     uint32_t g = state[6];
     uint32_t h = state[7];
     
-    // 3. 64 rondas de compresión
-    for (int t = 0; t < 64; ++t) {
+    // 3. ROUNDS rondas de compresión
+    for (size_t t = 0; t < ROUNDS; ++t) {
         uint32_t T1 = h + sigma1(e) + ch(e, f, g) + SHA256_K[t] + W[t];
         uint32_t T2 = sigma0(a) + maj(a, b, c);
         
@@ -232,28 +266,29 @@ SHA256Digest SHA256::hash(const uint8_t* data, size_t length) {
     std::vector<uint8_t> padded = pad_message(data, length);
     
     // 2. Inicializar estado del hash (FIPS PUB 180-4, Sección 5.3.3)
-    uint32_t state[8];
-    for (int i = 0; i < 8; ++i) {
+    uint32_t state[STATE_WORDS];
+    for (size_t i = 0; i < STATE_WORDS; ++i) {
         state[i] = SHA256_H0[i];
     }
-    
-    // 3. Procesar cada bloque de 512 bits (64 bytes)
-    size_t num_blocks = padded.size() / 64;
-    
+
+    // 3. Procesar cada bloque de 512 bits (BLOCK_BYTES bytes)
+    size_t num_blocks = padded.size() / BLOCK_BYTES;
+
     for (size_t i = 0; i < num_blocks; ++i) {
-        process_block(padded.data() + i * 64, state);
+        process_block(padded.data() + i * BLOCK_BYTES, state);
     }
-    
+
     // 4. Producir el digest final (big-endian)
     SHA256Digest digest;
-    
-    for (int i = 0; i < 8; ++i) {
-        digest.bytes[i * 4]     = static_cast<uint8_t>((state[i] >> 24) & 0xFF);
-        digest.bytes[i * 4 + 1] = static_cast<uint8_t>((state[i] >> 16) & 0xFF);
-        digest.bytes[i * 4 + 2] = static_cast<uint8_t>((state[i] >> 8) & 0xFF);
-        digest.bytes[i * 4 + 3] = static_cast<uint8_t>(state[i] & 0xFF);
+
+    for (size_t i = 0; i < STATE_WORDS; ++i) {
+        for (size_t j = 0; j < WORD_BYTES; ++j) {
+            unsigned shift = static_cast<unsigned>((WORD_BYTES - 1 - j) * BITS_PER_BYTE);
+            digest.bytes[i * WORD_BYTES + j] =
+                static_cast<uint8_t>((state[i] >> shift) & BYTE_MASK);
+        }
     }
-    
+
     return digest;
 }
 

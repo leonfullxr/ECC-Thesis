@@ -2,7 +2,7 @@
 % Capitulo 6: Implementacion y entorno experimental
 %
 % Autor: Leon Elliott Fuller
-% Fecha: Mayo 2026
+% Fecha: Junio 2026
 
 \chapter{Implementación y entorno experimental}
 \label{ch:implementacion}
@@ -34,35 +34,53 @@ en las pruebas.
 \label{subsec:impl-modulos}
 
 El proyecto se ha organizado siguiendo un enfoque modular, donde cada concepto criptográfico tiene su propio par de ficheros (cabecera \texttt{.hpp} e implementación 
-\texttt{.cpp}). La figura \ref{fig:arquitectura} ilustra cómo se relacionan entre sí.
+\texttt{.cpp}). La figura \ref{fig:arquitectura-docker} ilustra cómo se relacionan entre sí.
 
 \begin{figure}[htbp]
-\centering
+% Centrar la figura respecto a la PAGINA fisica (no solo al bloque de texto):
+% desplazamiento = 0.5\paperwidth - 1in - margen lateral - 0.5\textwidth,
+% que depende de si la pagina es par o impar (documento a doble cara).
+\checkoddpage
+\ifoddpage
+  \edef\figpageshift{\the\dimexpr0.5\paperwidth-1in-\oddsidemargin-0.5\textwidth\relax}%
+\else
+  \edef\figpageshift{\the\dimexpr0.5\paperwidth-1in-\evensidemargin-0.5\textwidth\relax}%
+\fi
+% Capturamos primero la figura en una caja (con catcodes normales) y despues la escalamos:
+% \resizebox no puede escanear directamente el tikzpicture por los caracteres activos de babel spanish.
+\begin{lrbox}{\arqbox}%
 \begin{tikzpicture}[
-    every node/.style={font=\small\ttfamily, draw, rounded corners, minimum height=0.8cm, minimum width=2cm, align=center, fill=blue!5},
+    every node/.style={font=\small\ttfamily, draw, rounded corners,
+                       minimum height=0.8cm, minimum width=2cm, align=center, fill=blue!5},
+    small/.style={font=\footnotesize\ttfamily, draw, rounded corners, align=center,
+                  minimum height=0.6cm, minimum width=2.4cm, fill=blue!5},
+    band/.style={font=\footnotesize\ttfamily, draw, rounded corners, align=center,
+                 text width=3.4cm, inner sep=3pt, minimum height=0.9cm},
+    cluster/.style={draw, rounded corners, inner sep=6pt,
+                    minimum width=0pt, minimum height=0pt},
+    docker/.style={draw=blue!55!black, dashed, very thick, rounded corners,
+                   fill=none, inner sep=6pt, minimum width=0pt, minimum height=0pt},
     arrow/.style={->, >=latex, thick},
+    rel/.style={->, >=latex, thick, gray!55!black},
+    cirel/.style={->, >=latex, thick, dashed, violet!60!black},
+    lbl/.style={draw=none, fill=none, font=\scriptsize\sffamily,
+                inner sep=1.5pt, minimum width=0pt, minimum height=0pt},
     node distance=0.4cm and 0.6cm
 ]
-    % Capa 0: punto de entrada
+
+% ===================== Banda central: codigo fuente =====================
     \node (main) [fill=orange!15] {main.cpp};
-
-    % Capa 1: modulos criptograficos
-    \node (rsa) [below left=1.2cm and 1.5cm of main] {rsa.\{hpp,cpp\}};
-    \node (ecc) [below=1.2cm of main] {ecc.\{hpp,cpp\}};
+    \node (rsa)  [below left=1.2cm and 1.5cm of main] {rsa.\{hpp,cpp\}};
+    \node (ecc)  [below=1.2cm of main] {ecc.\{hpp,cpp\}};
     \node (eccb) [below right=1.2cm and -0.4cm of main] {ecc\_binary.\{hpp,cpp\}};
-    \node (sha) [right=0.6cm of eccb, fill=blue!5] {sha256.\{hpp,cpp\}};
-
-    % Capa 2: utilidades base
-    \node (rng) [below=1.4cm of ecc, fill=green!10] {rng.\{hpp,cpp\}};
+    \node (sha)  [right=0.6cm of eccb] {sha256.\{hpp,cpp\}};
+    \node (rng)    [below=1.4cm of ecc, fill=green!10] {rng.\{hpp,cpp\}};
     \node (common) [right=1.0cm of rng, fill=green!10] {common.hpp};
 
-    % Aristas desde main
     \draw [arrow] (main) -- (rsa);
     \draw [arrow] (main) -- (ecc);
     \draw [arrow] (main) -- (eccb);
     \draw [arrow] (main.east) to[bend left=15] (sha);
-
-    % Aristas a la capa de utilidades
     \draw [arrow] (rsa) -- (rng);
     \draw [arrow] (rsa.south) -- (common.north west);
     \draw [arrow] (ecc) -- (rng);
@@ -70,9 +88,65 @@ El proyecto se ha organizado siguiendo un enfoque modular, donde cada concepto c
     \draw [arrow] (eccb.south west) -- (common.north east);
     \draw [arrow] (eccb) -- (rng.north east);
     \draw [arrow] (sha.south) -- (common.north east);
-\end{tikzpicture}
-\caption{Diagrama de dependencias del proyecto. El fichero \texttt{main.cpp} actúa como controlador principal de los módulos criptográficos, los cuales dependen de herramientas comunes (\texttt{common.hpp}) y del generador de números aleatorios (\texttt{rng}).}
-\label{fig:arquitectura}
+
+    % --- una sola caja con fit + etiqueta (corrige el bug del srcbox vacio) ---
+    \begin{scope}[on background layer]
+        \node[cluster, fill=blue!3, draw=blue!40,
+              fit=(main)(rsa)(ecc)(eccb)(sha)(rng)(common),
+              label={[font=\scriptsize\bfseries, text=blue!45!black, anchor=south west]%
+                     north west:Codigo fuente (C++17)}] (srcbox) {};
+    \end{scope}
+
+% ===================== Banda superior: configuracion y build =====================
+    \node[small, fill=orange!12, anchor=south west] (dockerfile)
+          at ([yshift=12mm]srcbox.north west) {Dockerfile};
+    \node[small, fill=orange!12, right=3mm of dockerfile] (compose)  {docker-compose.yml};
+    \node[small, fill=orange!12, right=3mm of compose]    (makefile) {Makefile};
+    \node[small, fill=orange!12, right=3mm of makefile]   (reqs)     {requirements.txt};
+
+    \begin{scope}[on background layer]
+        \node[cluster, fill=orange!4, draw=orange!55,
+              fit=(dockerfile)(compose)(makefile)(reqs),
+              label={[font=\scriptsize\bfseries, text=orange!55!black, anchor=south west]%
+                     north west:Configuracion y build}] (cfgbox) {};
+    \end{scope}
+
+% ===================== Banda inferior: CI / scripts / artefactos =====================
+    \node[band, fill=teal!15, anchor=north] (scripts) at ([yshift=-12mm]srcbox.south)
+          {{\normalfont\bfseries Scripts}\\ \texttt{scripts/}\\[1pt] *.sh~$\cdot$~*.py};
+    \node[band, fill=violet!15, left=6mm of scripts] (ci)
+          {{\normalfont\bfseries CI/CD}\\ \texttt{.github/workflows/}\\[1pt]
+           ci~$\cdot$~lint~$\cdot$~codeql\\ latex~$\cdot$~dependabot};
+    \node[band, fill=yellow!20, right=6mm of scripts] (bindir)
+          {{\normalfont\bfseries Bin}\\ \texttt{bin/}\\[1pt] binarios~ECC};
+    \node[band, fill=green!12, right=6mm of bindir] (artef)
+          {{\normalfont\bfseries Artefactos}\\ results/~CSV\\ graficas~PNG\\ memoria~LaTeX};
+
+% ===================== Relaciones entre bandas =====================
+    \draw[rel]  (cfgbox.south) -- node[lbl, right]{compila} (srcbox.north);
+    \draw[rel]  (srcbox.south) -- node[lbl, right]{binario} (scripts.north);
+    \draw[rel]  (scripts.east) -- node[lbl, above]{genera} (artef.west);
+    \draw[cirel] (ci.north) to[bend left=10]
+          node[lbl, above, pos=0.6]{build~$\cdot$~test} (srcbox.south west);
+
+% ===================== Contenedor Docker (caja exterior) =====================
+    \coordinate (padTop) at ([yshift=0.85cm]cfgbox.north);
+    \begin{scope}[on background layer]
+        \node[docker, fit=(padTop)(cfgbox)(srcbox)(ci)(scripts)(bindir)(artef),
+              label={[font=\footnotesize\bfseries, text=white, fill=blue!60!black,
+                      rounded corners, inner sep=3pt, anchor=north west,
+                      xshift=8pt, yshift=-3pt]north west:%
+                      {Contenedor Docker -- \texttt{leonfullxr/ecc-benchmarks:latest}}}]
+              (dockerbox) {};
+    \end{scope}
+
+\end{tikzpicture}%
+\end{lrbox}%
+% Escalamos a la anchura de texto y desplazamos al centro fisico de la pagina.
+\noindent\hspace*{\figpageshift}%
+\resizebox{\textwidth}{!}{\usebox{\arqbox}}%
+\caption{Arquitectura del proyecto dentro del contenedor Docker.}
+\label{fig:arquitectura-docker}
 \end{figure}
 
 Para facilitar la lectura y el mantenimiento, el código base se divide en utilidades comunes y módulos criptográficos. El fichero \texttt{common.hpp} define tipos básicos como los enteros 
@@ -128,6 +202,47 @@ obtenida en la práctica ronda el factor de 1,7 a 1,9, un dato que aporta mucho 
 Aunque habría sido mucho más rápido utilizar la función SHA-256 de bibliotecas consagradas como OpenSSL, se decidió programarla desde cero siguiendo el estándar oficial (FIPS PUB 180-4). 
 Esto se hizo por integridad académica, para comprender realmente cómo funciona el algoritmo de \textit{hash} que acompaña a la firma ECDSA. Además, evitar dependencias externas impide que 
 posibles actualizaciones de terceros alteren los tiempos de ejecución de las pruebas.
+
+El algoritmo opera sobre palabras de 32 bits y consta de tres fases: un \emph{preprocesamiento} (relleno del mensaje), la expansión de cada bloque en un \textit{message schedule} y una función de compresión de 64 rondas. El relleno (\textit{padding}) añade al mensaje un bit \(1\), después tantos bits \(0\) como sea necesario y, finalmente, la longitud original del mensaje en bits como un entero de 64 bits (\textit{big-endian}), de modo que la longitud total sea un múltiplo de 512 bits.
+
+La compresión emplea seis funciones lógicas sobre palabras de 32 bits, donde \(\mathrm{ROTR}^{n}\) denota la rotación circular a la derecha, \(\mathrm{SHR}^{n}\) el desplazamiento lógico a la derecha, \(\wedge\) la conjunción bit a bit, \(\oplus\) la suma XOR y \(\lnot\) la negación:
+\[
+\begin{aligned}
+\mathrm{Ch}(x,y,z) &= (x \wedge y) \oplus (\lnot x \wedge z), \\
+\mathrm{Maj}(x,y,z) &= (x \wedge y) \oplus (x \wedge z) \oplus (y \wedge z), \\
+\Sigma_0(x) &= \mathrm{ROTR}^{2}(x) \oplus \mathrm{ROTR}^{13}(x) \oplus \mathrm{ROTR}^{22}(x), \\
+\Sigma_1(x) &= \mathrm{ROTR}^{6}(x) \oplus \mathrm{ROTR}^{11}(x) \oplus \mathrm{ROTR}^{25}(x), \\
+\sigma_0(x) &= \mathrm{ROTR}^{7}(x) \oplus \mathrm{ROTR}^{18}(x) \oplus \mathrm{SHR}^{3}(x), \\
+\sigma_1(x) &= \mathrm{ROTR}^{17}(x) \oplus \mathrm{ROTR}^{19}(x) \oplus \mathrm{SHR}^{10}(x).
+\end{aligned}
+\]
+
+El Algoritmo \ref{alg:sha256} resume el cálculo del resumen una vez aplicado el relleno. Todas las sumas se realizan módulo \(2^{32}\), y \(K_0,\dots,K_{63}\) son las constantes de ronda definidas en el estándar.
+
+\begin{algorithm}
+\caption{Cálculo del resumen SHA-256 (FIPS PUB 180-4)}
+\label{alg:sha256}
+\begin{algorithmic}[1]
+\Require Mensaje rellenado, dividido en \(N\) bloques de 512 bits \(M^{(1)},\dots,M^{(N)}\).
+\Ensure Resumen \(H\) de 256 bits.
+\State \((H_0,\dots,H_7) \gets\) valores iniciales (FIPS PUB 180-4)
+\For{\(i = 1\) \textbf{ to } \(N\)}
+  \State Dividir \(M^{(i)}\) en 16 palabras de 32 bits \(W_0,\dots,W_{15}\)
+  \For{\(t = 16\) \textbf{ to } \(63\)}
+    \State \(W_t \gets \sigma_1(W_{t-2}) + W_{t-7} + \sigma_0(W_{t-15}) + W_{t-16}\)
+  \EndFor
+  \State \((a,b,c,d,e,f,g,h) \gets (H_0,H_1,H_2,H_3,H_4,H_5,H_6,H_7)\)
+  \For{\(t = 0\) \textbf{ to } \(63\)}
+    \State \(T_1 \gets h + \Sigma_1(e) + \mathrm{Ch}(e,f,g) + K_t + W_t\)
+    \State \(T_2 \gets \Sigma_0(a) + \mathrm{Maj}(a,b,c)\)
+    \State \(h \gets g\);\quad \(g \gets f\);\quad \(f \gets e\);\quad \(e \gets d + T_1\)
+    \State \(d \gets c\);\quad \(c \gets b\);\quad \(b \gets a\);\quad \(a \gets T_1 + T_2\)
+  \EndFor
+  \State \(H_0 \gets H_0 + a\);\ \ \dots\ \ \(H_7 \gets H_7 + h\)
+\EndFor
+\State \Return \(H \gets H_0 \,\Vert\, H_1 \,\Vert\, \cdots \,\Vert\, H_7\)
+\end{algorithmic}
+\end{algorithm}
 
 \subsection{Uso de curvas estandarizadas}
 \label{subsec:impl-curvas-estandar}
