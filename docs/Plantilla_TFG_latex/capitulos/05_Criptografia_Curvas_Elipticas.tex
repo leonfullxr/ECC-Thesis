@@ -814,6 +814,8 @@ Formalmente, dado un mensaje $m$ de longitud arbitraria, denotamos su hash como
 \]
 donde $H$ es SHA-256 y $e$ se interpreta como un entero. Si la longitud en bits de $n$ es $L_n$ y la del hash es $L_H$, se toman los $\min(L_n, L_H)$ bits más significativos de $e$.
 
+El funcionamiento interno de SHA-256 (preprocesamiento, expansión de bloque y función de compresión) y los detalles de nuestra implementación propia, desarrollada desde cero a partir del estándar, se describen en la sección~\ref{subsec:impl-sha256}.
+
 
 \subsection{Generación de firma}
 \label{subsec:ecdsa-firma}

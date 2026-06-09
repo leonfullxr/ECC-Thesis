@@ -200,7 +200,7 @@ obtenida en la práctica ronda el factor de 1,7 a 1,9, un dato que aporta mucho 
 \label{subsec:impl-sha256}
 
 Aunque habría sido mucho más rápido utilizar la función SHA-256 de bibliotecas consagradas como OpenSSL, se decidió programarla desde cero siguiendo el estándar oficial (FIPS PUB 180-4). 
-Esto se hizo por integridad académica, para comprender realmente cómo funciona el algoritmo de \textit{hash} que acompaña a la firma ECDSA. Además, evitar dependencias externas impide que 
+Esto se hizo por integridad académica, para comprender realmente cómo funciona el algoritmo de \textit{hash} que acompaña a la firma ECDSA, cuyo papel en el esquema de firma se introdujo en la sección~\ref{subsec:ecdsa-sha256}. Además, evitar dependencias externas impide que
 posibles actualizaciones de terceros alteren los tiempos de ejecución de las pruebas.
 
 El algoritmo opera sobre palabras de 32 bits y consta de tres fases: un \emph{preprocesamiento} (relleno del mensaje), la expansión de cada bloque en un \textit{message schedule} y una función de compresión de 64 rondas. El relleno (\textit{padding}) añade al mensaje un bit \(1\), después tantos bits \(0\) como sea necesario y, finalmente, la longitud original del mensaje en bits como un entero de 64 bits (\textit{big-endian}), de modo que la longitud total sea un múltiplo de 512 bits.
