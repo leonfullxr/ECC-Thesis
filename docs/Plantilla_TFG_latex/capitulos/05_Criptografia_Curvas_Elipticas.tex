@@ -2,7 +2,7 @@
 % Capítulo 5: Criptografía de curvas elípticas (ECC)
 %
 % Autor: Leon Elliott Fuller
-% Fecha: Marzo 2026
+% Fecha: Junio 2026
 
 \chapter{Criptografía de curvas elípticas (ECC)}
 \label{ch:ecc}
@@ -637,6 +637,60 @@ Sean Alice y Bob dos entidades que desean establecer un secreto compartido. Ambo
     \item \textbf{Derivación de clave.} La coordenada $x$ del punto $S$ (o una función de derivación de clave aplicada sobre ella) se utiliza como clave simétrica de sesión.
 \end{enumerate}
 
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    font=\small,
+    actor/.style={draw, rounded corners, fill=blue!12, minimum width=2.2cm,
+                  minimum height=0.8cm, align=center, font=\bfseries},
+    life/.style={draw=gray!55, dashed, thick},
+    msg/.style={-{Latex[length=2.5mm]}, thick, blue!50!black},
+    note/.style={draw, rounded corners, align=left, font=\footnotesize,
+                 inner sep=4pt, text width=4.4cm},
+    noteA/.style={note, fill=teal!8,   draw=teal!60},
+    noteB/.style={note, fill=orange!8, draw=orange!60},
+    mlbl/.style={font=\scriptsize\sffamily, fill=white, inner sep=1.5pt}
+]
+    % Actores y lineas de vida
+    \node[actor] (A) at (0,0) {Alice};
+    \node[actor] (B) at (7,0) {Bob};
+    \draw[life] (A.south) -- (0,-9.7);
+    \draw[life] (B.south) -- (7,-9.7);
+
+    % Intercambio publico de las claves de largo plazo
+    \draw[msg] (0,-4.3) -- node[mlbl,above]{$Q_A$} (7,-4.3);
+    \draw[msg] (7,-5.1) -- node[mlbl,above]{$Q_B$} (0,-5.1);
+
+    % Generacion de claves (en paralelo)
+    \node[noteA] (aKey) at (0,-2.1)
+        {\textbf{1. Generación de claves}\\
+         $d_A \xleftarrow{\$} [1,n-1]$\\
+         $Q_A = d_A \cdot G$};
+    \node[noteB] (bKey) at (7,-2.1)
+        {\textbf{1. Generación de claves}\\
+         $d_B \xleftarrow{\$} [1,n-1]$\\
+         $Q_B = d_B \cdot G$};
+
+    % Calculo independiente del mismo secreto compartido
+    \node[noteA] (aSec) at (0,-7.0)
+        {\textbf{2. Secreto compartido}\\
+         $S = d_A \cdot Q_B = d_A d_B\,G$\\
+         Clave: $k = x_S \bmod 2^{b}$};
+    \node[noteB] (bSec) at (7,-7.0)
+        {\textbf{2. Secreto compartido}\\
+         $S = d_B \cdot Q_A = d_A d_B\,G$\\
+         Clave: $k = x_S \bmod 2^{b}$};
+
+    % Nota central
+    \node[draw, rounded corners, fill=gray!8, align=center, font=\footnotesize,
+          text width=8.6cm, inner sep=4pt] at (3.5,-9.1)
+        {Ambos obtienen el mismo punto $S$. En el prototipo la clave es la
+         coordenada $x_S$ truncada a $b$ bits, sin aplicar una KDF.};
+\end{tikzpicture}
+\caption{Diagrama de secuencia del intercambio de claves ECDH tal como se implementa en el prototipo. Alice y Bob generan sus pares de claves de largo plazo, intercambian las claves públicas $Q_A$ y $Q_B$ y calculan de forma independiente el mismo punto secreto $S = d_A d_B\,G$. La clave de sesión se obtiene directamente de la coordenada $x_S$ truncada al tamaño deseado de $b$ bits, sin función de derivación (véase la sección~\ref{subsec:ecdh-kdf}).}
+\label{fig:ecdh-secuencia}
+\end{figure}
+
 \begin{table}[htbp]
 \centering
 \begin{tabular}{ll}
@@ -685,10 +739,59 @@ En estándares como NIST SP 800-56A \cite{nist-sp800-56a} se especifican KDFs ba
 Existen varias variantes del intercambio ECDH que mejoran distintos aspectos del protocolo:
 
 \begin{description}
-    \item[ECIES (\textit{Elliptic Curve Integrated Encryption Scheme}):] Combina ECDH con un cifrado simétrico y un MAC en un esquema de cifrado de clave pública completo. Definido en IEEE P1363a e ISO 18033-2, es el análogo de ElGamal sobre curvas elípticas.
+    \item[ECIES (\textit{Elliptic Curve Integrated Encryption Scheme}):] Combina ECDH con un cifrado simétrico y un MAC en un esquema de cifrado de clave pública completo. Definido en IEEE P1363a e ISO 18033-2, es el análogo de ElGamal sobre curvas elípticas. La Figura~\ref{fig:ecies-simplificado} muestra una versión \emph{simplificada} de este esquema realizada con las primitivas del prototipo (ECDH y derivación por truncamiento, sin KDF ni MAC).
     
     \item[X25519:] Diseñada por Bernstein \cite{bernstein2006curve25519}, es una curva de Montgomery optimizada para intercambios Diffie--Hellman. Su aritmética se realiza exclusivamente sobre la coordenada $x$ (usando la ``escalera de Montgomery''), lo que la hace intrínsecamente resistente a ciertos ataques de canal lateral de tiempo constante. Es la curva predeterminada en TLS 1.3 para intercambio de claves.
 \end{description}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    font=\small,
+    actor/.style={draw, rounded corners, fill=blue!12, minimum width=2.2cm,
+                  minimum height=0.8cm, align=center, font=\bfseries},
+    life/.style={draw=gray!55, dashed, thick},
+    msg/.style={-{Latex[length=2.5mm]}, thick, blue!50!black},
+    note/.style={draw, rounded corners, align=left, font=\footnotesize,
+                 inner sep=4pt, text width=5.0cm},
+    noteA/.style={note, fill=teal!8,   draw=teal!60},
+    noteB/.style={note, fill=orange!8, draw=orange!60},
+    mlbl/.style={font=\scriptsize\sffamily, fill=white, inner sep=1.5pt}
+]
+    % Actores y lineas de vida
+    \node[actor] (A) at (0,0) {Alice};
+    \node[actor] (B) at (7,0) {Bob};
+    \draw[life] (A.south) -- (0,-10.9);
+    \draw[life] (B.south) -- (7,-10.9);
+
+    % Mensajes
+    \draw[msg] (7,-3.5) -- node[mlbl,above]{$Q_B$ (clave pública)} (0,-3.5);
+    \draw[msg] (0,-7.7) -- node[mlbl,above]{$R \,\Vert\, c$} (7,-7.7);
+
+    % Cajas de computo local
+    \node[noteB] (bobReg) at (7,-1.9)
+        {\textbf{1. Registro}\\
+         Genera el par de largo plazo\\
+         \hspace{1em}$(d_B,\ Q_B = d_B G)$\\
+         Publica $Q_B$};
+
+    \node[noteA] (aliceEnc) at (0,-5.7)
+        {\textbf{2. Cifrado (simplificado)}\\
+         1) Par efímero: $(d_e,\ R = d_e G)$\\
+         2) ECDH: $S = d_e Q_B$\\
+         3) Clave: $k = x_S \bmod 2^{b}$\\
+         4) Cifrado: $c = \mathrm{Enc}_k(m)$};
+
+    \node[noteB] (bobDec) at (7,-9.6)
+        {\textbf{3. Descifrado (Bob)}\\
+         1) ECDH: $S' = d_B R = d_e Q_B$\\
+         \hspace{1em}$\Rightarrow x_{S'} = x_S$\\
+         2) Clave: $k = x_{S'} \bmod 2^{b}$\\
+         3) Descifrado: $m = \mathrm{Dec}_k(c)$};
+\end{tikzpicture}
+\caption{Esquema de cifrado híbrido \emph{simplificado}, construido con las primitivas del prototipo. Bob publica su clave pública de largo plazo $Q_B$. Alice genera una clave efímera $(d_e, R)$, calcula el secreto ECDH $S = d_e Q_B$ y deriva la clave de sesión tomando la coordenada $x_S$ truncada a $b$ bits, $k = x_S \bmod 2^{b}$ ---\emph{sin} función de derivación (KDF) y \emph{sin} código de autenticación (MAC)---, tal como hace la implementación (sección~\ref{subsec:ecdh-kdf}). Bob reconstruye el mismo secreto ($S' = d_B R = d_e Q_B$, de donde $x_{S'} = x_S$) y descifra. El prototipo implementa y mide el acuerdo de claves ECDH y la derivación por truncamiento (Figura~\ref{fig:ecdh-secuencia}); el cifrado simétrico $\mathrm{Enc}_k / \mathrm{Dec}_k$ representa el uso natural de la clave derivada y no forma parte del banco de pruebas. Compárese con el esquema ECIES completo (con KDF, cifrado y MAC) descrito arriba; aquí $\Vert$ denota concatenación.}
+\label{fig:ecies-simplificado}
+\end{figure}
 
 
 % ============================================================================
@@ -711,6 +814,8 @@ Formalmente, dado un mensaje $m$ de longitud arbitraria, denotamos su hash como
 \]
 donde $H$ es SHA-256 y $e$ se interpreta como un entero. Si la longitud en bits de $n$ es $L_n$ y la del hash es $L_H$, se toman los $\min(L_n, L_H)$ bits más significativos de $e$.
 
+El funcionamiento interno de SHA-256 (preprocesamiento, expansión de bloque y función de compresión) y los detalles de nuestra implementación propia, desarrollada desde cero a partir del estándar, se describen en la sección~\ref{subsec:impl-sha256}.
+
 
 \subsection{Generación de firma}
 \label{subsec:ecdsa-firma}
@@ -730,7 +835,7 @@ Dados los parámetros del dominio $T = (p, a, b, G, n, h)$ y un par de claves $(
     \item La firma es el par $(r, s)$.
 \end{enumerate}
 
-El valor $k$ es un secreto temporal que \textbf{no debe revelarse} y \textbf{no debe reutilizarse}. La sección \ref{subsec:ecdsa-problemas} detalla las consecuencias catastróficas de violar esta condición.
+El valor $k$ es un secreto temporal que no debe revelarse y no debe reutilizarse. La sección \ref{subsec:ecdsa-problemas} detalla las consecuencias catastróficas de violar esta condición.
 
 
 \subsection{Verificación de firma}

@@ -2,7 +2,7 @@
 
 \section{Introducción y motivación}
 Los sistemas criptográficos basados en curvas elípticas dependen, en última instancia, de la aritmética de los puntos de la curva. Como se mostró en el capítulo~\ref{chap:Campos_finitos}, la eficiencia de estos esquemas se apoya directamente en la velocidad de los algoritmos de aritmética de curva, que a su vez se construyen sobre las operaciones del cuerpo subyacente: suma, multiplicación e inversión. Esta aritmética no solo descansa en dichas operaciones, sino que en algunos casos también requiere aritmética de grandes enteros y operaciones modulares; un protocolo como el algoritmo de firma digital sobre curvas elípticas (ECDSA) emplea, además, una función hash. No obstante, los pasos computacionalmente más costosos son las propias operaciones sobre la curva, como ilustra la figura~\ref{fig:ECDSA_esquema}, que muestra los bloques necesarios para entender e implementar dicho protocolo.
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{imagenes/ECDSA_esquema.png}
     \caption{Esquema del Algoritmo de Firma Digital sobre Curvas Elípticas (ECDSA).}
@@ -73,7 +73,7 @@ Denotamos por $\mathcal{O}$ el único punto en el infinito que completa la curva
   \item Los \emph{puntos \(L\)-racionales} de \(E\) son aquellos cuyos pares \((x,y)\) pertenecen al cuerpo \(L\). Siempre incluimos \(\mathcal{O}\).
 \end{enumerate}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{imagenes/elliptic_curve_singular_example.png}
     \caption{Ejemplo de una curva con un punto singular (cúspide en el origen), correspondiente a \(\Delta = 0\).}
@@ -91,7 +91,7 @@ Las gráficas de los conjuntos \(E_1(\mathbb{R})\setminus\{\mathcal{O}\}\) y
 \(E_2(\mathbb{R})\setminus\{\mathcal{O}\}\) se muestran en la figura~\ref{fig:curvas_reales}.
 \end{ejemplo}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \includegraphics[width=0.48\textwidth]{imagenes/elliptic_curve2D_example.png}
   \hfill
@@ -309,7 +309,7 @@ así que se emplea la recta \emph{tangente} a la curva en \(P\) (su segundo cort
 La figura~\ref{fig:grupo_elipticas} ilustra ambas situaciones, que son las dos únicas que requieren cálculo real y el resto de casos 
 (operar con el neutro o con un punto y su opuesto) se resuelven de forma directa.
 
-\begin{figure}[H]
+\begin{figure}[htbp]
   \centering
   \begin{minipage}{0.5\textwidth}
     \centering
@@ -473,7 +473,7 @@ sigue formando un \emph{grupo abeliano finito} bajo la ley de la cuerda y la tan
   \item \textbf{Seguridad:} El tamaño finito del grupo y su estructura abeliana permiten cuantificar con precisión la resistencia ante ataques de fuerza bruta o algoritmos de logaritmo discreto; elegir \(q\) y la curva de modo que \(\#E(\mathbb{F}_q)\) (véase la sección~\ref{subsec:orden_del_grupo}) tenga un gran factor primo es esencial para garantizar la dificultad del problema.  
 \end{itemize}
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=0.8\textwidth]{imagenes/points_finite_field_251.png}
     \caption{Ejemplo de los puntos de una curva elíptica sobre un cuerpo finito}

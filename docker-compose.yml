@@ -1,7 +1,7 @@
 services:
   crypto:
-    build: .  # Build from local Dockerfile
-    image: ecc-thesis  # Use the local image you built
+    build: .
+    image: ecc-thesis
     volumes:
       - .:/workspace:delegated
     working_dir: /workspace

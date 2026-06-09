@@ -5,7 +5,7 @@
 ### Logros
 - [x] Sistema RNG reproducible con semillas
 - [x] Implementación completa de RSA
-- [x] Optimización CRT (~4x speedup)
+- [x] Optimización CRT (~3.5x speedup medido)
 - [x] Sistema de benchmarking con estadísticas
 - [x] Arquitectura modular sin duplicación
 - [x] Documentación exhaustiva
@@ -14,6 +14,15 @@
   - [x] Realizar toda la generación y normalización en C++, volcar datos ya normalizados, y Python lee los datos limpios
 - [x] Scripts de automatización para análisis RNG
 - [x] Análisis estadístico básico (histogramas, autocorrelación, entropía)
+- [x] Pipeline CI/CD (GitHub Actions):
+  - [x] `ci.yml`: build, smoke test, reproducibilidad, ASan/UBSan
+  - [x] `test.yml`: tests unitarios
+  - [x] `lint.yml`: clang-format sobre ficheros modificados
+  - [x] `latex.yml`: compilación automática del PDF del TFG
+  - [x] `docker-publish.yml`: publicación de imagen Docker
+  - [x] `codeql.yml`: análisis estático de seguridad
+  - [x] `dependabot.yml`: actualizaciones automáticas de dependencias
+
 ## FASE 2: Validación Estadística del RNG (COMPLETADO)
  
 ### Objetivos
@@ -45,6 +54,7 @@ Verificar la calidad criptográfica del generador de números aleatorios.
 - [x] Informe de resultados estadísticos
 - [x] Comparación con generadores estándar
 - [x] Conclusiones sobre calidad criptográfica
+
 ## FASE 3: Implementación Completa de ECC (COMPLETADO)
  
 ### Objetivos
@@ -115,16 +125,7 @@ Implementar ECC con las mismas características que RSA.
 - [x] Mapeo de seguridad ECC → RSA (NIST SP 800-57)
 - [x] Recomendación de curva según tamaño RSA
 - [x] Conversión de tipos de curva a string
-### Archivos Nuevos/Modificados en Fase 3
-| Archivo | Estado | Descripción |
-|---------|--------|-------------|
-| `sha256.hpp` | **NUEVO** | Header de SHA-256 (FIPS PUB 180-4) |
-| `sha256.cpp` | **NUEVO** | Implementación de SHA-256 |
-| `ecc.hpp` | **MODIFICADO** | +ECDSA: ECDSASignature, sign, verify, truncate_hash |
-| `ecc.cpp` | **MODIFICADO** | +ECDSA: implementación completa |
-| `main.cpp` | **MODIFICADO** | +Benchmarks ECDSA, RSA sign/verify, modo CMP |
-| `roadmap.md` | **MODIFICADO** | Actualización de progreso |
- 
+
 ## FASE 4: Análisis Comparativo RSA vs ECC (COMPLETADO)
  
 ### Objetivos
@@ -143,16 +144,22 @@ Comparación exhaustiva de rendimiento y seguridad en tres dimensiones.
 #### 4.2. Análisis de Rendimiento
 - [x] Gráficas de tiempo vs tamaño de clave (chart_rsa_scaling)
 - [x] Speedup de ECC sobre RSA (chart_speedup_ratios)
-- [ ] Consumo de memoria (no significativo: KBs para ambos)
+- [x] Distribución estadística de tiempos de firma y verificación (chart_distribution_sign/verify)
 - [x] Escalabilidad (RSA super-polynomial vs ECC linear scaling)
-#### 4.3. Análisis de Seguridad
+#### 4.3. Comparativa con OpenSSL
+- [x] Script `compare_openssl.sh` + benchmark de referencia
+- [x] `openssl_baseline.csv` con tiempos OpenSSL para RSA y ECC
+- [x] Análisis de brecha: RSA textbook vs OpenSSL (~8-9% diferencia) y ECC vs OpenSSL (14x-34x en P-256, 1.7x-4x en P-384)
+#### 4.4. Análisis de Flags de Compilación
+- [x] Script `compare_compiler_flags.sh` con múltiples combinaciones de flags
+- [x] `visualize_compiler_flags.py` y `chart_compiler_flags.png`
+- [x] `compiler_flags.csv` con métricas por configuración
+#### 4.5. Análisis de Seguridad
 - [x] Comparación de niveles de seguridad (NIST SP 800-57 mapping)
 - [x] Tamaño de claves equivalentes (tabla en README)
-- [ ] Resistencia a ataques conocidos (contenido teórico → memoria TFG)
-#### 4.4. Análisis Práctico
-- [ ] Uso en protocolos reales (TLS, SSH) (contenido teórico → memoria TFG)
+#### 4.6. Análisis Práctico
 - [x] Ventajas/desventajas de cada uno (documentado en README y optimization_analysis.md)
-- [ ] Recomendaciones de uso (contenido teórico → memoria TFG)
+
 ### Archivos Nuevos/Modificados en Fase 4
 | Archivo | Estado | Descripción |
 |---------|--------|-------------|
@@ -160,9 +167,12 @@ Comparación exhaustiva de rendimiento y seguridad en tres dimensiones.
 | `visualize_benchmarks.py` | **MODIFICADO** | 11 gráficos (4 nuevos para Jacobian + binario) |
 | `create_collages.py` | **MODIFICADO** | 3 collages (nuevo: coordenadas y campos) |
 | `run_benchmarks.sh` | **MODIFICADO** | +ecc_binary.cpp, verificación 4 algoritmos |
+| `compare_openssl.sh` | **NUEVO** | Comparativa con implementación OpenSSL |
+| `compare_compiler_flags.sh` | **NUEVO** | Análisis de impacto de flags de compilación |
+| `visualize_compiler_flags.py` | **NUEVO** | Gráficas de análisis de flags |
 | `README.md` | **MODIFICADO** | Sección 6 completa con 3 dimensiones |
 | `optimization_analysis.md` | **NUEVO** | Análisis teórico afín vs Jacobiano vs binario |
- 
+
 ## FASE 5: Optimizaciones Avanzadas (PARCIALMENTE COMPLETADO)
  
 ### Objetivos
@@ -184,7 +194,7 @@ Mejorar rendimiento y añadir características avanzadas.
 - [x] Multiplicación escalar Jacobiana (`ec_scalar_mult_jacobian`)
 - [x] Parámetro `use_jacobian` en keygen, ECDSA, ECDH
 - [x] Benchmark comparativo afín vs Jacobiano (chart_affine_vs_jacobian)
-- [x] Análisis de speedup teórico vs medido (optimization_analysis.md)
+- [x] Análisis de speedup teórico vs medido (~8x teórico, ~1.8x medido; documentado en optimization_analysis.md)
 - [ ] NAF (Non-Adjacent Form) para multiplicación
 - [ ] Precomputación de puntos (ventana fija)
 #### 5.4. Curvas sobre Campos Binarios GF(2^m)
@@ -195,10 +205,11 @@ Mejorar rendimiento y añadir características avanzadas.
 - [x] 5 curvas estándar SEC 2 (sect163k1, sect233k1, sect283k1, sect233r1, sect283r1)
 - [x] Generación de claves y ECDH en campos binarios
 - [x] Benchmark y visualización (chart_binary_curves, chart_prime_vs_binary)
+- [ ] Coordenadas de Lopez-Dahab (proyectivas para GF(2^m)) — alcance TFG excedido
 #### 5.5. Padding Schemes
 - [ ] Implementar OAEP para RSA
 - [ ] Implementar PSS para firmas RSA
-- [ ] Hacer RSA seguro en la práctica
+
 ## FASE 6: Exportación y Visualización de Datos (COMPLETADO)
  
 ### Objetivos
@@ -208,20 +219,29 @@ Facilitar análisis externo y presentación de resultados.
  
 #### 6.1. Exportación de Datos
 - [x] Exportar resultados a CSV (summary + raw per-iteration)
-- [ ] Exportar resultados a JSON (opcional, no necesario)
 - [x] Formato compatible con Excel/Sheets (CSV estándar)
 #### 6.2. Visualización Avanzada
-- [ ] Dashboard interactivo con Python (Dash/Streamlit) (opcional)
-- [x] Gráficas con matplotlib (11 tipos de gráfico)
+- [x] Gráficas con matplotlib (16 gráficos de resultados):
+  - `chart_rsa_scaling`, `chart_speedup_ratios`, `chart_keygen_comparison`
+  - `chart_sign_verify_comparison`, `chart_ecc_curves`
+  - `chart_affine_vs_jacobian`, `chart_jacobian_speedup`
+  - `chart_binary_curves`, `chart_prime_vs_binary`
+  - `chart_summary_table`, `chart_compiler_flags`
+  - `chart_distribution_sign`, `chart_distribution_verify`
 - [x] Comparaciones visuales RSA vs ECC (collage_comparison)
-- [x] Comparación afín vs Jacobiano (chart_affine_vs_jacobian, chart_jacobian_speedup)
-- [x] Comparación campo primo vs binario (chart_prime_vs_binary)
+- [x] Comparación afín vs Jacobiano (collage_detailed)
+- [x] Comparación campo primo vs binario (collage_coordinates_fields)
 - [x] 3 collages (overview, detailed, coordinates_fields)
-#### 6.3. Reportes Automáticos
-- [ ] Generación automática de informes PDF (opcional)
+#### 6.3. Visualizaciones Educativas
+- [x] Curvas elípticas 2D (`visual_curve2D.py`, `visual_singular_curve2D.py`)
+- [x] Puntos en curvas 2D (`visual_points2D.py`)
+- [x] Superficies 3D (Weierstrass, toro): `weierstrass_surface.py`, `torus.py`, `visual3D.py`, `3Dgraphics.py`
+- [x] Visualización de Rho de Pollard: animado (`visual_pollard_rho_animated.py`, `pollard_rho.gif`) y estático (`gen_pollard_rho_static.py`)
+#### 6.4. Reportes
 - [x] Tablas de comparación (chart_summary_table heatmap)
 - [x] Gráficas embebidas en README
-## FASE 7: Documentación y TFG (EN PROGRESO)
+
+## FASE 7: Documentación y TFG (CASI COMPLETADO)
  
 ### Objetivos
 Preparar toda la documentación para el TFG.
@@ -230,34 +250,66 @@ Preparar toda la documentación para el TFG.
  
 #### 7.1. Documentación Técnica
 - [x] README.md completo con 3 dimensiones de comparación
-- [x] optimization_analysis.md (análisis teórico)
-- [ ] Manual de usuario completo
-- [ ] Documentación de API
-- [ ] Guía de desarrollador
-#### 7.2. Memoria del TFG
-- [ ] Introducción y motivación
-- [ ] Estado del arte
-- [ ] Diseño e implementación
-- [ ] Resultados experimentales
-- [ ] Análisis de resultados
-- [ ] Conclusiones y trabajo futuro
-- [ ] Bibliografía
-#### 7.3. Presentación
-- [ ] Slides de presentación
-- [ ] Demo en vivo
-- [ ] Preparación de preguntas
+- [x] `optimization_analysis.md` (análisis teórico)
+- [x] `notes.md` (preparación de defensa consolidada: 10 partes, preguntas probables, rigor metodológico, datos y profundidad algebraica; antes `defensa.md`, ya fusionado aquí)
+#### 7.2. Memoria del TFG (LaTeX)
+- [x] Cap. 1 — Introducción y motivación (71 líneas)
+- [x] Cap. 2 — Criptografía: fundamentos y contexto histórico (439 líneas)
+- [x] Cap. 3 — Campos Finitos (457 líneas)
+- [x] Cap. 4 — Curvas Elípticas (698 líneas)
+- [x] Cap. 5 — Criptografía de Curvas Elípticas (970 líneas)
+- [x] Cap. 6 — Implementación (401 líneas)
+- [x] Cap. 7 — Resultados Experimentales y Análisis (488 líneas)
+- [x] Cap. 8 — Conclusiones y Trabajo Futuro (92 líneas)
+- [x] Prefacio / resumen
+- [x] Bibliografía (`bibliography.txt`, `bibliography.bib`)
+- [x] Compilación automática del PDF via GitHub Actions (`latex.yml`)
+#### 7.3. Correcciones Pendientes (notas del tutor / revisión)
+- [ ] Resumen del TFG — actualizar para quitar o matizar referencia a ataques cuánticos
+- [ ] Cap. 4 — reducir separación entre párrafos (formato LaTeX)
+- [ ] Cap. 7 — aumentar tamaño de figuras 7.2, 7.3, 7.6, 7.7, 7.8, 7.13, 7.14 (especialmente 7.13)
+- [ ] Cap. 6/7 — verificar y aclarar todas las referencias al CRT (ya implementado; confirmar redacción correcta)
+- [ ] Cap. 6 — Aclarar descripción de la implementación de RSA (BigInt vs ZZ_p)
+- [ ] Cap. 4 — Clarificar la frase sobre coordenadas Jacobianas en campos binarios (limitación documentada)
+#### 7.4. Presentación
+- [ ] Diapositivas de defensa
+- [ ] Demo en vivo preparada
+- [ ] Ensayo de preguntas del tribunal (cubierto en `notes.md`)
+
+## FASE 8: Defensa TFG (EN PROGRESO)
+ 
+### Objetivos
+Preparar y ejecutar la defensa oral del TFG.
+ 
+### Tareas
+ 
+#### 8.1. Preparación
+- [x] Documento `notes.md` (defensa consolidada, 10 partes; fusión de `notes.md` + `defensa.md`):
+  - Teoría algebraica (char(K), asociatividad, j-invariante, Hasse)
+  - Implementación (RSA, CRT, ECDSA, ECDH)
+  - Ataques (Pollard ρ, MOV, curvas anómalas, canales laterales)
+  - Metodología (validez interna/externa, justicia de la comparativa)
+  - Preguntas trampa y cómo gestionarlas
+  - Estándares modernos (Curve25519, RFC 6979, post-cuántico)
+- [x] Identificados los 3-4 números estrella: speedup keygen (~138x), CRT (~3.5x), Jacobiano (~1.8x), ratio de clave (~12x)
+#### 8.2. Material Visual
+- [ ] Diapositivas de presentación (10-15 min)
+- [ ] Selección de 3-4 gráficas clave (keygen, tabla resumen 7.14, afín vs Jacobiano)
+#### 8.3. Ejecución
+- [ ] Defensa oral ante el tribunal
 
 ## MÉTRICAS DE PROGRESO
 
 | Fase | Estado | Completado | Notas |
 |------|--------|-----------|-------|
-| 1. Infraestructura Base | COMPLETADO | 100% | RSA + RNG + Docker |
+| 1. Infraestructura Base | COMPLETADO | 100% | RSA + RNG + Docker + CI/CD |
 | 2. Validación RNG | COMPLETADO | 100% | Tests estadísticos completos |
 | 3. Implementación ECC | COMPLETADO | 100% | Afín, ECDSA, ECDH, SHA-256 |
-| 4. Análisis Comparativo | COMPLETADO | 90% | 3 dimensiones; falta contenido teórico |
-| 5. Optimizaciones | PARCIAL | 60% | Jacobian + binario hechos; faltan NAF, OAEP |
-| 6. Visualización | COMPLETADO | 90% | 11 gráficos + 3 collages; dashboard opcional |
-| 7. Documentación TFG | EN PROGRESO | 30% | README listo; memoria LaTeX pendiente |
+| 4. Análisis Comparativo | COMPLETADO | 100% | 3 dimensiones + OpenSSL + compiler flags |
+| 5. Optimizaciones | PARCIAL | 65% | Jacobian + binario hechos; NAF/OAEP/PSS pendientes |
+| 6. Visualización | COMPLETADO | 100% | 16 gráficos + 3 collages + visualizaciones educativas |
+| 7. Documentación TFG | CASI COMPLETADO | 85% | Todos los capítulos escritos; correcciones menores pendientes |
+| 8. Defensa | EN PROGRESO | 25% | notes.md (defensa consolidada) listo; slides y ensayo pendientes |
 
 ## RECURSOS ÚTILES
 

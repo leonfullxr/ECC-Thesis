@@ -1,12 +1,10 @@
-s3dlib
 matplotlib
+networkx
 numpy
+pandas
+Pillow
 plotly
-mpmath
-sympy
-
-# GPM
-https://libntl.org/doc/tour-gmp.html
-
-# NTL
-https://libntl.org/doc/tour-unix.html
+qutip
+s3dlib
+scipy
+seaborn

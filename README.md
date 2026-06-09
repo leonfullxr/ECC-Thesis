@@ -13,10 +13,10 @@
 ## Table of Contents
 
 - [ECC-Thesis](#ecc-thesis)
-  - [1. Project Description](#1--project-description)
-  - [2. Project Structure](#2--project-structure)
-  - [3. CI / GitHub Workflows](#3-ci-/-github-workflows)
-  - [4. Docker Image](#4--docker-image)
+  - [1. Project Description](#1-project-description)
+  - [2. Project Structure](#2-project-structure)
+  - [3. CI / GitHub Workflows](#3-ci--github-workflows)
+  - [4. Docker Image](#4-docker-image)
     - [Files](#files)
     - [Usage](#usage)
       - [1. Build the image](#1-build-the-image)
@@ -93,19 +93,23 @@ ecc-thesis/
 
 ## 3. CI / GitHub Workflows
 
-The repository includes a `docker-publish.yml` file and a `test.yml` for GitHub Actions to automatically rebuild and publish our Docker image on every push to `main` or when a new tag is created.
+The repository ships a full CI/CD pipeline via GitHub Actions. Every push or pull request to `main` is validated automatically before merging.
 
-### Workflow file
+### Workflows
 
-- **`.github/workflows/docker-publish.yml`**: is an automation that, when a push is made to GitHub and changes are detected in the dependencies of any of the languages or the Dockerfile, it automatically rebuilds the image and uploads it to DockerHub under `leonfullxr/ecc-benchmarks:latest`.
-- **`.github/workflows/test.yml`**: On every push or PR to `main`:
-  1. Checks out your code  
-  2. Pulls the latest image from Docker Hub  
-  3. Runs a quick non-interactive command inside the container (e.g. `make`) to verify it launches correctly
+| File | Trigger | What it does |
+|------|---------|--------------|
+| **`ci.yml`** | push / PR --> `main` | Build inside Docker + smoke test (`./bin/bench -h`), reproducibility check with fixed seed, and a separate job that recompiles with `-fsanitize=address,undefined` (ASan + UBSan) and runs a smoke case. |
+| **`test.yml`** | push / PR --> `main` | Pulls the published Docker image, runs `make` and verifies the binary launches correctly - quick sanity check that the image and Makefile stay in sync. |
+| **`lint.yml`** | push / PR --> `main` | Four linters in parallel: **clang-format 17** (scoped to changed `src/` and `include/` files only, so it never flags untouched code), **cppcheck** (warnings/performance/portability, informational), **shellcheck** (severity: warning), and **ruff** for Python scripts. |
+| **`latex.yml`** | push / PR --> `main` (only when `.tex`/`.bib` files change) | Compiles `docs/Plantilla_TFG_latex/proyecto.tex` with `latexmk` and uploads the resulting `proyecto.pdf` as a workflow artifact. |
+| **`docker-publish.yml`** | push --> `main` (only when `Dockerfile` changes) | Rebuilds the benchmark image and pushes it to Docker Hub as `leonfullxr/ecc-benchmarks:latest`. |
+| **`codeql.yml`** | push / PR --> `main`, scheduled weekly (Mon 04:23 UTC) | GitHub CodeQL security analysis for C/C++ and Python - especially relevant for a cryptography project. Results appear in the Security tab. |
+| **`dependabot.yml`** | weekly schedule | Automatically opens PRs to keep GitHub Actions and the Docker base image up to date. |
 
 ### Secrets
 
-In your fork (or upstream) you must configure two repository secrets under **Settings → Secrets and variables → Actions**:
+To enable the Docker publish workflow in your fork, add two repository secrets under **Settings --> Secrets and variables --> Actions**:
 
 ```yaml
 DOCKERHUB_USERNAME: your-dockerhub-username   # e.g. "leonfullxr"
@@ -208,7 +212,7 @@ make
   docker-compose run crypto
 ```
 
-  Compose will pick up `docker-compose.yml` and bind `.` → `/workspace`.
+  Compose will pick up `docker-compose.yml` and bind `.` --> `/workspace`.
 
 * **USB-path override**:
   If you need to mount a weird host path (like me) from your USB drive, use:

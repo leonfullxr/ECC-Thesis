@@ -2,11 +2,9 @@ services:
   crypto:
     build: .
     volumes:
-      # 1) bind-mount your USB-hosted repo into /workspace
+      # bind-mount your USB-hosted repo into /workspace
       - "/media/leon/Leon's File/Nextcloud/ETSIIT/ETSHIT/Github/ECC-Thesis:/workspace:delegated"
-      # 2) mount a Docker volume over /workspace/bin (exec-enabled)
       - bin:/workspace/bin
-      # (optional) also mask results if you prefer container-side storage
       - results:/workspace/results
     working_dir: /workspace
     stdin_open: true
@@ -14,5 +12,5 @@ services:
     command: bash
 
 volumes:
-  bin:      # this is a normal local volume (exec OK)
-  results:  # likewise, for your bench outputs
+  bin:
+  results:
