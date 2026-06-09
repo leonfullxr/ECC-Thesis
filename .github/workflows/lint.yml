@@ -70,7 +70,7 @@ jobs:
       # Ejecuta una vez "clang-format -i <ficheros>" en local antes de exigirlo.
       - name: Check changed C++ formatting
         if: steps.changed-cpp.outputs.has_files == 'true'
-        uses: jidicula/clang-format-action@v4.13.0
+        uses: jidicula/clang-format-action@v4.18.0
         with:
           clang-format-version: '17'
           include-regex: ${{ steps.changed-cpp.outputs.include_regex }}
