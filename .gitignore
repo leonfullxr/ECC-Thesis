@@ -59,3 +59,8 @@ core
 *.log
 *.fdb_latexmk
 *.synctex.gz
+
+# Beamer (presentation) build artifacts
+*.nav
+*.snm
+*.vrb

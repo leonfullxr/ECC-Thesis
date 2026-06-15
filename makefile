@@ -36,6 +36,8 @@ SCRIPTS_DIR := scripts
 INCLUDE_DIR := include
 RESULTS_DIR := results
 IMAGES_DIR := docs/Plantilla_TFG_latex/imagenes
+SLIDES_DIR := docs/presentacion_defensa
+SLIDES_IMAGES := $(SLIDES_DIR)/imagenes
 
 ######################### Source and object files
 SOURCES := $(SRC_DIR)/rng.cpp $(SRC_DIR)/rsa.cpp $(SRC_DIR)/ecc.cpp $(SRC_DIR)/ecc_binary.cpp  $(SRC_DIR)/sha256.cpp $(SRC_DIR)/main.cpp
@@ -96,7 +98,9 @@ show-info:
 	@echo ""
 	@echo "$(IFG)  Figures / reproducibility:$(EC)"
 	@echo "$(IFG) -  make visualize$(EC)          Regenerate all charts + collages"
-	@echo "$(IFG) -  make figures$(EC)            Regenerate charts and copy to imagenes/"
+	@echo "$(IFG) -  make figures$(EC)            Regenerate charts and copy to imagenes/ (memoria + slides)"
+	@echo "$(IFG) -  make illustrations$(EC)      Regenerate static slide figures (curve shapes, group law)"
+	@echo "$(IFG) -  make slides$(EC)             Compile the Beamer defense presentation (PDF)"
 	@echo "$(IFG) -  make reproduce$(EC)          Full pipeline: benchmark+openssl+flags+figures"
 	@echo ""
 	@echo "$(IFG)  Variables: OPT, BENCH_ITERS, OPENSSL_SECONDS, FLAG_ITERS, KEY_SIZE, ITERS$(EC)"
@@ -162,7 +166,7 @@ test-rsa-py:
 # ============================================================================
 # Full experiments and reproducibility (memoria)
 # ============================================================================
-.PHONY: benchmark compare-openssl compare-compiler-flags rng-full visualize figures reproduce
+.PHONY: benchmark compare-openssl compare-compiler-flags rng-full visualize figures illustrations slides reproduce
 
 # Full RSA vs ECC comparative benchmark (3 axes) + charts
 benchmark: $(BIN_DIR)/bench
@@ -199,12 +203,27 @@ visualize:
 	@$(PYTHON) $(SCRIPTS_DIR)/visualize_summary.py $(RESULTS_DIR)/summary_latest.csv $(RESULTS_DIR)
 	@$(PYTHON) $(SCRIPTS_DIR)/create_collages.py $(RESULTS_DIR) $(RESULTS_DIR) || true
 
-# Regenerate figures and copy them into the LaTeX imagenes/ folder
+# Regenerate figures and copy them into the LaTeX imagenes/ folders
+# (thesis memoria + defense presentation share the same charts)
 figures: visualize
-	@mkdir -p $(IMAGES_DIR)
+	@mkdir -p $(IMAGES_DIR) $(SLIDES_IMAGES)
 	@cp -f $(RESULTS_DIR)/chart_*.png $(IMAGES_DIR)/ 2>/dev/null || true
 	@cp -f $(RESULTS_DIR)/collage_*.png $(IMAGES_DIR)/ 2>/dev/null || true
-	@echo -e "$(LGFG)Figures copied to $(IMAGES_DIR)/$(EC)"
+	@cp -f $(RESULTS_DIR)/chart_*.png $(SLIDES_IMAGES)/ 2>/dev/null || true
+	@echo -e "$(LGFG)Figures copied to $(IMAGES_DIR)/ and $(SLIDES_IMAGES)/$(EC)"
+
+# Regenerate the static slide illustrations (curve shapes + group law).
+# These are analytic figures (no benchmark data), saved into the slides imagenes/.
+illustrations:
+	@echo -e "$(LGFG)Generating slide illustrations (ec_shape, ec_addition)...$(EC)"
+	@$(PYTHON) $(SCRIPTS_DIR)/generate_slide_illustrations.py $(SLIDES_IMAGES)
+
+# Compile the Beamer defense presentation (two passes for TOC/progress bar)
+slides:
+	@echo -e "$(LGFG)Compiling defense presentation...$(EC)"
+	@cd $(CURDIR)/$(SLIDES_DIR) && pdflatex -interaction=nonstopmode -halt-on-error presentacion_defensa.tex >/dev/null
+	@cd $(CURDIR)/$(SLIDES_DIR) && pdflatex -interaction=nonstopmode -halt-on-error presentacion_defensa.tex >/dev/null
+	@echo -e "$(LGFG)Presentation built: $(SLIDES_DIR)/presentacion_defensa.pdf$(EC)"
 
 # Full reproducible pipeline (serial order guaranteed)
 reproduce:

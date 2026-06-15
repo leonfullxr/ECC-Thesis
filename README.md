@@ -100,12 +100,10 @@ The repository ships a full CI/CD pipeline via GitHub Actions. Every push or pul
 | File | Trigger | What it does |
 |------|---------|--------------|
 | **`ci.yml`** | push / PR --> `main` | Build inside Docker + smoke test (`./bin/bench -h`), reproducibility check with fixed seed, and a separate job that recompiles with `-fsanitize=address,undefined` (ASan + UBSan) and runs a smoke case. |
-| **`test.yml`** | push / PR --> `main` | Pulls the published Docker image, runs `make` and verifies the binary launches correctly - quick sanity check that the image and Makefile stay in sync. |
 | **`lint.yml`** | push / PR --> `main` | Four linters in parallel: **clang-format 17** (scoped to changed `src/` and `include/` files only, so it never flags untouched code), **cppcheck** (warnings/performance/portability, informational), **shellcheck** (severity: warning), and **ruff** for Python scripts. |
 | **`latex.yml`** | push / PR --> `main` (only when `.tex`/`.bib` files change) | Compiles `docs/Plantilla_TFG_latex/proyecto.tex` with `latexmk` and uploads the resulting `proyecto.pdf` as a workflow artifact. |
 | **`docker-publish.yml`** | push --> `main` (only when `Dockerfile` changes) | Rebuilds the benchmark image and pushes it to Docker Hub as `leonfullxr/ecc-benchmarks:latest`. |
 | **`codeql.yml`** | push / PR --> `main`, scheduled weekly (Mon 04:23 UTC) | GitHub CodeQL security analysis for C/C++ and Python - especially relevant for a cryptography project. Results appear in the Security tab. |
-| **`dependabot.yml`** | weekly schedule | Automatically opens PRs to keep GitHub Actions and the Docker base image up to date. |
 
 ### Secrets
 
