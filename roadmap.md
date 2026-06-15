@@ -16,12 +16,10 @@
 - [x] Análisis estadístico básico (histogramas, autocorrelación, entropía)
 - [x] Pipeline CI/CD (GitHub Actions):
   - [x] `ci.yml`: build, smoke test, reproducibilidad, ASan/UBSan
-  - [x] `test.yml`: tests unitarios
   - [x] `lint.yml`: clang-format sobre ficheros modificados
   - [x] `latex.yml`: compilación automática del PDF del TFG
   - [x] `docker-publish.yml`: publicación de imagen Docker
   - [x] `codeql.yml`: análisis estático de seguridad
-  - [x] `dependabot.yml`: actualizaciones automáticas de dependencias
 
 ## FASE 2: Validación Estadística del RNG (COMPLETADO)
  
