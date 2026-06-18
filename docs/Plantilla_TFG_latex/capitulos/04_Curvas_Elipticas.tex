@@ -299,11 +299,11 @@ La condición de \emph{supersingularidad} (discriminante especial, ver cada caso
 Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\mathcal{O}\) 
 (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}.
 
-La idea geométrica es sencilla y constituye el corazón de toda la aritmética de curva, por lo que conviene entenderla bien:, porque es la operación 
+La idea geométrica es sencilla y constituye el corazón de toda la aritmética de curva, por lo que conviene entenderla bien, ya que, es la operación 
 elemental que después se repite miles de veces en la multiplicación escalar (sección~\ref{subsec:ecc-mult-escalar}) y, por tanto, la que domina el 
 coste de cualquier protocolo basado en ECC. Para \emph{sumar} dos puntos distintos \(P\) y \(Q\) se traza la recta (la \emph{cuerda}) que los une. 
 Dado que la ecuación de Weierstrass es cúbica en \(x\), una recta no vertical corta a la curva exactamente en un tercer punto, 
-al que llamamos \(R'\) que el resultado de la suma se define como el reflejo de \(R'\) respecto al eje de simetría de la curva 
+al que llamamos \(R'\). El resultado de la suma se define como el reflejo de \(R'\) respecto al eje de simetría de la curva 
 (el eje de abscisas en la forma corta), de modo que \(R = P+Q\). Cuando los dos sumandos coinciden (\(P = Q\)) no existe una cuerda que los una, 
 así que se emplea la recta \emph{tangente} a la curva en \(P\) (su segundo corte con la curva), una vez reflejado, proporciona la duplicación \(2P\). 
 La figura~\ref{fig:grupo_elipticas} ilustra ambas situaciones, que son las dos únicas que requieren cálculo real y el resto de casos 
@@ -346,7 +346,7 @@ de los dos operandos. Sean \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) dos puntos de \(E(K
     \]
 \end{enumerate}
 
-\noindent Como se anticipaba, solo los casos 3 y 4 requieren aritmética no trivial en el cuerpo; ambos siguen el mismo patrón ---calcular una pendiente \(\lambda\), de ella la nueva abscisa \(x_3\) y, finalmente, la ordenada \(y_3\)--- y se diferencian únicamente en cómo se obtiene \(\lambda\) (por diferencia de puntos en la cuerda o por derivación en la tangente). Las fórmulas concretas se exponen a continuación, primero para característica \(\neq 2,3\) y después para cuerpos binarios.
+\noindent Como se anticipaba, solo los casos 3 y 4 requieren aritmética no trivial en el cuerpo; ambos siguen el mismo patrón --calcular una pendiente \(\lambda\), de ella la nueva abscisa \(x_3\) y, finalmente, la ordenada \(y_3\)-- y se diferencian únicamente en cómo se obtiene \(\lambda\) (por diferencia de puntos en la cuerda o por derivación en la tangente). Las fórmulas concretas se exponen a continuación, primero para característica \(\neq 2,3\) y después para cuerpos binarios.
 
 \subsubsection*{Propiedades del grupo abeliano}
 El conjunto de puntos de la curva, junto con la operación $+$ y el elemento neutro $\mathcal{O}$, forma un \emph{grupo abeliano} que denotamos
@@ -696,4 +696,4 @@ En la práctica, para curvas de uso criptográfico sobre primos grandes, las coo
 
 \section{Selección de parámetros}\label{sec:seleccion_parametros_ch4}
 
-La elección de los parámetros del dominio de una curva elíptica ---el cuerpo base \(\mathbb{F}_q\), los coeficientes \((a,b)\) (o \((a,b,c)\) en característica~2), el punto generador \(G\), su orden \(n\) y el cofactor \(h\)--- determina simultáneamente la seguridad y el rendimiento del criptosistema resultante. Como esta selección está íntimamente ligada al uso criptográfico (tamaño de clave equivalente, resistencia frente al ECDLP, ataques especializados como Pohlig–Hellman, MOV/Frey–Rück o Smart–Semaev–Satoh), su discusión se difiere al capítulo~\ref{ch:ecc}: en particular, la sección~\ref{subsec:ecc-comparativa-claves} compara tamaños de clave entre RSA y ECC para distintos niveles de seguridad, la sección~\ref{subsec:ecc-parametros-dominio} enumera los requisitos formales que debe satisfacer un dominio seguro, y la sección~\ref{subsec:ecc-curvas-estandar} describe las curvas estandarizadas usadas en la práctica (NIST P-256, P-384, secp256k1, Curve25519, las cinco curvas binarias SEC~2 implementadas en este trabajo, etc.).
+La elección de los parámetros del dominio de una curva elíptica --el cuerpo base \(\mathbb{F}_q\), los coeficientes \((a,b)\) (o \((a,b,c)\) en característica~2), el punto generador \(G\), su orden \(n\) y el cofactor \(h\)-- determina simultáneamente la seguridad y el rendimiento del criptosistema resultante. Como esta selección está íntimamente ligada al uso criptográfico (tamaño de clave equivalente, resistencia frente al ECDLP, ataques especializados como Pohlig–Hellman, MOV/Frey–Rück o Smart–Semaev–Satoh), su discusión se difiere al capítulo~\ref{ch:ecc}: en particular, la sección~\ref{subsec:ecc-comparativa-claves} compara tamaños de clave entre RSA y ECC para distintos niveles de seguridad, la sección~\ref{subsec:ecc-parametros-dominio} enumera los requisitos formales que debe satisfacer un dominio seguro, y la sección~\ref{subsec:ecc-curvas-estandar} describe las curvas estandarizadas usadas en la práctica (NIST P-256, P-384, secp256k1, Curve25519, las cinco curvas binarias SEC~2 implementadas en este trabajo, etc.).
