@@ -31,11 +31,54 @@ La criptografía se puede clasificar históricamente en dos:
 Tanto la criptografía clásica como la moderna se clasifican de acuerdo a las técnicas o métodos que se utilizan para cifrar los mensajes. Esta clasificación la podemos ver en la siguiente figura~\ref{fig:clasificacion_criptografia}:
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{imagenes/Clasificación_criptografía.png}
-    \caption{Clasificación de la criptografía en función del método de cifrado}
-    \label{fig:clasificacion_criptografia}
+\centering
+% \resizebox no puede escanear directamente el tikzpicture por los caracteres activos de babel spanish.
+\begin{lrbox}{\arqbox}%
+\begin{tikzpicture}[
+    nodo/.style={draw, rounded corners, align=center, font=\small,
+                 inner sep=4pt, minimum height=8mm, minimum width=20mm},
+    flecha/.style={draw, -{Latex[length=2mm]}},
+]
+    \node[nodo] (crip)  at (5.4, 0)   {Criptografía};
+    \node[nodo] (clas)  at (1.4, -2)  {Clásica};
+    \node[nodo] (mod)   at (9.4, -2)  {Moderna};
+
+    \node[nodo] (trans) at (0,    -4) {Transposición};
+    \node[nodo] (sust)  at (2.8,  -4) {Sustitución};
+    \node[nodo] (sim)   at (5.8,  -4) {Simétrica};
+    \node[nodo] (asim)  at (8.3,  -4) {Asimétrica};
+    \node[nodo] (sinc)  at (10.6, -4) {Sin clave};
+    \node[nodo] (pq)    at (13.0, -4) {Postcuántica};
+
+    \node[nodo] (bloq)  at (5.0,  -6) {Bloques};
+    \node[nodo] (flujo) at (6.6,  -6) {Flujo};
+
+    \draw[flecha] (crip) -- (clas);
+    \draw[flecha] (crip) -- (mod);
+    \draw[flecha] (clas) -- (trans);
+    \draw[flecha] (clas) -- (sust);
+    \draw[flecha] (mod)  -- (sim);
+    \draw[flecha] (mod)  -- (asim);
+    \draw[flecha] (mod)  -- (sinc);
+    \draw[flecha] (mod)  -- (pq);
+    \draw[flecha] (sim)  -- (bloq);
+    \draw[flecha] (sim)  -- (flujo);
+\end{tikzpicture}%
+\end{lrbox}%
+\resizebox{\textwidth}{!}{\usebox{\arqbox}}%
+\caption{Clasificación de la criptografía en función del método de cifrado.}
+\label{fig:clasificacion_criptografia}
 \end{figure}
+
+En los últimos años ha cobrado relevancia una nueva categoría dentro de la 
+criptografía moderna: la \emph{criptografía postcuántica}. A diferencia de RSA o ECC, 
+cuya seguridad se vería comprometida por un ordenador cuántico capaz de ejecutar el algoritmo de 
+Shor~\cite{shor-quantum-threat}, los esquemas postcuánticos se apoyan en problemas matemáticos 
+que se conjeturan resistentes tanto a ataques clásicos como cuánticos. En 2024 el NIST estandarizó 
+los primeros algoritmos de este tipo -ML-KEM y ML-DSA, derivados de las propuestas \emph{CRYSTALS-Kyber} 
+y \emph{CRYSTALS-Dilithium}-~\cite{nist-fips203}, marcando el inicio de la transición hacia 
+sistemas resistentes a la amenaza cuántica. Aunque su estudio detallado queda fuera del alcance de este trabajo, 
+se incluye en la figura~\ref{fig:clasificacion_criptografia} por su creciente importancia.
 
 \section{Estructura de un criptosistema}
 
@@ -85,26 +128,15 @@ Para su uso en criptografía, \(H\) debe satisfacer al menos:
 
 Cuando \(H\) es público y sin clave, se le llama \emph{código de detección de modificaciones} (MDC). Si se añade una clave secreta al cómputo de hash, obtenemos un \emph{código de autenticación de mensaje} (MAC), que ofrece además autenticación del origen junto con integridad.
 
-\subsection{MD5}
-El MD5 (Message-Digest Algorithm 5) procesa el mensaje de entrada en bloques sucesivos de 512 bits y produce un resumen (digest) de 128 bits~\citep{rivest1992md5}.  
-Su diseño sigue la construcción de Merkle-Damgard, inicializando cuatro registros de 32 bits y aplicando cuatro rondas de 16 operaciones cada una por bloque~\citep{wang2004md5}.  
-En 2004 se demostró que MD5 ya no es resistente a colisiones: dos entradas diferentes pueden colisionar y producir el mismo digest en tiempo práctico~\citep{wang2004md5}.  
-Por ejemplo, en 2009, Marc Stevens, Arjen Lenstra y Benne de Weger, un grupo de investigadores, construyeron colisiones con prefijos elegidos y generaron un certificado CA malicioso~\citep{stevens2009md5-ca}.  
-Actualmente se desaconseja MD5 para cualquier uso criptográfico y se recomienda SHA-2 o SHA-3 como alternativas seguras~\citep{nist-sp800-131a}.
+\subsection{SHA-2}
+La familia SHA-2 (Secure Hash Algorithm 2), publicada por el NIST en 2001 y recogida en el estándar FIPS 180-4~\citep{nist-fips180-4}, agrupa seis funciones hash (SHA-224, SHA-256, SHA-384, SHA-512 y las variantes truncadas SHA-512/224 y SHA-512/256) que producen resúmenes de entre 224 y 512 bits. Al igual que las funciones que la precedieron, sigue la construcción de Merkle-Damgard: procesa el mensaje en bloques (de 512 bits en SHA-256 y de 1024 bits en SHA-512) y los combina con un estado interno mediante 64 u 80 rondas de operaciones lógicas y sumas modulares.
 
+A diferencia de sus predecesores, no se conocen ataques prácticos de colisión contra SHA-2. Por ello, SHA-256 constituye hoy la función hash de propósito general más utilizada, presente en certificados TLS, firmas digitales (incluida la firma ECDSA empleada en este trabajo) y cadenas de bloques. El NIST la recomienda explícitamente como alternativa segura frente a los algoritmos ya obsoletos~\citep{nist-sp800-131a}.
 
-\subsection{SHA-1}
-El SHA (Secure Hash Algorithm 1), fue publicado en 1995 como FIPS 180-1 por el NIST~\citep{nist-fips180-1}. Procesa los datos de entrada en bloques de 512 bits al igual que MD5, pero produce un digest de 160 bits con cinco registros de 32 bits y 80 rondas de mezcla~\citep{nist-fips180-1}. Su algoritmo es el siguiente:
-\begin{enumerate}
-    \item Se toma el mensaje original y se rellena hasta alcanzar una longitud de $448 \mod 512$ bits. Es decir, al dividir la longitud total entre 512, el resto debe ser 448.
-    \item Se añade un campo de 64 bits que indica la longitud del mensaje original (incluyendo el propio relleno). Así, la longitud total del mensaje resultante, denotado $P'$, será un múltiplo de 512 bits.
-    \item $P'$ se divide en bloques de longitud fija de 512 bits, denotados como $Y_1, Y_2, \ldots, Y_L$.
-    \item Se inicia el cálculo del resumen. Cada bloque de 512 bits se mezcla con un búfer de 160 bits mediante 80 rondas. Cada 20 rondas se modifican las funciones de mezcla utilizadas. Este proceso continúa hasta procesar todos los bloques de entrada.
-\end{enumerate}
+\subsection{SHA-3}
+SHA-3 (Secure Hash Algorithm 3), estandarizado por el NIST en 2015 en el documento FIPS 202~\citep{nist-fips202}, es el resultado de un concurso público internacional que ganó el algoritmo \emph{Keccak}. Su novedad principal es que abandona la construcción de Merkle-Damgard en favor de una \emph{construcción de esponja} (\emph{sponge}): el mensaje se \emph{absorbe} en un estado interno de gran tamaño mediante una permutación y, a continuación, se \emph{exprime} para obtener un resumen de la longitud deseada.
 
-Una vez terminado el cálculo, el buffer de 160 bits contiene el valor del compendio de mensaje. El SHA es $2^{32}$ veces más seguro que el MD5, pero su cálculo es más lento.
-
-En 2005 Xiaoyun Wang y colaboradores redujeron la complejidad para hallar colisiones de \(2^{80}\) a \(2^{63}\) operaciones~\citep{wang2005sha1}, y en 2017 Google y CWI demostraron la primera colisión real de SHA-1 en el experimento \emph{SHAttered}~\citep{google-shattered}. El NIST anunció en 2011 la deprecación de SHA-1 y ha planificado retirarla completamente para fines de 2030~\citep{nist-sp800-131a}. Chrome dejó de aceptar certificados TLS firmados con SHA-1 en enero de 2017~\citep{chrome-sha1}, Mozilla Firefox siguió en febrero de 2017~\citep{mozilla-sha1} y Microsoft finalizó el soporte para contenidos firmados con SHA-1 en 2021~\citep{microsoft-sha1}.
+SHA-3 ofrece las mismas longitudes de salida que SHA-2 (224, 256, 384 y 512 bits) e incorpora además las funciones de salida extensible SHAKE128 y SHAKE256. No nace para sustituir a SHA-2, que permanece seguro, sino para servir como alternativa de diseño independiente, de modo que un eventual ataque estructural contra una de las familias no comprometa a la otra.
 
 \section{Criptografía de clave privada o simétrica}
 Un cifrado simétrico utiliza una clave $k$ elegida de un espacio (conjunto) de claves posibles $K$ para cifrar un mensaje $m$ perteneciente al conjunto de mensajes posibles $M$, generando un texto cifrado $c \in C$.

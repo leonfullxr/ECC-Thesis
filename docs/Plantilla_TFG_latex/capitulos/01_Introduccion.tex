@@ -7,15 +7,25 @@ Ya en la Antigüedad, civilizaciones como la espartana emplearon la “Escítala
 
 Durante el Renacimiento, el cifrado avanzó hacia métodos más sofisticados, como el de Leon Battista Alberti que introdujo en 1465 la idea del cifrado polialfabético mediante discos concéntricos, lo que supuso un gran avance en esa época. Blaise de Vigenère perfeccionó esta técnica en el siglo XVI con una tabla que combinaba alfabetos de forma periódica, y en Europa se publicaron tratados (como el \emph{Cryptomenytices et Cryptographiae} de Selenus) que difundieron estos métodos entre cortes y ejércitos.
 
+Entre la sustitución y la codificación surgió el \emph{nomenclátor}, un sistema híbrido 
+que surgió a finales del siglo XIV. 
+Combinaba un alfabeto de sustitución con un repertorio (la \emph{nomenclatura}) de 
+signos o grupos de cifras que reemplazaban nombres propios, palabras frecuentes y 
+sílabas completas, dificultando así el análisis de frecuencias. Los nomenclátores más 
+elaborados llegaron a contener miles de entradas. La dificultad de descifrado de estos sistemas dependía de la longitud de la nomenclatura y de la complejidad de las reglas de sustitución.
+Con el tiempo durante el imperio español, los nomenclátores se convirtieron en un instrumento de espionaje y diplomacia.
+Un ejemplo a destacar es la \emph{Gran Cifra} 
+de Luis XIV, obra de la familia Rossignol, que permaneció sin descifrar durante más de dos siglos.
+
 El siglo XX presenció el mayor salto tecnológico, donde se partió de los cifrados manuales de la Primera Guerra Mundial hasta la aparición de máquinas electromecánicas como la Enigma alemana en la Segunda Guerra Mundial, una máquina de rotores que automatizaba los cálculos que era necesario realizar para las operaciones de cifrado y descifrado de mensajes. El descifrado de Enigma por los criptógrafos aliados no solo cambió el curso del conflicto, sino que marcó el inicio de la era del cálculo automatizado al servicio de la criptografía. Tras la guerra, Claude Shannon sentó las bases teóricas de la información y la seguridad, y en los años 70 el NIST publicó el Estándar de Cifrado de Datos (DES), consolidando el cifrado simétrico en la informática moderna.
 
-Sin embargo, todos los criptosistemas anteriores tenían un inconveniente, y es que todos se basaban en el hecho de que tanto la parte que descifraba como la que codificaba debían conocer el método de cifrado y la clave para descifrarlo. ¿Pero cómo se transmite la clave de forma segura? Por supuesto, con cifrado. Pero entonces, ¿cómo se puede enviar el cifrado, para que la entidad que descifra el mensaje pueda conocer dicho cifrado? Como se puede apreciar, dicho problema de la criptografía es un bucle infinito entre el cifrado y la distribución de claves que no se puede resolver con seguridad garantizada para todos los lectores deseados.
+Sin embargo, todos los criptosistemas anteriores tenían un inconveniente, y es que todos se basaban en el hecho de que tanto la parte que descifraba como la que codificaba debían conocer el método de cifrado y la clave para descifrarlo. ¿Pero cómo se transmite la clave de forma segura? Por supuesto, con cifrado. Pero entonces, ¿cómo se puede enviar el cifrado, para que la entidad que descifra el mensaje pueda conocer dicho cifrado? Como se puede apreciar, dicho problema de la criptografía es un bucle infinito entre el cifrado y la distribución de claves que no se puede resolver con seguridad garantizada para todos los lectores deseados. Este problema de distribución de claves no encontraría una solución satisfactoria hasta la década de 1970, con la aparición de la criptografía de clave pública y, en particular, de los protocolos de intercambio de claves como Diffie--Hellman y su variante sobre curvas elípticas, ECDH (\emph{Elliptic Curve Diffie--Hellman}), que permiten a dos partes acordar una clave secreta a través de un canal inseguro sin necesidad de haberla compartido previamente (capítulo~\ref{ch:ecc}).
 
 Hoy día, RSA y sistemas análogos sustentan protocolos críticos como HTTPS, correo firmado, servicios bancarios,etc. Pero presentan dos limitaciones crecientes:  
 \begin{itemize}  
   \item \textbf{Tamaño de clave versus seguridad.} Para alcanzar un nivel de protección comparable al de cifrados simétricos de 128 bits, RSA requiere claves de varios miles de bits, lo que penaliza el rendimiento en cómputo y ancho de banda.  
   \item \textbf{Vulnerabilidad cuántica.} 
-  Los algoritmos cuánticos plantean un de\-sa\-fío fundamental para la criptografía moderna. En particular, Shor demostró en 1994 que un ordenador cuántico suficientemente grande podría factorizar enteros y resolver problemas de logaritmo discreto en tiempo polinómico, lo que rompería sistemas como RSA, Diffie–Hellman e incluso ECC \cite{shor-quantum-threat}\cite{paloalto-quantum-threat}. Esta perspectiva ha impulsado la búsqueda de algoritmos resistentes a estos ataques cuánticos, así como la adopción de curvas elípticas de mayor seguridad y longitudes de clave incrementadas.  
+  Los algoritmos cuánticos plantean un de\-safío fundamental para la criptografía moderna. En particular, Shor demostró en 1994 que un ordenador cuántico suficientemente grande podría factorizar enteros y resolver problemas de logaritmo discreto en tiempo polinómico, lo que rompería sistemas como RSA, Diffie-Hellman e incluso ECC \cite{shor-quantum-threat}\cite{paloalto-quantum-threat}. Esta perspectiva ha impulsado la búsqueda de algoritmos resistentes a estos ataques cuánticos, así como la adopción de curvas elípticas de mayor seguridad y longitudes de clave incrementadas.  
 \end{itemize}  
 
 Las limitaciones del tamaño de clave han impulsado la adopción de la \emph{Criptografía de Curvas Elípticas (ECC)}. Gracias a la dificultad del problema del logaritmo discreto en curvas elípticas, ECC ofrece un nivel de seguridad equivalente con claves drásticamente más pequeñas (por ejemplo, 256 bits en ECC frente a 3072 bits en RSA), mejorando así el rendimiento y la eficiencia. Además, la resistencia actual de ECC frente a los ataques cuánticos es mayor que la de RSA bajo el mismo modelo cuántico, lo que la posiciona como la opción de próxima generación para sistemas criptográficos modernos.
@@ -38,12 +48,12 @@ Este objetivo general se concreta en los siguientes objetivos específicos:
 El desarrollo del proyecto ha seguido una metodología incremental, organizando el trabajo en fases sucesivas en las que cada bloque se valida antes de construir el siguiente. Este enfoque permitió que los componentes más complejos (las curvas elípticas y sus optimizaciones) se apoyaran sobre cimientos previamente verificados (la aritmética base y RSA), reduciendo así la dificultad de depuración.
 
 \begin{enumerate}
-  \item \textbf{Fase 1 -- Infraestructura base.} Diseño de la arquitectura modular del código, implementación del generador de números aleatorios reproducible, de RSA con su optimización CRT y del motor de medición de tiempos.
-  \item \textbf{Fase 2 -- Validación estadística del generador.} Comprobación de la calidad del generador de números aleatorios mediante pruebas de uniformidad, rachas, autocorrelación y entropía, requisito imprescindible para que las mediciones criptográficas sean fiables.
-  \item \textbf{Fase 3 -- Curvas elípticas sobre $\mathbb{F}_p$.} Implementación de la aritmética de curva en coordenadas afines (priorizando la claridad y la verificabilidad) y, posteriormente, en coordenadas Jacobianas como optimización medible.
-  \item \textbf{Fase 4 -- Cuerpos binarios.} Extensión del trabajo a curvas sobre $\mathbb{F}_{2^m}$ mediante el módulo \texttt{GF2E} de NTL, incorporando cinco curvas estandarizadas del estándar SEC~2.
-  \item \textbf{Fase 5 -- Optimizaciones y robustez.} Estudio de mejoras adicionales (formas como NAF, precomputación) y de los esquemas de relleno OAEP y PSS, junto con la consolidación de la suite de pruebas comparativas.
-  \item \textbf{Fase 6 -- Redacción de la memoria.} Elaboración del documento final, integrando la fundamentación teórica, la descripción de la implementación y el análisis de los resultados experimentales.
+  \item \textbf{Fase 1 - Infraestructura base.} Diseño de la arquitectura modular del código, implementación del generador de números aleatorios reproducible, de RSA con su optimización CRT y del motor de medición de tiempos.
+  \item \textbf{Fase 2 - Validación estadística del generador.} Comprobación de la calidad del generador de números aleatorios mediante pruebas de uniformidad, rachas, autocorrelación y entropía, requisito imprescindible para que las mediciones criptográficas sean fiables.
+  \item \textbf{Fase 3 - Curvas elípticas sobre $\mathbb{F}_p$.} Implementación de la aritmética de curva en coordenadas afines (priorizando la claridad y la verificabilidad) y, posteriormente, en coordenadas Jacobianas como optimización medible.
+  \item \textbf{Fase 4 - Cuerpos binarios.} Extensión del trabajo a curvas sobre $\mathbb{F}_{2^m}$ mediante el módulo \texttt{GF2E} de NTL, incorporando cinco curvas estandarizadas del estándar SEC~2.
+  \item \textbf{Fase 5 - Optimizaciones y robustez.} Estudio de mejoras adicionales (formas como NAF, precomputación) y de los esquemas de relleno OAEP y PSS, junto con la consolidación de la suite de pruebas comparativas.
+  \item \textbf{Fase 6 - Redacción de la memoria.} Elaboración del documento final, integrando la fundamentación teórica, la descripción de la implementación y el análisis de los resultados experimentales.
 \end{enumerate}
 
 Cabe señalar que la fase de redacción no fue estrictamente secuencial, sino que se solapó con las fases técnicas para documentar cada decisión de diseño en el momento en que se tomaba.
@@ -67,6 +77,12 @@ de este proyecto:
     Detalla la arquitectura del software, las decisiones de diseño adoptadas, las herramientas y bibliotecas empleadas, el entorno contenedorizado con Docker, la validación del generador de números aleatorios y la metodología de medición.
   \item \textbf{Capítulo 7: Resultados experimentales y análisis.}  
     Recoge las métricas de rendimiento y su interpretación a lo largo de los tres ejes de comparación, junto con el contraste frente a la implementación de referencia OpenSSL y el estudio de la influencia de las opciones de compilación.
-  \item \textbf{Capítulo 8: Conclusiones.}  
+  \item \textbf{Capítulo 8: Conclusiones.}
     Sintetiza las conclusiones finales, las lecciones aprendidas, las limitaciones del trabajo y las líneas de trabajo futuro.
 \end{enumerate}
+
+\section{Uso de herramientas de inteligencia artificial}
+Durante el desarrollo de este Trabajo de Fin de Grado se han empleado asistentes de inteligencia artificial como herramienta de apoyo, tanto en la fase de implementación como en la redacción de esta memoria. Su uso se ha limitado a tareas auxiliares, como la generación de borradores de código, revisión del formato Latex y detección de errores, recayendo en todo momento sobre el autor la responsabilidad del diseño, la verificación experimental y la validez de los contenidos.
+
+En la práctica se compararon dos asistentes. Para la generación y depuración de código C++ se obtuvieron resultados notablemente mejores con \emph{Claude} (modelo Opus~4.7, de Anthropic) que con \emph{ChatGPT} (modelos GPT-5.4 y GPT-5.5, de OpenAI): el primero produjo implementaciones más correctas y coherentes con la arquitectura del proyecto, requiriendo menos correcciones manuales. Por este motivo, Claude se empleó también como apoyo en la redacción y el formateo de la memoria en \LaTeX. En cualquier caso, todo el código generado fue revisado, adaptado y validado mediante la suite de pruebas descrita en el capítulo~\ref{ch:implementacion}, 
+y ningún resultado experimental procede de la herramienta, sino de las mediciones reproducibles documentadas en el capítulo~\ref{ch:resultados}.

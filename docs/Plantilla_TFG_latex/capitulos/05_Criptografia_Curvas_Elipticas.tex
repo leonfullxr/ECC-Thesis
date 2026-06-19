@@ -662,14 +662,15 @@ Sean Alice y Bob dos entidades que desean establecer un secreto compartido. Ambo
     \draw[msg] (7,-5.1) -- node[mlbl,above]{$Q_B$} (0,-5.1);
 
     % Generacion de claves (en paralelo)
-    \node[noteA] (aKey) at (0,-2.1)
+    \node[noteA, align=center] (aKey) at (0,-2.1)
         {\textbf{1. Generación de claves}\\
-         $d_A \xleftarrow{\$} [1,n-1]$\\
-         $Q_A = d_A \cdot G$};
-    \node[noteB] (bKey) at (7,-2.1)
+        $d_A \gets [1,n-1]$\\
+        $Q_A = d_A \cdot G$};
+        
+    \node[noteB, align=center] (bKey) at (7,-2.1)
         {\textbf{1. Generación de claves}\\
-         $d_B \xleftarrow{\$} [1,n-1]$\\
-         $Q_B = d_B \cdot G$};
+        $d_B \gets [1,n-1]$\\
+        $Q_B = d_B \cdot G$};
 
     % Calculo independiente del mismo secreto compartido
     \node[noteA] (aSec) at (0,-7.0)
@@ -698,10 +699,10 @@ Sean Alice y Bob dos entidades que desean establecer un secreto compartido. Ambo
 \textbf{Fase} & \textbf{Operación} \\
 \hline
 Acuerdo público & Parámetros $T = (p, a, b, G, n, h)$ \\
-Generación de claves & Alice: $d_A \xleftarrow{\$} [1, n-1]$,\; $Q_A = d_A \cdot G$ \\
-                      & Bob:\; $d_B \xleftarrow{\$} [1, n-1]$,\; $Q_B = d_B \cdot G$ \\
-Intercambio público & Alice $\to$ Bob: $Q_A$;\; Bob $\to$ Alice: $Q_B$ \\
-Secreto compartido & Alice: $S = d_A \cdot Q_B$;\; Bob: $S = d_B \cdot Q_A$ \\
+Generación de claves & Alice: $d_A \gets [1, n-1],\; Q_A = d_A \cdot G$ \\
+                      & Bob: \quad $d_B \gets [1, n-1],\; Q_B = d_B \cdot G$ \\
+Intercambio público & Alice $\to$ Bob: $Q_A$ \quad Bob $\to$ Alice: $Q_B$ \\
+Secreto compartido & Alice: $S = d_A \cdot Q_B$ \quad Bob: $S = d_B \cdot Q_A$ \\
 \hline
 \end{tabular}
 \caption{Resumen del intercambio de claves ECDH.}
@@ -824,7 +825,7 @@ Dados los parámetros del dominio $T = (p, a, b, G, n, h)$ y un par de claves $(
 
 \begin{enumerate}
     \item Calcular $e = H(m)$.
-    \item Seleccionar un entero aleatorio $k \xleftarrow{\$} [1, n-1]$ (\emph{nonce} o valor efímero).
+    \item Seleccionar un entero aleatorio $k \leftarrow [1, n-1]$ (\emph{nonce} o valor efímero).
     \item Calcular el punto $R = k \cdot G = (x_R, y_R)$.
     \item Calcular $r = x_R \bmod n$. Si $r = 0$, volver al paso 2.
     \item Calcular

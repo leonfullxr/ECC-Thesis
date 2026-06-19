@@ -23,10 +23,21 @@
 \definecolor{UGRdark}{HTML}{1F2933}
 \definecolor{UGRaccent}{HTML}{A6192E}
 \definecolor{UGRsoft}{HTML}{3E5C76}
+\definecolor{UGRgreen}{HTML}{2E7D32}
 \setbeamercolor{frametitle}{bg=UGRdark}
 \setbeamercolor{progress bar}{fg=UGRaccent}
 \setbeamercolor{alerted text}{fg=UGRaccent}
 \setbeamercolor{block title}{bg=UGRsoft,fg=white}
+
+% --- Estilos tikz para los diagramas paso a paso (ECDH/ECDSA/RSA) ----
+\tikzset{
+  sec/.style={draw=UGRgreen, fill=UGRgreen!10, rounded corners, align=left, inner sep=4pt},
+  pub/.style={draw=UGRsoft, fill=UGRsoft!14, rounded corners, align=left, inner sep=4pt},
+  sh/.style ={draw=UGRaccent, fill=UGRaccent!10, rounded corners, align=center, inner sep=4pt},
+  hdr/.style={align=center, font=\footnotesize\bfseries},
+  lbl/.style={UGRaccent, font=\scriptsize\bfseries},
+  flow/.style={-{Stealth}, thick, UGRaccent},
+}
 
 % --- Macro: figura real si existe; si no, recuadro con el nombre --------
 \newcommand{\figordemo}[2][width=0.92\textwidth]{%
@@ -104,25 +115,18 @@
 \section{Fundamentos: curvas elípticas}
 
 \begin{frame}{¿Qué es una curva elíptica?}
-  \begin{columns}[c]
-    \begin{column}{0.38\textwidth}
-      Sobre un cuerpo $K$ (con char$(K)\neq 2,3$), el conjunto de soluciones de la
-      \alert{ecuación de Weierstrass}
-      \[ y^2 = x^3 + ax + b \]
-      junto con un \alert{punto del infinito} $\mathcal{O}$.
-      \vfill
-      \begin{block}{Condición de no singularidad}
-        $\Delta = -16(4a^3 + 27b^2) \neq 0$ \\
-        (sin cúspides ni autointersecciones).
-      \end{block}
-    \end{column}
-    \begin{column}{0.62\textwidth}
-      \centering
-      \figordemo[width=\textwidth]{imagenes/ec_shape.png}
-    \end{column}
-  \end{columns}
+  \footnotesize
+  Soluciones de la \alert{ecuación de Weierstrass} $y^2 = x^3 + ax + b$
+  (con char$(K)\neq 2,3$), más el \alert{punto del infinito} $\mathcal{O}$.\;
+  \alert{No singular} $\iff \Delta = -16(4a^3 + 27b^2) \neq 0$
+  (sin cúspides ni autointersecciones): es la condición para que la
+  \alert{ley de grupo} esté bien definida.
+  \begin{center}
+    \figordemo[width=\textwidth]{imagenes/ec_shape.png}
+  \end{center}
   \note{Soluciones de y^2=x^3+ax+b mas O. No singular: discriminante no nulo. Factores 16 y
-  27 por char != 2,3.}
+  27 por char != 2,3. Tercer panel: en un punto singular la tangente no es unica y 2P divide
+  por 2y=0, por eso la ley de grupo falla.}
 \end{frame}
 
 \begin{frame}{De la ecuación general a la forma de Weierstrass}
@@ -393,7 +397,7 @@
 \end{frame}
 
 %==============================================================================
-\section{Protocolos: ECDH y ECDSA}
+\section{Protocolos: ECDH, ECDSA y RSA}
 
 \begin{frame}{Parámetros del dominio}
   \small
@@ -428,63 +432,112 @@
   Usamos curvas estandar NIST/SECG.}
 \end{frame}
 
-\begin{frame}{Intercambio de claves: ECDH}
+\begin{frame}{Intercambio de claves: ECDH paso a paso}
   \centering
-  \begin{tikzpicture}[font=\footnotesize]
-    \node[draw, rounded corners, fill=UGRsoft!12, align=center, minimum width=3.1cm,
-          minimum height=1.4cm] (alice)
-      {\textbf{Alice}\\ privado $d_A$\\ $Q_A = d_A\,G$};
-    \node[draw, rounded corners, fill=UGRsoft!12, align=center, minimum width=3.1cm,
-          minimum height=1.4cm, right=5.2cm of alice] (bob)
-      {\textbf{Bob}\\ privado $d_B$\\ $Q_B = d_B\,G$};
-    \draw[-{Stealth}, thick, UGRaccent] ([yshift=4mm]alice.east)
-      -- node[above]{$Q_A$} ([yshift=4mm]bob.west);
-    \draw[-{Stealth}, thick, UGRaccent] ([yshift=-4mm]bob.west)
-      -- node[below]{$Q_B$} ([yshift=-4mm]alice.east);
-    \node[align=center, below=0.35cm] at ($(alice)!0.5!(bob)$) {\itshape canal público};
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[hdr] (A) at (0,0) {Alice};
+    \node[hdr] (B) at (9,0) {Bob};
+    \draw[dashed, gray!60] (A) -- (0,-6.5);
+    \draw[dashed, gray!60] (B) -- (9,-6.5);
+
+    \node[sh, text width=6.2cm] (T) at (4.5,-0.95)
+      {\textbf{0.} Acuerdan el dominio $T=(p,a,b,G,n,h)$ \;($G$ es público)};
+
+    \node[sec, text width=3.2cm, anchor=north] (ka) at (0,-1.9)
+      {\textbf{1.} genera su clave\\ $d_A \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(privada)}\\ $Q_A = d_A\,G$ \;(pública)};
+    \node[sec, text width=3.2cm, anchor=north] (kb) at (9,-1.9)
+      {\textbf{1.} genera su clave\\ $d_B \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(privada)}\\ $Q_B = d_B\,G$ \;(pública)};
+
+    \draw[flow] (1.7,-4.05) -- node[above]{$Q_A$} (7.3,-4.05);
+    \draw[flow] (7.3,-4.55) -- node[below]{$Q_B$} (1.7,-4.55);
+    \node[lbl] at (4.5,-4.3) {2. canal público};
+
+    \node[pub, text width=2.7cm, anchor=north] (sa) at (0,-5.0)
+      {\textbf{3.} $S = d_A\,Q_B$};
+    \node[pub, text width=2.7cm, anchor=north] (sb) at (9,-5.0)
+      {\textbf{3.} $S = d_B\,Q_A$};
+
+    \node[sh, text width=7.6cm, anchor=north] (res) at (4.5,-6.0)
+      {\textbf{4.} $S = d_A Q_B = d_B Q_A = d_A d_B\,G$ \;(el \alert{mismo} punto)\\[2pt]
+       $\Rightarrow$ clave de sesión $=\mathrm{KDF}(x_S)$};
   \end{tikzpicture}
 
-  \vspace{0.8em}
-  \small Ambos calculan el \alert{mismo secreto} (asociatividad y conmutatividad):
-  \[ S = d_A\,Q_B = d_B\,Q_A = d_A d_B\,G \;\Longrightarrow\; \text{clave de sesión}=\mathrm{KDF}(x_S) \]
-  \footnotesize Un intruso ve $G,\,Q_A,\,Q_B$, pero recuperar $d_A$ o $d_B$ es el ECDLP.
+  \vspace{0.3em}
+  {\scriptsize \textcolor{UGRgreen}{verde = secreto} \quad azul = público \quad
+   $\bullet$ un intruso ve $G,Q_A,Q_B$, pero hallar $d_A,d_B$ es el \alert{ECDLP}.}
   \note{Alice y Bob: privado d, publico Q=dG. Intercambian Q_A, Q_B por canal publico. Cada
   uno calcula S = d_A Q_B = d_B Q_A = d_A d_B G. Clave de sesion = KDF(x_S). El intruso ve los
   Q pero no los d (ECDLP). ECDH da confidencialidad; en efimero (ECDHE), secreto perfecto
   hacia adelante. NO autentica por si solo: hace falta firma/certificado contra MITM.}
 \end{frame}
 
-\begin{frame}{Firma digital: ECDSA}
-  \small
-  \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
-      \textbf{Firma}\; (clave privada $d$)
-      \begin{enumerate}\footnotesize
-        \item $e = H(m)$
-        \item nonce $k \xleftarrow{\$} [1,n-1]$
-        \item $R = kG=(x_R,y_R)$,\quad $r = x_R \bmod n$
-        \item $s = k^{-1}(e + d\,r) \bmod n$
-      \end{enumerate}
-      Firma: $\boxed{(r,s)}$
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \textbf{Verificación}\; (clave pública $Q=dG$)
-      \begin{enumerate}\footnotesize
-        \item $e=H(m)$,\quad $w = s^{-1}\bmod n$
-        \item $u_1 = e\,w \bmod n$,\quad $u_2 = r\,w \bmod n$
-        \item $R' = u_1 G + u_2 Q$
-        \item aceptar si $x_{R'} \bmod n = r$
-      \end{enumerate}
-    \end{column}
-  \end{columns}
-  \vspace{0.5ex}
+\begin{frame}{Firma digital: ECDSA paso a paso}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[hdr, anchor=north] (Sh) at (0,0.1) {Firmante (Alice): privada $d$};
+    \node[sec, text width=5.0cm, anchor=north] (sign) at (0,-0.4)
+      {\textbf{1.} $e = H(m)$\\
+       \textbf{2.} nonce $k \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(secreto, único)}\\
+       \textbf{3.} $R = kG = (x_R,y_R)$,\; $r = x_R \bmod n$\\
+       \textbf{4.} $s = k^{-1}(e + d\,r) \bmod n$\\[2pt]
+       $\Rightarrow$ firma $\boxed{(r,s)}$};
+
+    \node[hdr, anchor=north] (Vh) at (8.8,0.1) {Verificador (Bob): pública $Q=dG$};
+    \node[pub, text width=5.0cm, anchor=north] (ver) at (6.4,-0.4)
+      {\textbf{1.} $e = H(m)$,\; $w = s^{-1} \bmod n$\\
+       \textbf{2.} $u_1 = e\,w$,\; $u_2 = r\,w \pmod n$\\
+       \textbf{3.} $R' = u_1 G + u_2 Q$\\
+       \textbf{4.} aceptar si $x_{R'} \bmod n = r$};
+
+    \draw[flow] (sign.east) -- node[above, font=\scriptsize]{$m,\,(r,s)$} (ver.west);
+
+    \node[sh, text width=6.4cm, anchor=north] (ok) at (4.4,-3.6)
+      {\textbf{Por qué cuadra:} $k = u_1 + u_2\,d \Rightarrow R' = (u_1+u_2 d)G = kG = R$};
+  \end{tikzpicture}
+
+  \vspace{0.2em}
   \begin{alertblock}{El nonce $k$ es crítico}
-    \footnotesize Si $k$ se reutiliza o es predecible, se recupera la clave privada $d$
+    \footnotesize Reutilizarlo o predecirlo $\Rightarrow$ se despeja la clave privada $d$
     (casos PlayStation 3 y Bitcoin). Solución: nonce determinista (RFC 6979).
   \end{alertblock}
   \note{Firma: e=H(m), nonce k, R=kG, r=x_R mod n, s=k^-1(e+dr). Firma (r,s). Verificacion:
-  w=s^-1, u1=ew, u2=rw, R'=u1 G+u2 Q, aceptar si x_R' mod n = r. Correccion: k=u1+u2 d
-  (respaldo). Nonce k critico: reuso -> se despeja d (PS3, Bitcoin). RFC 6979 determinista.}
+  w=s^-1, u1=ew, u2=rw, R'=u1 G+u2 Q, aceptar si x_R' mod n = r. Correccion: k=u1+u2 d.
+  Nonce k critico: reuso -> se despeja d (PS3, Bitcoin). RFC 6979 determinista.}
+\end{frame}
+
+\begin{frame}{El contraste: RSA paso a paso}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[hdr] (B) at (0,0) {Bob (dueño de las claves)};
+    \node[hdr] (A) at (9,0) {Alice (quiere enviar $m$)};
+    \draw[dashed, gray!60] (0,-0.3) -- (0,-5.7);
+    \draw[dashed, gray!60] (9,-0.3) -- (9,-5.7);
+
+    \node[sec, text width=4.2cm, anchor=north] (kg) at (0,-0.55)
+      {\textbf{1.} genera sus claves\\
+       primos $p,q$ \;\textcolor{UGRgreen}{(secretos)}\\
+       $n = p\,q$,\; $\varphi(n)=(p{-}1)(q{-}1)$\\
+       $e = 65537$ \;(público)\\
+       $d = e^{-1} \bmod \varphi(n)$ \;\textcolor{UGRgreen}{(privada)}};
+
+    \draw[flow] (2.3,-2.5) -- node[above]{clave pública $(n,e)$} (9,-2.5);
+
+    \node[pub, text width=3.4cm, anchor=north] (enc) at (9,-2.9)
+      {\textbf{2.} cifra con $(n,e)$:\\ $c = m^{e} \bmod n$};
+
+    \draw[flow] (9,-4.1) -- node[below]{texto cifrado $c$} (2.3,-4.1);
+
+    \node[pub, text width=3.9cm, anchor=north] (dec) at (0,-4.5)
+      {\textbf{3.} descifra con $d$:\\ $m = c^{d} \bmod n$ \;(acelera con CRT)};
+  \end{tikzpicture}
+
+  \vspace{0.3em}
+  {\scriptsize \textcolor{UGRgreen}{verde = secreto}, azul = público.\;
+   Romper RSA $=$ \alert{factorizar $n$} (subexponencial) $\Rightarrow$ claves grandes.}
+  \note{RSA: Bob genera p,q secretos; n=pq, phi=(p-1)(q-1); e=65537 publico; d=e^-1 mod phi
+  privada. Publica (n,e). Alice cifra c=m^e mod n. Bob descifra m=c^d mod n (CRT ~3.5x).
+  Seguridad: factorizar n es subexponencial, por eso claves grandes. Contraste directo con ECC:
+  misma seguridad con claves mucho menores (Eje 1). La firma RSA es analoga (m^d / m^e).}
 \end{frame}
 
 %==============================================================================
@@ -534,7 +587,7 @@
   \note{Docker, RNG semilla fija (pareado), mediana+calentamiento, igual seguridad NIST.}
 \end{frame}
 
-\begin{frame}{Metodología -- elección de las opciones de compilación}
+\begin{frame}{Metodología - elección de las opciones de compilación}
   \centering
   \figordemo[width=0.62\textwidth]{imagenes/chart_compiler_flags.png}
 
@@ -548,7 +601,7 @@
 %==============================================================================
 \section{Resultados: los tres ejes}
 
-\begin{frame}{Eje 1 -- RSA frente a ECC: generación de claves}
+\begin{frame}{Eje 1 - RSA frente a ECC: generación de claves}
   \centering
   \figordemo[width=0.74\textwidth]{imagenes/chart_keygen_comparison.png}
 
@@ -559,7 +612,7 @@
   Log: RSA-4096 156 ms. Ventaja habilitante para TLS efimero.}
 \end{frame}
 
-\begin{frame}{Eje 1 -- RSA frente a ECC: firma y verificación}
+\begin{frame}{Eje 1 - RSA frente a ECC: firma y verificación}
   \begin{columns}[c]
     \begin{column}{0.62\textwidth}
       \centering
@@ -581,7 +634,7 @@
   \note{Firma ECC 2.6x. Verificacion RSA 38x por e=65537. No hay ganador absoluto.}
 \end{frame}
 
-\begin{frame}{Eje 2 -- Coordenadas afines vs Jacobianas}
+\begin{frame}{Eje 2 - Coordenadas afines vs Jacobianas}
   \begin{columns}[c]
     \begin{column}{0.58\textwidth}
       \centering
@@ -603,7 +656,7 @@
   inversion barata.}
 \end{frame}
 
-\begin{frame}{Eje 3 -- Cuerpos primos vs binarios}
+\begin{frame}{Eje 3 - Cuerpos primos vs binarios}
   \begin{columns}[c]
     \begin{column}{0.58\textwidth}
       \centering
@@ -742,7 +795,7 @@
 %-------------------------------------------- Backup ---
 \appendix
 
-\begin{frame}{Respaldo -- corrección de la verificación ECDSA}
+\begin{frame}{Respaldo - corrección de la verificación ECDSA}
   \footnotesize
   Si la firma es honesta, $s = k^{-1}(e + d\,r)\bmod n$, luego
   \[ k = s^{-1}(e + d\,r) = \underbrace{s^{-1}e}_{u_1} + \underbrace{s^{-1}r}_{u_2}\,d
@@ -751,24 +804,24 @@
   $x_{R'}\bmod n = x_R \bmod n = r$ y la firma se acepta. \qed
 \end{frame}
 
-\begin{frame}{Respaldo -- panorama completo de tiempos}
+\begin{frame}{Respaldo - panorama completo de tiempos}
   \centering
   \figordemo[height=0.86\textheight,keepaspectratio]{imagenes/chart_summary_table.png}
 \end{frame}
 
-\begin{frame}{Respaldo -- razón de rendimiento RSA/ECC}
+\begin{frame}{Respaldo - razón de rendimiento RSA/ECC}
   \centering
   \figordemo[width=0.78\textwidth]{imagenes/chart_speedup_ratios.png}
 \end{frame}
 
-\begin{frame}{Respaldo -- CRT en el descifrado RSA}
+\begin{frame}{Respaldo - CRT en el descifrado RSA}
   \footnotesize
   Se calcula $d_p=d\bmod(p-1)$, $d_q=d\bmod(q-1)$, $q_{inv}=q^{-1}\bmod p$. Recombinación de
   Garner: $m_1=c^{d_p}\bmod p$, $m_2=c^{d_q}\bmod q$, $h=q_{inv}(m_1-m_2)\bmod p$,
   $m=m_2+hq$. Acelera $\approx 3.5\times$ (dos exponenciaciones a la mitad de bits).
 \end{frame}
 
-\begin{frame}{Respaldo -- la asociatividad de la ley de grupo}
+\begin{frame}{Respaldo - la asociatividad de la ley de grupo}
   \footnotesize
   $(E(K),+)$ es grupo abeliano. Neutro $\mathcal{O}$, inversos (reflexión) y conmutatividad
   son inmediatos. El axioma no trivial es la \alert{asociatividad}: se prueba con el teorema
