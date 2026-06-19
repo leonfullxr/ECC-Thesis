@@ -84,35 +84,55 @@ def top_legend(ax, header):
 # FIGURE 1: non-singular vs singular
 # ============================================================================
 def make_ec_shape(out_path):
-    x_min, x_max = -2.6, 2.9
     y_min, y_max = -3.4, 3.4
+    fig, axes = plt.subplots(1, 3, figsize=(14.0, 5.6), constrained_layout=True)
 
-    # taller aspect (= bigger when placed at a fixed width on the slide)
-    fig, axes = plt.subplots(1, 2, figsize=(9.8, 6.8), constrained_layout=True)
-
-    # --- non-singular: two examples (Delta != 0) ----------------------
-    #   two-component:  y^2 = x^3 - x
-    #   one-component:  y^2 = x^3 - x + 1
+    # --- non-singular: two examples, zoomed (tight left x = -1.5) ------
+    #   two-component:  y^2 = x^3 - x      one-component:  y^2 = x^3 - x + 1
     ax = axes[0]
-    plot_curve(ax, -1.0, 0.0, x_min, x_max, color=BLUE,
+    nx_min, nx_max = -1.5, 2.9
+    plot_curve(ax, -1.0, 0.0, nx_min, nx_max, color=BLUE,
                label=r"$y^2 = x^3 - x$")
-    plot_curve(ax, -1.0, 1.0, x_min, x_max, color=RED,
+    plot_curve(ax, -1.0, 1.0, nx_min, nx_max, color=RED,
                label=r"$y^2 = x^3 - x + 1$")
-    style_axes(ax, x_min, x_max, y_min, y_max)
+    style_axes(ax, nx_min, nx_max, y_min, y_max)
     top_legend(ax, r"No singular  ($\Delta \neq 0$)")
 
-    # --- singular: two examples overlaid (both Delta = 0) -------------
+    # --- singular: node + cusp overlaid (both Delta = 0) --------------
     #   node: y^2 = x^3 - 3x + 2 = (x-1)^2 (x+2)   -> self-intersection at (1,0)
     #   cusp: y^2 = x^3                            -> cusp at (0,0)
     ax = axes[1]
-    plot_curve(ax, -3.0, 2.0, x_min, x_max, color=BLUE,
+    sx_min, sx_max = -2.6, 2.9
+    plot_curve(ax, -3.0, 2.0, sx_min, sx_max, color=BLUE,
                label=r"nodo:  $y^2 = x^3 - 3x + 2$")
-    plot_curve(ax, 0.0, 0.0, x_min, x_max, color=RED,
+    plot_curve(ax, 0.0, 0.0, sx_min, sx_max, color=RED,
                label=r"cuspide:  $y^2 = x^3$")
-    style_axes(ax, x_min, x_max, y_min, y_max)
+    style_axes(ax, sx_min, sx_max, y_min, y_max)
     ax.scatter([1], [0], color=BLUE, s=55, zorder=6)
     ax.scatter([0], [0], color=RED, s=55, zorder=6)
     top_legend(ax, r"Singular  ($\Delta = 0$)")
+
+    # --- why singular fails: two tangents at the node -----------------
+    #   2P slope lambda = (3x^2+a)/(2y); at the node y=0 -> division by 0,
+    #   and the node has two branch tangents -> doubling is ambiguous.
+    ax = axes[2]
+    fx_min, fx_max = -0.6, 2.6
+    assert abs(1.0**3 - 3 * 1.0 + 2) < 1e-9  # node (1,0) on curve, y=0
+    plot_curve(ax, -3.0, 2.0, fx_min, fx_max, color=BLUE,
+               label=r"$y^2 = x^3 - 3x + 2$")
+    slope = np.sqrt(3.0)
+    xs = np.array([fx_min, fx_max])
+    ax.plot(xs, slope * (xs - 1.0), color=RED, linestyle="--", linewidth=1.8,
+            zorder=4, label="tangentes en el nodo")
+    ax.plot(xs, -slope * (xs - 1.0), color=RED, linestyle="--", linewidth=1.8,
+            zorder=4)
+    ax.scatter([1], [0], color=POINT_COLOR, s=80, zorder=6)
+    style_axes(ax, fx_min, fx_max, y_min, y_max)
+    ax.text(0.5 * (fx_min + fx_max), y_min + 0.45,
+            r"dos tangentes $\Rightarrow$ $2P$ indefinido",
+            ha="center", fontsize=11, color=RED,
+            bbox=dict(boxstyle="round,pad=0.3", fc="#FBEAEC", ec=RED, lw=1.0))
+    top_legend(ax, r"Singular: la ley de grupo falla")
 
     fig.savefig(out_path, dpi=DPI, bbox_inches="tight")
     plt.close(fig)

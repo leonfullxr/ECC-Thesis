@@ -95,6 +95,7 @@ show-info:
 	@echo "$(IFG) -  make compare-openssl$(EC)    OpenSSL baseline ($(OPENSSL_SECONDS)s/op)"
 	@echo "$(IFG) -  make compare-compiler-flags$(EC)  ECC vs compiler flags + chart"
 	@echo "$(IFG) -  make rng-full$(EC)           Full RNG statistical analysis"
+	@echo "$(IFG) -  make rng-visualize$(EC)      RNG visualizations only -> results/plots/"
 	@echo ""
 	@echo "$(IFG)  Figures / reproducibility:$(EC)"
 	@echo "$(IFG) -  make visualize$(EC)          Regenerate all charts + collages"
@@ -166,7 +167,7 @@ test-rsa-py:
 # ============================================================================
 # Full experiments and reproducibility (memoria)
 # ============================================================================
-.PHONY: benchmark compare-openssl compare-compiler-flags rng-full visualize figures illustrations slides reproduce
+.PHONY: benchmark compare-openssl compare-compiler-flags rng-full rng-visualize visualize figures illustrations slides reproduce
 
 # Full RSA vs ECC comparative benchmark (3 axes) + charts
 benchmark: $(BIN_DIR)/bench
@@ -195,6 +196,15 @@ compare-compiler-flags:
 rng-full:
 	@echo -e "$(LGFG)Running full RNG analysis...$(EC)"
 	@bash $(SCRIPTS_DIR)/run_rng_analysis.sh
+
+# RNG visualizations only: one dataset -> plots in results/plots/
+# (lighter than rng-full: no multi-seed sweep, no text report)
+rng-visualize: $(BIN_DIR)/rng_analysis
+	@echo -e "$(LGFG)Generating RNG visualizations...$(EC)"
+	@mkdir -p $(RESULTS_DIR)/data $(RESULTS_DIR)/plots
+	@$(BIN_DIR)/rng_analysis -n 1000000 -r 1000 -s fixed -o $(RESULTS_DIR)/data/bounded.csv -v
+	@$(PYTHON) $(SCRIPTS_DIR)/analyze_randomness.py $(RESULTS_DIR)/data/bounded.csv $(RESULTS_DIR)/plots
+	@echo -e "$(LGFG)RNG plots in $(RESULTS_DIR)/plots/$(EC)"
 
 # Regenerate all charts and collages from the latest results
 visualize:

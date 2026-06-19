@@ -64,3 +64,6 @@ core
 *.nav
 *.snm
 *.vrb
+
+# Local Python venv (RNG visualization deps)
+.venv/
