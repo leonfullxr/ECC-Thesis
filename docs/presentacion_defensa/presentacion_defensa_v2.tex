@@ -1,0 +1,702 @@
+%==============================================================================
+%  Presentacion de defensa - TFG  (VERSION CONDENSADA, objetivo 15-20 min)
+%  Implementacion y analisis comparativo de rendimiento de RSA y ECC
+%  Leon Elliott Fuller - Universidad de Granada
+%  Compilar con: pdflatex presentacion_defensa_v2.tex  (dos veces). Tema: Metropolis.
+%  Figuras en ./imagenes/  (las mismas que la version larga).
+%
+%  Diferencias frente a presentacion_defensa.tex:
+%   - ~16 frames de contenido (antes ~28): fusiones y recortes a respaldo.
+%   - Motivacion incluye el horizonte cuantico (Shor rompe RSA y ECC por igual).
+%   - Objetivo enuncia explicitamente la aportacion del trabajo.
+%   - Detalle algebraico/formulas/protocolos completos -> apendice de respaldo.
+%==============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{metropolis}
+\metroset{block=fill, sectionpage=progressbar, numbering=fraction}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc}
+
+% --- Paleta -------------------------------------------
+\definecolor{UGRdark}{HTML}{1F2933}
+\definecolor{UGRaccent}{HTML}{A6192E}
+\definecolor{UGRsoft}{HTML}{3E5C76}
+\setbeamercolor{frametitle}{bg=UGRdark}
+\setbeamercolor{progress bar}{fg=UGRaccent}
+\setbeamercolor{alerted text}{fg=UGRaccent}
+\setbeamercolor{block title}{bg=UGRsoft,fg=white}
+
+% --- Macro: figura real si existe; si no, recuadro con el nombre --------
+\newcommand{\figordemo}[2][width=0.92\textwidth]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \setlength{\fboxsep}{10pt}%
+    \fcolorbox{UGRsoft}{black!4}{\parbox[c][0.45\textheight][c]{0.85\textwidth}{%
+      \centering {\ttfamily\small\detokenize{#2}}\\[1.2ex]
+      {\itshape\footnotesize (figura: sustituir por la grafica real)}}}}}
+
+\title{Implementación y análisis comparativo de \\ rendimiento de primitivas RSA y ECC}
+\subtitle{Trabajo Fin de Grado - Ingeniería Informática}
+\author{Leon Elliott Fuller}
+\institute{Tutor: Jesús García Miranda \\ E.T.S. de Ingenierías Informática y de Telecomunicación \\ Universidad de Granada}
+\date{Junio de 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{frame}{Índice}
+  \setbeamertemplate{section in toc}[sections numbered]
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+%==============================================================================
+\section{Motivación y objetivos}
+
+\begin{frame}{Motivación}
+  \begin{itemize}
+    \item RSA (años 70) sigue siendo el pilar de la clave pública, pero su seguridad
+          exige claves \alert{cada vez más grandes}.
+    \item \textbf{1985:} Koblitz y Miller proponen, de forma independiente, usar
+          \alert{curvas elípticas} (ECC): misma seguridad con claves \alert{mucho menores}
+          $\Rightarrow$ idóneas para dispositivos limitados y alto rendimiento.
+    \item \textbf{Horizonte cuántico:} el algoritmo de Shor rompe —en teoría
+          demostrada— tanto RSA (factorización) como ECC (logaritmo discreto), pero
+          exige un ordenador cuántico tolerante a fallos que \alert{aún no existe}. La
+          transición post-cuántica es \alert{híbrida}: ECC no se retira.
+  \end{itemize}
+  \vfill
+  \begin{block}{Pregunta del trabajo}
+    No basta con saber que ECC es ``mejor''. \textbf{¿Cuánto vale esa ventaja en la
+    práctica, y por qué?}
+  \end{block}
+  \note{RSA desde los 70, claves crecientes. Koblitz/Miller 1985: misma seguridad, claves
+  menores. Cuantico: Shor rompe AMBOS por igual, bajo la misma condicion (QC tolerante a
+  fallos grande, aun inexistente). NO decir que cuantico favorece a ECC. Transicion hibrida.
+  La pregunta: cuanto vale la ventaja y por que.}
+\end{frame}
+
+\begin{frame}{Objetivo, aportación y los tres ejes}
+  \textbf{Objetivo:} implementar ambos criptosistemas en C++17 y compararlos
+  empíricamente con rigor.
+  \vfill
+  \begin{columns}[t]
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Eje 1}
+        \textbf{RSA vs ECC} \\ a igual nivel de seguridad (NIST SP 800-57)
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Eje 2}
+        \textbf{Afines vs Jacobianas} \\ efecto de las coordenadas proyectivas
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Eje 3}
+        \textbf{$\mathbb{F}_p$ vs $\mathbb{F}_{2^m}$} \\ cuerpos primos vs binarios
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vfill
+  \begin{alertblock}{Aportación}
+    \small Separar empíricamente lo que es \alert{álgebra} (ventaja estructural,
+    transferible) de lo que es \alert{ingeniería} (cifras que dependen del entorno).
+  \end{alertblock}
+  \note{Implemento ambos en C++17. Tres ejes, cada uno una pregunta. La aportacion:
+  separar algebra de implementacion. Enunciarla explicita -- el tribunal lo valora.}
+\end{frame}
+
+%==============================================================================
+\section{Fundamentos: curvas elípticas}
+
+\begin{frame}{¿Qué es una curva elíptica?}
+  \begin{columns}[c]
+    \begin{column}{0.38\textwidth}
+      Sobre un cuerpo $K$ (con char$(K)\neq 2,3$), el conjunto de soluciones de la
+      \alert{ecuación de Weierstrass}
+      \[ y^2 = x^3 + ax + b \]
+      junto con un \alert{punto del infinito} $\mathcal{O}$.
+      \vfill
+      \begin{block}{No singularidad}
+        $\Delta = -16(4a^3 + 27b^2) \neq 0$ \\
+        (sin cúspides ni autointersecciones).
+      \end{block}
+      \footnotesize La forma corta exige char$\neq 2,3$ (derivación en respaldo).
+    \end{column}
+    \begin{column}{0.62\textwidth}
+      \centering
+      \figordemo[height=0.68\textheight,keepaspectratio]{imagenes/ec_shape.png}
+    \end{column}
+  \end{columns}
+  \note{Soluciones de y^2=x^3+ax+b mas O. No singular: discriminante no nulo. char != 2,3
+  porque al reducir la general de Weierstrass se divide por 2 y por 3 (detalle en respaldo).}
+\end{frame}
+
+\begin{frame}{La ley de grupo: los puntos forman $(E(K),+)$}
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \small
+      \alert{Grupo abeliano} bajo la suma geométrica:
+      \begin{itemize}\small
+        \item \textbf{Suma $P+Q$:} la recta por $P,Q$ corta en un tercer punto; su
+              \alert{reflexión} es $P+Q$.
+        \item \textbf{Duplicación $2P$:} igual, con la \alert{tangente} en $P$.
+        \item \textbf{Neutro} $\mathcal{O}$; \textbf{inverso} $-P$ (reflexión).
+      \end{itemize}
+      \footnotesize Cumple los cinco axiomas (clausura, asociatividad, neutro, inverso,
+      conmutatividad); la \alert{asociatividad} es el no trivial (prueba en respaldo).
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \figordemo[width=\textwidth]{imagenes/ec_addition.png}
+    \end{column}
+  \end{columns}
+  \vfill
+  \begin{columns}[c]
+    \begin{column}{0.46\textwidth}
+      \begin{block}{Teorema de Hasse}
+        \small $\bigl|\,\#E(\mathbb{F}_q)-(q+1)\,\bigr|\le 2\sqrt{q}$
+      \end{block}
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \footnotesize En cripto: subgrupo cíclico de \alert{orden primo $n$}, con
+      $\#E=h\cdot n$ (cofactor $h$ pequeño). La dificultad del ECDLP es $\sim\sqrt{n}$.
+    \end{column}
+  \end{columns}
+  \note{Grupo abeliano: suma=cuerda+reflejo, duplicacion=tangente, neutro O, inverso reflejo.
+  Cinco axiomas; asociatividad la dificil (respaldo). Hasse: cerca de q+1. Cripto: subgrupo de
+  orden primo n, cofactor h pequeno, ECDLP ~ sqrt(n).}
+\end{frame}
+
+\begin{frame}{Coordenadas: afines vs Jacobianas (motor del Eje 2)}
+  \small
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \textbf{Afines} $(x,y)$
+      \begin{itemize}\footnotesize
+        \item Directas, pero \alert{cada suma exige una inversión} en el cuerpo (para $\lambda$).
+        \item La inversión es la operación \alert{más cara}: $I\approx 80\text{--}100\,M$.
+      \end{itemize}
+      \vspace{0.4ex}
+      \textbf{Jacobianas} $(X:Y:Z)$,\; $x=\tfrac{X}{Z^2},\; y=\tfrac{Y}{Z^3}$
+      \begin{itemize}\footnotesize
+        \item No se normaliza $\Rightarrow$ se \alert{difiere una única inversión al final}.
+        \item Duplicación: $4M+6S$ \alert{sin $I$} (afín: $1I+2M+2S$).
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{alertblock}{Adelanto del hallazgo (Eje 2)}
+        \footnotesize La teoría predice $\sim$\textbf{8}$\times$; nosotros medimos
+        $\sim$\textbf{1.8}$\times$.\\[0.5ex]
+        NTL/GMP hacen la inversión tan rápida que el cociente real $I/M \ll 80$, y el
+        ahorro teórico se reduce.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \vfill
+  \footnotesize Las fórmulas explícitas en $\mathbb{F}_p$ y $\mathbb{F}_{2^m}$ —ambas
+  necesitan esa inversión para $\lambda$— están en respaldo.
+  \note{Afin: cada suma una inversion (cara, I~80-100 M). Jacobiana: difiere UNA inversion al
+  final; duplicacion 4M+6S sin I. Teoria 8x pero GMP hace I barata -> I/M real << 80, medimos
+  1.8x. Esto explica el Eje 2 antes de verlo. Formulas explicitas en respaldo.}
+\end{frame}
+
+\begin{frame}{El problema difícil (ECDLP) y su consecuencia}
+  \small
+  \begin{columns}[c]
+    \begin{column}{0.46\textwidth}
+      \textbf{Multiplicación escalar} $kP$ con double-and-add, $O(\log k)$.
+      \begin{itemize}\footnotesize
+        \item \alert{Fácil:} dados $k,P$, calcular $Q=kP$.
+        \item \alert{Inviable (ECDLP):} dados $P,Q$, hallar $k$.
+      \end{itemize}
+      \footnotesize Mejor ataque genérico (rho de Pollard): $O(\sqrt{n})$ en tiempo,
+      $O(1)$ en memoria $\Rightarrow$ \alert{exponencial en bits}. RSA en cambio factoriza
+      en \alert{subexponencial} $L_n[1/3]$.\\[0.4ex]
+      $k$ es la clave privada, $Q=kP$ la pública $\Rightarrow$ base de ECDH y ECDSA.
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \centering
+      \renewcommand{\arraystretch}{1.2}
+      \footnotesize
+      \begin{tabular}{cccc}
+        \toprule
+        \textbf{Seguridad} & \textbf{RSA} & \textbf{ECC} & \textbf{Razón} \\
+        \midrule
+        80 bits  & 1024 b  & 160 b & 6$\times$ \\
+        112 bits & \alert{2048 b}  & 224 b & 9$\times$ \\
+        128 bits & 3072 b  & 256 b & 12$\times$ \\
+        192 bits & 7680 b  & 384 b & 20$\times$ \\
+        256 bits & 15360 b & 512 b & 30$\times$ \\
+        \bottomrule
+      \end{tabular}
+      \\[0.8ex]
+      \footnotesize NIST SP 800-57: la ventaja de ECC es \alert{estructural} y
+      \textbf{crece} con la seguridad.
+    \end{column}
+  \end{columns}
+  \note{kP double-and-add O(log k). Facil k->Q, inviable Q->k = ECDLP. rho de Pollard sqrt(n)
+  tiempo, O(1) memoria = exponencial; RSA subexponencial L[1/3]. Por eso ECC usa claves mucho
+  menores y la brecha crece (tabla NIST). Detalle de rho en respaldo.}
+\end{frame}
+
+%==============================================================================
+\section{Protocolos, implementación y metodología}
+
+\begin{frame}{Protocolos sobre el ECDLP: ECDH y ECDSA}
+  \small
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \textbf{ECDH} (intercambio de claves)
+      \begin{itemize}\footnotesize
+        \item Alice: $d_A$, $Q_A=d_AG$; \; Bob: $d_B$, $Q_B=d_BG$.
+        \item Secreto común $S = d_A Q_B = d_B Q_A = d_A d_B\,G$.
+        \item El intruso ve $Q_A,Q_B$, pero recuperar $d$ es el ECDLP.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{ECDSA} (firma digital)
+      \begin{itemize}\footnotesize
+        \item Firma $(r,s)$: $r=x_{kG}\bmod n$, $\;s=k^{-1}(e+dr)\bmod n$.
+        \item Verifica: $R'=u_1 G + u_2 Q$; aceptar si $x_{R'}\bmod n = r$.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vfill
+  \begin{alertblock}{El nonce $k$ es crítico}
+    \footnotesize Si se reutiliza o es predecible, se despeja la clave privada $d$
+    (casos PlayStation 3 y Bitcoin). Solución: nonce determinista (RFC 6979).
+  \end{alertblock}
+  \footnotesize Desarrollo completo, parámetros del dominio y prueba de corrección: en respaldo.
+  \note{ECDH: privado d, publico Q=dG; secreto comun S=d_A Q_B=d_B Q_A. Intruso ve Q pero no d
+  (ECDLP). ECDSA: firma (r,s) con r=x_kG, s=k^-1(e+dr); verifica R'=u1G+u2Q. Nonce k critico:
+  reuso -> se despeja d (PS3, Bitcoin); RFC 6979. Formulas completas y prueba en respaldo.}
+\end{frame}
+
+\begin{frame}{La implementación}
+  \begin{columns}[c]
+    \begin{column}{0.55\textwidth}
+      \textbf{Arquitectura modular}
+      \begin{itemize}
+        \item RSA con descifrado acelerado por \alert{CRT}
+        \item ECC afín y \alert{Jacobiano} sobre $\mathbb{F}_p$
+        \item ECC sobre cuerpos binarios $\mathbb{F}_{2^m}$
+        \item \alert{SHA-256 desde cero} (FIPS 180-4)
+        \item RNG validado, cinco modos CLI
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \begin{block}{Stack}
+        C++17 \\ NTL + GMP \\ Docker (reproducibilidad)
+      \end{block}
+      \footnotesize SHA-256 a mano: entender el hash de ECDSA y evitar que librerías
+      externas contaminen los tiempos.
+    \end{column}
+  \end{columns}
+  \note{Modular: RSA+CRT, ECC afin/Jacobiano F_p, ECC binario, SHA-256 propio, RNG, 5 modos
+  CLI. C++17, NTL/GMP, Docker.}
+\end{frame}
+
+\begin{frame}{Metodología: convertir medidas en ciencia}
+  \begin{columns}[c]
+    \begin{column}{0.52\textwidth}
+      \small
+      \begin{itemize}\small
+        \item \alert{Docker}: mismo entorno, reproducible.
+        \item \alert{RNG con semilla fija}: comparación \textbf{pareada}.
+        \item \alert{Mediana} + calentamiento (3 descartados, 100 iteraciones).
+        \item A \alert{igual nivel de seguridad} (NIST), nunca a igual tamaño de clave.
+      \end{itemize}
+      \vspace{0.4ex}
+      \footnotesize \textbf{Flags:} de $-$O0 a $-$O1 se gana $\sim$1.25$\times$; por encima de
+      $-$O2 las mejoras son marginales (el cálculo pesado vive en GMP, ya precompilado) y
+      $-$O3 mete ruido. Estándar del TFG: \alert{$-$O2}.
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \centering
+      \figordemo[width=\textwidth]{imagenes/chart_compiler_flags.png}
+    \end{column}
+  \end{columns}
+  \note{Docker, RNG semilla fija (pareado), mediana+calentamiento, igual seguridad NIST. Flags:
+  O0->O1 gana 1.25x; sobre O2 marginal (GMP precompilado), O3 ruido. Elegimos O2. Esto sostiene
+  la reproducibilidad y es ya el hallazgo 1: GMP domina.}
+\end{frame}
+
+%==============================================================================
+\section{Resultados: los tres ejes}
+
+\begin{frame}{Eje 1 -- ECC genera claves $\sim$138$\times$ más rápido que RSA}
+  \centering
+  \figordemo[width=0.72\textwidth]{imagenes/chart_keygen_comparison.png}
+
+  \footnotesize RSA debe \alert{buscar primos grandes} por ensayo y error; ECC solo
+  \alert{elige un escalar}. RSA-3072 $\approx 58$ ms frente a ECC Jacobiano
+  $\approx 0{.}42$ ms: \alert{$\sim$138$\times$} (escala logarítmica).
+  \note{RSA busca primos, ECC elige escalar. RSA-3072 58 ms vs ECC Jacobiano 0.42 ms = 138x.
+  Log: RSA-4096 156 ms. Ventaja habilitante para TLS efimero.}
+\end{frame}
+
+\begin{frame}{Eje 1 -- firma y verificación: sin ganador absoluto}
+  \begin{columns}[c]
+    \begin{column}{0.62\textwidth}
+      \centering
+      \figordemo[width=\textwidth]{imagenes/chart_sign_verify_comparison.png}
+    \end{column}
+    \begin{column}{0.38\textwidth}
+      \footnotesize
+      \begin{itemize}\footnotesize
+        \item \textbf{Firma:} ECC $\sim$2.6$\times$ más rápida.
+        \item \textbf{Verificación:} \alert{RSA} $\sim$38$\times$ más rápida.
+      \end{itemize}
+      \vspace{1ex}
+      RSA gana en verificación por su exponente público $e=65537$ (solo 2 bits a 1).
+      \vspace{1ex}
+
+      \alert{No hay ganador absoluto:} depende del perfil de uso.
+    \end{column}
+  \end{columns}
+  \note{Firma ECC 2.6x. Verificacion RSA 38x por e=65537. No hay ganador absoluto: depende del
+  perfil (firmar mucho vs verificar mucho).}
+\end{frame}
+
+\begin{frame}{Eje 2 -- Jacobianas: $1.8\times$ medido frente a $8\times$ teórico}
+  \begin{columns}[c]
+    \begin{column}{0.58\textwidth}
+      \centering
+      \figordemo[width=\textwidth]{imagenes/chart_jacobian_speedup.png}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      \begin{itemize}
+        \item Las Jacobianas \alert{evitan la inversión modular} (visto en fundamentos).
+        \item Medido: \alert{1.70--1.93$\times$} (media $\sim$1.8$\times$).
+      \end{itemize}
+      \vfill
+      \begin{block}{La brecha ES el hallazgo}
+        La teoría predice $\sim$8$\times$; NTL/GMP hacen la inversión barata, y el ahorro
+        real es mucho menor.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \note{Jacobianas evitan inversion. Medido 1.70-1.93x (crece con el tamano del cuerpo).
+  Teoria 8x: la brecha = hallazgo, GMP hace la inversion barata.}
+\end{frame}
+
+\begin{frame}{Eje 3 y validación: artefacto de software, no de álgebra}
+  \begin{columns}[c]
+    \begin{column}{0.52\textwidth}
+      \centering
+      \figordemo[width=\textwidth]{imagenes/chart_prime_vs_binary.png}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \footnotesize
+      \textbf{Eje 3:} a 128 bits el binario resulta $\sim$1.7$\times$ \alert{más lento} que el
+      primo (afín). \texttt{GF2E} de NTL es genérico frente al ensamblador de GMP; además solo
+      se midió en afín. Con hardware dedicado (PCLMULQDQ) el binario podría ganar.
+      \vspace{0.8ex}
+
+      \textbf{Validación (OpenSSL):} 14--34$\times$ más rápido en P-256 (asm por curva +
+      blinding); RSA-4096 verificación \alert{a la par}. Que ``ganemos'' en RSA es un
+      \alert{artefacto de medida}, no una victoria.
+      \vspace{0.6ex}
+
+      \begin{block}{Mensaje común}
+        Estas cifras dependen del \alert{entorno}, no del álgebra.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \note{Eje 3: binario 1.7x mas lento (GF2E generico vs GMP asm, solo afin); con PCLMULQDQ
+  podria ganar. OpenSSL 14-34x en P-256 (asm+blinding); RSA-4096 verify a la par; nuestra
+  "victoria" en RSA es artefacto. Tabla OpenSSL completa en respaldo. Mensaje: entorno, no algebra.}
+\end{frame}
+
+%==============================================================================
+\section{Conclusiones y trabajo futuro}
+
+\begin{frame}{Conclusiones}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Estructural (transferible)}
+        \small La ventaja de ECC en tamaño de clave es \alert{matemática} (ECDLP exponencial)
+        y \textbf{crece} con la seguridad.
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{De implementación (del entorno)}
+        \small Las cifras de velocidad (Jacobiano $1.8\times$, binario lento, ``ganar'' a
+        OpenSSL) dependen de compilador, arquitectura y bibliotecas.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vfill
+  \footnotesize \textbf{Limitaciones conscientes (de alcance, no olvidos):} no es de
+  \alert{tiempo constante} (no apto para producción); RSA \alert{de libro} (sin OAEP/PSS);
+  el modelo Jacobiano solo se implementó en $\mathbb{F}_p$.
+  \vfill
+  \centering \alert{El valor del trabajo: separar el álgebra de la ingeniería.}
+  \note{Estructural (matematica, crece) vs implementacion (depende del entorno). Limitaciones
+  las digo yo: no constant-time, RSA de libro sin OAEP/PSS, Jacobiano solo F_p. Cierre:
+  separar algebra de ingenieria.}
+\end{frame}
+
+\begin{frame}{ECC hoy y el horizonte post-cuántico}
+  \footnotesize
+  \begin{itemize}\footnotesize
+    \item \textbf{Web (TLS 1.3):} $\sim$97--98\% de los handshakes usan ECDHE; \alert{X25519}
+      por defecto en navegadores.
+    \item \textbf{Passkeys/FIDO2:} ECDSA P-256. \quad \textbf{Signal, WhatsApp, SSH, WireGuard:}
+      Curve25519 / Ed25519.
+    \item \textbf{Criptomonedas:} Bitcoin y Ethereum $\to$ \alert{secp256k1} (la curva de
+      Koblitz del TFG).
+  \end{itemize}
+  \vspace{0.3ex}
+  \begin{alertblock}{La transición es híbrida, no una retirada}
+    \scriptsize Shor rompe \alert{RSA y ECC por igual} (NIST 2024: ML-KEM, ML-DSA, SLH-DSA).
+    Pero \texttt{X25519MLKEM768} ya cubre $>$40\% del tráfico HTTPS humano en Cloudflare: la
+    parte clásica \alert{sigue siendo ECC}. El banco de pruebas construido es
+    \textbf{directamente reutilizable} para comparar los esquemas PQC frente a ECC.
+  \end{alertblock}
+  \footnotesize \textbf{Trabajo futuro:} padding seguro (OAEP/PSS); optimizaciones (NAF,
+  precomputación); portar el binario a coordenadas Jacobianas.
+  \note{TLS 97-98% ECDHE, X25519 default. Passkeys ECDSA P-256. Signal/WhatsApp/SSH/WireGuard.
+  Bitcoin/Ethereum secp256k1. Post-cuantico HIBRIDO: Shor rompe ambos, X25519MLKEM768 >40%
+  Cloudflare, la parte clasica sigue siendo ECC. Banco reutilizable para PQC. Futuro: OAEP/PSS,
+  NAF, binario en Jacobiano.}
+\end{frame}
+
+\begin{frame}[standout]
+  Gracias por su atención
+  \vspace{1em}
+
+  {\normalsize \texttt{github.com/leonfullxr/ECC-Thesis}}
+\end{frame}
+
+%-------------------------------------------- Backup ---
+\appendix
+
+\begin{frame}{Respaldo -- de la ecuación general a la forma corta}
+  \small
+  Toda curva elíptica parte de la \alert{ecuación general de Weierstrass}:
+  \[ y^2 + a_1 xy + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6 \]
+  Sobre cuerpos con char$(K)\neq 2,3$ se simplifica en dos pasos:
+  \begin{enumerate}\small
+    \item \textbf{Completar el cuadrado} en $y$ $\bigl[y \mapsto y - \tfrac{1}{2}(a_1 x + a_3)\bigr]$,
+      \alert{requiere dividir por 2}:\; $y^2 = x^3 + a_2' x^2 + a_4' x + a_6'$.
+    \item \textbf{Eliminar el término cuadrático} $\bigl[x \mapsto x - \tfrac{a_2'}{3}\bigr]$,
+      \alert{requiere dividir por 3}:\; $\boxed{\,y^2 = x^3 + ax + b\,}$.
+  \end{enumerate}
+  \footnotesize Los divisores $2$ y $3$ son exactamente la razón de exigir char$(K)\neq 2,3$.
+\end{frame}
+
+\begin{frame}{Respaldo -- curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}
+  \small
+  En char $2$ \alert{no se puede dividir entre 2}: falla el primer paso. Para curvas
+  \alert{ordinarias} (no supersingulares) se llega a la forma usada en el TFG:
+  \[ \boxed{\,y^2 + xy = x^3 + ax^2 + b\,},\qquad b \neq 0 \]
+  \begin{itemize}\footnotesize
+    \item Forma de las curvas \alert{SEC 2}: \texttt{sect163k1}, \texttt{sect233k1},
+      \texttt{sect283k1} (Koblitz) y \texttt{sect233r1}, \texttt{sect283r1} (aleatorias).
+    \item Koblitz: $a\in\{0,1\}$, $b=1$; admiten optimización por el endomorfismo de
+      Frobenius (no aprovechada en nuestra versión afín).
+    \item No singular $\iff b\neq 0$ (aquí $\Delta = b$).
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Respaldo -- fórmulas de suma en $\mathbb{F}_p$ y $\mathbb{F}_{2^m}$}
+  \scriptsize
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \textbf{Cuerpo primo}\; $y^2=x^3+ax+b$
+      \vspace{0.6ex}
+
+      \emph{Suma} $(P\neq Q)$:\; $\lambda=\dfrac{y_2-y_1}{x_2-x_1}$\\[0.4ex]
+      $x_3=\lambda^2-x_1-x_2$,\quad $y_3=\lambda(x_1-x_3)-y_1$
+      \vspace{0.8ex}
+
+      \emph{Duplicación} $(2P)$:\; $\lambda=\dfrac{3x_1^2+a}{2y_1}$\\[0.4ex]
+      $x_3=\lambda^2-2x_1$,\quad $y_3=\lambda(x_1-x_3)-y_1$
+      \vspace{0.8ex}
+
+      $-P=(x_1,\,-y_1)$
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Cuerpo binario}\; $y^2+xy=x^3+ax^2+b$
+      \vspace{0.6ex}
+
+      \emph{Suma} $(P\neq Q)$:\; $\lambda=\dfrac{y_1+y_2}{x_1+x_2}$\\[0.4ex]
+      $x_3=\lambda^2+\lambda+x_1+x_2+a$\\[0.2ex]
+      $y_3=\lambda(x_1+x_3)+x_3+y_1$
+      \vspace{0.8ex}
+
+      \emph{Duplicación} $(2P)$:\; $\lambda=x_1+\dfrac{y_1}{x_1}$\\[0.4ex]
+      $x_3=\lambda^2+\lambda+a$,\quad $y_3=x_1^2+(\lambda+1)x_3$
+      \vspace{0.8ex}
+
+      $-P=(x_1,\,x_1+y_1)$;\; restar $=$ sumar
+    \end{column}
+  \end{columns}
+  \vspace{1ex}
+  \centering\small\alert{Ambas requieren una inversión} en el cuerpo para calcular $\lambda$.
+\end{frame}
+
+\begin{frame}{Respaldo -- atacar el ECDLP: rho de Pollard}
+  \begin{columns}[c]
+    \begin{column}{0.44\textwidth}
+      \footnotesize
+      Mejor ataque \alert{genérico} conocido:
+      \begin{itemize}\footnotesize
+        \item Paseo \alert{pseudoaleatorio} sobre el grupo de puntos.
+        \item Por la \alert{paradoja del cumpleaños}, aparece pronto una \alert{colisión}:
+              el camino entra en un ciclo (forma de $\rho$).
+        \item Detección de ciclo con poca memoria (Floyd). De la colisión se despeja $k$.
+      \end{itemize}
+      \begin{block}{Coste}
+        \footnotesize $O(\sqrt{n})$ tiempo, $O(1)$ memoria $\Rightarrow$ \alert{exponencial} en bits.
+      \end{block}
+    \end{column}
+    \begin{column}{0.56\textwidth}
+      \centering
+      \figordemo[width=\textwidth]{imagenes/attack_pollard_rho.png}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Respaldo -- parámetros del dominio}
+  \small
+  Séxtupla acordada por todas las partes: $T=(p,\,a,\,b,\,G,\,n,\,h)$.
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}\footnotesize
+        \item $p$: primo que define $\mathbb{F}_p$.
+        \item $a,b$: coeficientes de $y^2=x^3+ax+b$.
+        \item $G$: punto generador; $n$: su orden.
+        \item $h=\#E(\mathbb{F}_p)/n$: cofactor.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Requisitos de seguridad}
+      \begin{itemize}\footnotesize
+        \item $n$ primo (evita Pohlig--Hellman).
+        \item $h$ pequeño, ideal $1$.
+        \item No anómala: $\#E(\mathbb{F}_p)\neq p$.
+        \item Grado de inmersión alto (evita MOV).
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \footnotesize En el TFG se usan curvas estándar \alert{NIST/SECG}, ya auditadas.
+\end{frame}
+
+\begin{frame}{Respaldo -- ECDH en detalle}
+  \centering
+  \begin{tikzpicture}[font=\footnotesize]
+    \node[draw, rounded corners, fill=UGRsoft!12, align=center, minimum width=3.1cm,
+          minimum height=1.4cm] (alice)
+      {\textbf{Alice}\\ privado $d_A$\\ $Q_A = d_A\,G$};
+    \node[draw, rounded corners, fill=UGRsoft!12, align=center, minimum width=3.1cm,
+          minimum height=1.4cm, right=5.2cm of alice] (bob)
+      {\textbf{Bob}\\ privado $d_B$\\ $Q_B = d_B\,G$};
+    \draw[-{Stealth}, thick, UGRaccent] ([yshift=4mm]alice.east)
+      -- node[above]{$Q_A$} ([yshift=4mm]bob.west);
+    \draw[-{Stealth}, thick, UGRaccent] ([yshift=-4mm]bob.west)
+      -- node[below]{$Q_B$} ([yshift=-4mm]alice.east);
+    \node[align=center, below=0.35cm] at ($(alice)!0.5!(bob)$) {\itshape canal público};
+  \end{tikzpicture}
+
+  \vspace{0.8em}
+  \small Ambos calculan el \alert{mismo secreto} (asociatividad y conmutatividad):
+  \[ S = d_A\,Q_B = d_B\,Q_A = d_A d_B\,G \;\Longrightarrow\; \text{clave de sesión}=\mathrm{KDF}(x_S) \]
+  \footnotesize En modo efímero (ECDHE) da \alert{secreto perfecto hacia adelante}; no
+  autentica por sí solo (hace falta firma/certificado contra MITM).
+\end{frame}
+
+\begin{frame}{Respaldo -- ECDSA en detalle}
+  \small
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \textbf{Firma}\; (clave privada $d$)
+      \begin{enumerate}\footnotesize
+        \item $e = H(m)$
+        \item nonce $k \xleftarrow{\$} [1,n-1]$
+        \item $R = kG=(x_R,y_R)$,\quad $r = x_R \bmod n$
+        \item $s = k^{-1}(e + d\,r) \bmod n$
+      \end{enumerate}
+      Firma: $\boxed{(r,s)}$
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Verificación}\; (clave pública $Q=dG$)
+      \begin{enumerate}\footnotesize
+        \item $e=H(m)$,\quad $w = s^{-1}\bmod n$
+        \item $u_1 = e\,w \bmod n$,\quad $u_2 = r\,w \bmod n$
+        \item $R' = u_1 G + u_2 Q$
+        \item aceptar si $x_{R'} \bmod n = r$
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Respaldo -- corrección de la verificación ECDSA}
+  \footnotesize
+  Si la firma es honesta, $s = k^{-1}(e + d\,r)\bmod n$, luego
+  \[ k = s^{-1}(e + d\,r) = \underbrace{s^{-1}e}_{u_1} + \underbrace{s^{-1}r}_{u_2}\,d
+       = u_1 + u_2\,d \pmod n. \]
+  Por tanto $R' = u_1 G + u_2 Q = u_1 G + u_2\,d\,G = (u_1 + u_2 d)\,G = k\,G = R$, de donde
+  $x_{R'}\bmod n = x_R \bmod n = r$ y la firma se acepta. \qed
+\end{frame}
+
+\begin{frame}{Respaldo -- validación frente a OpenSSL}
+  \begin{columns}[c]
+    \begin{column}{0.52\textwidth}
+      \footnotesize
+      \begin{tabular}{lc}
+        \toprule
+        & OpenSSL vs propia \\
+        \midrule
+        P-256 (operaciones) & 14--34$\times$ más rápido \\
+        P-384 & 1.7--4$\times$ más rápido \\
+        RSA-4096 verificación & \alert{a la par} (1.08$\times$) \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Por qué la diferencia}
+        \footnotesize Ensamblador a mano + \alert{blinding} contra canales laterales que mi
+        versión académica no incorpora.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vfill
+  \footnotesize Objetivo del TFG: \textbf{entender y comparar}, no competir con código de producción.
+\end{frame}
+
+\begin{frame}{Respaldo -- CRT en el descifrado RSA}
+  \footnotesize
+  Se calcula $d_p=d\bmod(p-1)$, $d_q=d\bmod(q-1)$, $q_{inv}=q^{-1}\bmod p$. Recombinación de
+  Garner: $m_1=c^{d_p}\bmod p$, $m_2=c^{d_q}\bmod q$, $h=q_{inv}(m_1-m_2)\bmod p$,
+  $m=m_2+hq$. Acelera $\approx 3.5\times$ (dos exponenciaciones a la mitad de bits).
+\end{frame}
+
+\begin{frame}{Respaldo -- la asociatividad de la ley de grupo}
+  \footnotesize
+  $(E(K),+)$ es grupo abeliano. Neutro $\mathcal{O}$, inversos (reflexión) y conmutatividad
+  son inmediatos. El axioma no trivial es la \alert{asociatividad}: se prueba con el teorema
+  de Cayley--Bacharach o, más elegantemente, identificando $E$ con su grupo de clases de
+  divisores $\mathrm{Pic}^0(E)$ (Riemann--Roch).
+\end{frame}
+
+\begin{frame}{Respaldo -- panorama completo de tiempos}
+  \centering
+  \figordemo[height=0.86\textheight,keepaspectratio]{imagenes/chart_summary_table.png}
+\end{frame}
+
+\begin{frame}{Respaldo -- razón de rendimiento RSA/ECC}
+  \centering
+  \figordemo[width=0.78\textwidth]{imagenes/chart_speedup_ratios.png}
+\end{frame}
+
+\end{document}

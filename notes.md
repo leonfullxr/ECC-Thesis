@@ -635,3 +635,102 @@ En `ecc_binary.cpp` están implementadas la aritmética de campo, las operacione
 - Tabla completa de tiempos → respaldo "panorama completo de tiempos".
 - "Quién gana en cada operación" → respaldo "razón de rendimiento RSA/ECC".
 - Elección de -O2 → diapositiva de metodología (flags de compilación).
+
+#### Grupo abeliano
+
+Un Grupo Abeliano (nombrado así en honor al matemático noruego Niels Henrik Abel) no es más que la formalización de estas "reglas del juego". Es una estructura algebraica formada por un conjunto de elementos y una operación matemática (que llamaremos suma "+") que cumple obligatoriamente cinco propiedades.
+
+Sirve para garantizar que la aritmética no se rompa. Al demostrar que los puntos de una curva elíptica forman un Grupo Abeliano, los criptógrafos tienen la garantía matemática de que pueden hacer álgebra con ellos igual que lo hacen con los números enteros.
+
+```mermaid
+sequenceDiagram
+    participant B as Bob (Firmante)
+    participant A as Alice (Verificadora)
+
+    Note over B: 1. Preparar Datos<br/>Mensaje (m)<br/>Clave Privada (d_B)
+    
+    Note over B: 2. Hashing<br/>e = HASH(m)
+    
+    Note over B: 3. Generar Firma (r, s)<br/>k = Random[1, n-1]<br/>P = k * G = (x_1, y_1)<br/>r = x_1 mod n<br/>s = k^-1 * (e + d_B * r) mod n
+    
+    B->>A: Envía a través de la red: [ Mensaje (m) + Firma (r, s) ]
+    
+    Note over A: 4. Recibe Datos<br/>Mensaje (m), Firma (r, s)<br/>Tiene la Clave Pública de Bob (Q_B)
+    
+    Note over A: 5. Hashing (Recálculo)<br/>e_A = HASH(m)
+    
+    Note over A: 6. Verificación Matemática<br/>w = s^-1 mod n<br/>u_1 = (e_A * w) mod n<br/>u_2 = (r * w) mod n<br/>V = u_1 * G + u_2 * Q_B = (x_v, y_v)
+    
+    alt Coordenada x_v == r
+        Note over A: ✅ Firma Válida<br/>(El mensaje es de Bob y no fue alterado)
+    else Coordenada x_v != r
+        Note over A: ❌ Firma Inválida<br/>(Posible MITM o alteración de datos)
+    end
+```
+
+
+``` mermaid
+sequenceDiagram
+    autonumber
+    participant A as Alice (Cliente)
+    participant B as Bob (Servidor)
+
+    rect rgb(245, 245, 245)
+    Note over A, B: <b>FASE 1: Intercambio de Identidad y Claves Públicas</b>
+    
+    Note over A: Genera Claves ECC:<br/>Privada (d_A), Pública (Q_A = d_A * G)
+    Note over B: Genera Claves RSA:<br/>Pública (e_B, n), Privada (d_B)
+    
+    A->>B: Inicia conexión (ClientHello) + Certificado Cliente [ Q_A ]
+    B->>A: Envía Certificado Servidor [ e_B, n, Firma_CA ]
+    
+    Note over A: Valida Firma_CA de Bob con CA Root.
+    Note over B: Extrae y guarda Q_A de Alice.
+    end
+
+    rect rgb(230, 240, 255)
+    Note over A, B: <b>FASE 2: Establecimiento de Clave Simétrica (RSA)</b>
+    
+    Note over A: CSPRNG genera Clave Maestra:<br/>K_sym (32 bytes para AES-256)
+    Note over A: Cifra K_sym con RSA-OAEP:<br/>C_key = (K_sym ^ e_B) mod n
+    
+    A->>B: Envía llave cifrada: [ C_key ]
+    
+    Note over B: Descifra con RSA-CRT:<br/>K_sym = (C_key ^ d_B) mod n
+    end
+    
+    rect rgb(255, 250, 240)
+    Note over A, B: <b>FASE 3: Preparación y Firma (Sign-then-Encrypt)</b>
+    
+    Note over A: Archivo a enviar: M (Ej. 5 GB)
+    Note over A: <b>1. Hashing:</b> H = SHA-256(M)
+    Note over A: <b>2. Firma ECDSA (d_A):</b><br/>k = CSPRNG [1, n-1]<br/>(r, s) = ECDSA_Sign(H, d_A, k)
+    Note over A: <b>3. Estructuración:</b><br/>Payload = [ M + r + s ]
+    end
+
+    rect rgb(240, 255, 240)
+    Note over A, B: <b>FASE 4: Cifrado Simétrico Autenticado y Transmisión</b>
+    
+    Note over A: Genera Nonce/IV aleatorio.<br/>Cifra con AES-GCM (K_sym):<br/>(C_msg, Auth_Tag) = AES-GCM(Payload, IV)
+    
+    A->>B: Transmisión: [ IV + C_msg + Auth_Tag ]
+    end
+    
+    rect rgb(255, 240, 245)
+    Note over A, B: <b>FASE 5: Descifrado y Verificación</b>
+    
+    Note over B: <b>1. Descifrado AES-GCM:</b><br/>Payload = AES-GCM-Decrypt(C_msg, IV, Auth_Tag, K_sym)
+    Note over B: (Si el Auth_Tag falla, se rechaza el paquete)
+    Note over B: Extrae Archivo (M) y Firma (r, s)
+    
+    Note over B: <b>2. Recálculo del Hash:</b><br/>H_calc = SHA-256(M)
+    
+    Note over B: <b>3. Verificación ECDSA (Q_A):</b><br/>w = s⁻¹ mod n<br/>u1 = (H_calc * w) mod n<br/>u2 = (r * w) mod n<br/>V = u1*G + u2*Q_A
+    
+    alt Coordenada V.x mod n == r
+        Note over B: ✅ <b>Éxito:</b> Integridad y Autenticidad confirmadas.
+    else Coordenada V.x mod n != r
+        Note over B: ❌ <b>Fallo:</b> Alerta de Seguridad. Paquete descartado.
+    end
+    end
+```
