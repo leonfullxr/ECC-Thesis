@@ -11,9 +11,10 @@
 ######################### Compilation
 CXX      := g++
 PREFIX   ?= /usr/local
-# Nivel de optimizacion (sobreescribible: make OPT=-O2 para reproducir los
-# tiempos de la memoria, que se midieron sin -march=native).
-OPT      ?= -O2 -march=native
+# Nivel de optimizacion. -O2 es el estandar del TFG: las cifras de la memoria
+# se midieron asi (sin -march=native), por portabilidad y reproducibilidad.
+# Sobreescribible, p.ej. para un binario local mas rapido: make OPT="-O2 -march=native".
+OPT      ?= -O2
 CXXFLAGS := -std=c++17 $(OPT)
 # Include paths are kept in a separate variable so that overriding CXXFLAGS
 # on the command line (e.g. for sanitizer builds) does not lose -Iinclude.

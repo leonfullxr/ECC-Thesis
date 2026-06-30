@@ -17,7 +17,8 @@
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta,calc}
+\usetikzlibrary{positioning,arrows.meta,arrows,calc,fit,backgrounds}
+\newsavebox{\arqbox}   % caja para capturar el diagrama de arquitectura
 
 % --- Paleta -------------------------------------------
 \definecolor{UGRdark}{HTML}{1F2933}
@@ -39,6 +40,21 @@
   flow/.style={-{Stealth}, thick, UGRaccent},
 }
 
+% --- Macro: hito de la cronología -------------------------------------
+%  \evt{x}{año}{dir: 1 arriba / -1 abajo}{texto}
+\newcommand{\evt}[4]{%
+  \fill[UGRaccent] (#1,0) circle (2.2pt);%
+  \ifnum#3=1
+    \draw[UGRaccent, semithick] (#1,0) -- (#1,0.45);%
+    \node[anchor=south, text width=2.2cm, align=center, font=\tiny] at (#1,0.5)
+      {\textcolor{UGRaccent}{\bfseries #2}\\[1pt] #4};%
+  \else
+    \draw[UGRaccent, semithick] (#1,0) -- (#1,-0.45);%
+    \node[anchor=north, text width=2.2cm, align=center, font=\tiny] at (#1,-0.5)
+      {\textcolor{UGRaccent}{\bfseries #2}\\[1pt] #4};%
+  \fi
+}
+
 % --- Macro: figura real si existe; si no, recuadro con el nombre --------
 \newcommand{\figordemo}[2][width=0.92\textwidth]{%
   \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
@@ -47,11 +63,11 @@
       \centering {\ttfamily\small\detokenize{#2}}\\[1.2ex]
       {\itshape\footnotesize (figura: sustituir por la gráfica real)}}}}}
 
-\title{Implementación y análisis comparativo de \\ rendimiento de primitivas RSA y ECC}
+\title{Curvas elípticas en criptografía}
 \subtitle{Trabajo Fin de Grado - Ingeniería Informática}
 \author{Leon Elliott Fuller}
 \institute{Tutor: Jesús García Miranda \\ E.T.S. de Ingenierías Informática y de Telecomunicación \\ Universidad de Granada}
-\date{Junio de 2026}
+\date{Julio de 2026}
 
 \begin{document}
 
@@ -81,6 +97,32 @@
   \end{block}
   \note{RSA desde los 70, claves crecientes. Koblitz/Miller 1985. Misma seguridad, claves
   menores. La pregunta: cuánto vale y por qué.}
+\end{frame}
+
+\begin{frame}{Una breve cronología: de RSA a ECC (y más allá)}
+  \centering
+  \vspace{0.4em}
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}
+    % eje temporal
+    \draw[-{Stealth}, very thick, UGRsoft] (-0.4,0) -- (13.7,0);
+
+    \evt{0.6}{1977}{1}{Nace \textbf{RSA}}
+    \evt{2.35}{1985}{-1}{\textbf{ECC} propuesta (Koblitz, Miller)}
+    \evt{4.1}{2000}{1}{Estándar NIST/SECG: P-256, secp256k1}
+    \evt{5.85}{2008}{-1}{\textbf{TLS 1.2} (RFC 5246)}
+    \evt{7.6}{2009}{1}{\textbf{Bitcoin} usa secp256k1}
+    \evt{9.35}{2013}{-1}{NIST retira \textbf{RSA-1024}; mín. RSA-2048/3072}
+    \evt{11.1}{2018}{1}{\textbf{TLS 1.3}: ECDHE; X25519, Ed25519 (Signal, SSH)}
+    \evt{12.85}{2024}{-1}{NIST \textbf{PQC}: ML-KEM/ML-DSA (era híbrida)}
+  \end{tikzpicture}}
+  \vfill
+  {\scriptsize De claves RSA \alert{cada vez mayores} al despliegue masivo de \alert{ECC};
+   hoy, transición \alert{híbrida} ECC\,$+$\,post-cuántico.}
+  \note{1977 RSA. 1985 ECC (Koblitz/Miller). 2000 estandarizacion NIST FIPS 186-2 y SECG SEC2
+  (P-256, secp256k1). 2008 TLS 1.2. 2009 Bitcoin secp256k1. 2013 NIST retira RSA-1024, sube a
+  2048/3072. 2018 TLS 1.3 con ECDHE, X25519/Ed25519 en Signal y SSH. 2024 NIST estandariza PQC,
+  era hibrida. Hilo: RSA crece, ECC se generaliza, ahora hibrido post-cuantico.}
 \end{frame}
 
 \begin{frame}{Objetivo y los tres ejes de comparación}
@@ -115,36 +157,41 @@
 \section{Fundamentos: curvas elípticas}
 
 \begin{frame}{¿Qué es una curva elíptica?}
-  \footnotesize
-  Soluciones de la \alert{ecuación de Weierstrass} $y^2 = x^3 + ax + b$
-  (con char$(K)\neq 2,3$), más el \alert{punto del infinito} $\mathcal{O}$.\;
-  \alert{No singular} $\iff \Delta = -16(4a^3 + 27b^2) \neq 0$
-  (sin cúspides ni autointersecciones): es la condición para que la
-  \alert{ley de grupo} esté bien definida.
-  \begin{center}
-    \figordemo[width=\textwidth]{imagenes/ec_shape.png}
-  \end{center}
-  \note{Soluciones de y^2=x^3+ax+b mas O. No singular: discriminante no nulo. Factores 16 y
-  27 por char != 2,3. Tercer panel: en un punto singular la tangente no es unica y 2P divide
-  por 2y=0, por eso la ley de grupo falla.}
-\end{frame}
-
-\begin{frame}{De la ecuación general a la forma de Weierstrass}
   \small
-  Toda curva elíptica parte de la \alert{ecuación general de Weierstrass}:
+  Una \alert{curva elíptica} sobre un cuerpo $K$ es el conjunto de soluciones de la
+  \alert{ecuación general de Weierstrass}
   \[ y^2 + a_1 xy + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6 \]
+  junto con un \alert{punto del infinito} $\mathcal{O}$ (que será el neutro del grupo).
+  \medskip
+
   Sobre cuerpos con char$(K)\neq 2,3$ se simplifica en dos pasos:
-  \begin{enumerate}\small
+  \begin{enumerate}\footnotesize
     \item \textbf{Completar el cuadrado} en $y$\, $\bigl[y \mapsto y - \tfrac{1}{2}(a_1 x + a_3)\bigr]$,
-      \alert{requiere dividir por 2}:
-      \[ y^2 = x^3 + a_2' x^2 + a_4' x + a_6' \]
+      \alert{divide por 2}:\quad $y^2 = x^3 + a_2' x^2 + a_4' x + a_6'$
     \item \textbf{Eliminar el término cuadrático}\, $\bigl[x \mapsto x - \tfrac{a_2'}{3}\bigr]$,
-      \alert{requiere dividir por 3}:
-      \[ \boxed{\,y^2 = x^3 + ax + b\,}\quad\text{(forma corta)} \]
+      \alert{divide por 3}:
+      \[ \boxed{\,y^2 = x^3 + ax + b\,}\quad\text{(forma corta de Weierstrass)} \]
   \end{enumerate}
   \footnotesize Los divisores $2$ y $3$ son exactamente la razón de exigir char$(K)\neq 2,3$.
-  \note{General de Weierstrass. Paso 1: completar cuadrado en y, divide por 2. Paso 2:
-  eliminar el termino cuadratico, divide por 3. Llegamos a forma corta. Por eso char != 2,3.}
+  \note{Definicion: soluciones de la general de Weierstrass mas O (neutro). Sobre char != 2,3
+  se simplifica: paso 1 completar cuadrado en y (divide por 2), paso 2 eliminar termino
+  cuadratico (divide por 3). Llegamos a la forma corta y^2=x^3+ax+b. Los divisores 2 y 3 son
+  justo por lo que se exige char != 2,3.}
+\end{frame}
+
+\begin{frame}{Singularidad: ¿cuándo es una curva elíptica válida?}
+  \footnotesize
+  La forma corta $y^2=x^3+ax+b$ define una curva elíptica solo si es \alert{no singular}
+  (sin cúspides ni autointersecciones):\;
+  $\text{no singular} \iff \Delta = -16(4a^3 + 27b^2) \neq 0$.
+  \begin{center}
+    \figordemo[width=0.68\textwidth]{imagenes/ec_shape.png}
+  \end{center}
+  En un \alert{punto singular} la tangente no es única y $2P$ obligaría a dividir por
+  $2y=0$: la \alert{ley de grupo} dejaría de estar bien definida.
+  \note{La forma corta es curva eliptica solo si es no singular: discriminante no nulo, sin
+  cuspides ni autointersecciones. Factores 16 y 27 por char != 2,3. Tercer panel: en un punto
+  singular la tangente no es unica y 2P divide por 2y=0, por eso la ley de grupo falla alli.}
 \end{frame}
 
 \begin{frame}{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}
@@ -176,8 +223,10 @@
         \item \textbf{Neutro:} $\mathcal{O}$ (rectas verticales).
       \end{itemize}
       \vspace{1ex}
-      \footnotesize Es la \alert{operación atómica} que se repite en todo ECC.
-    \end{column}
+      \footnotesize Suma y duplicación son las \alert{operaciones atómicas}. La
+      \alert{multiplicación escalar} $kP$ no es nueva: es repetirlas (\emph{double-and-add},
+      más adelante).
+\end{column}
     \begin{column}{0.58\textwidth}
       \centering
       \figordemo[width=\textwidth]{imagenes/ec_addition.png}
@@ -221,39 +270,40 @@
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
       \textbf{Cuerpo primo}\; $y^2=x^3+ax+b$
-      \vspace{0.6ex}
+      \vspace{1.4ex}
 
-      \emph{Suma} $(P\neq Q)$:\; $\lambda=\dfrac{y_2-y_1}{x_2-x_1}$\\[0.4ex]
-      $x_3=\lambda^2-x_1-x_2$,\quad $y_3=\lambda(x_1-x_3)-y_1$
-      \vspace{0.8ex}
+      \emph{Suma} $(P\neq Q)$,\; $\lambda=\dfrac{y_2-y_1}{x_2-x_1}$:\\[0.7ex]
+      $\boxed{x_3=\lambda^2-x_1-x_2}$\\[0.5ex]
+      $\boxed{y_3=\lambda(x_1-x_3)-y_1}$
+      \vspace{2.6ex}
 
-      \emph{Duplicación} $(2P)$:\; $\lambda=\dfrac{3x_1^2+a}{2y_1}$\\[0.4ex]
-      $x_3=\lambda^2-2x_1$,\quad $y_3=\lambda(x_1-x_3)-y_1$
-      \vspace{0.8ex}
+      \emph{Duplicación} $(2P)$,\; $\lambda=\dfrac{3x_1^2+a}{2y_1}$:\\[0.7ex]
+      $\boxed{x_3=\lambda^2-2x_1}$\\[0.5ex]
+      $\boxed{y_3=\lambda(x_1-x_3)-y_1}$
+      \vspace{2.6ex}
 
       $-P=(x_1,\,-y_1)$
     \end{column}
     \begin{column}{0.5\textwidth}
       \textbf{Cuerpo binario}\; $y^2+xy=x^3+ax^2+b$
-      \vspace{0.6ex}
+      \vspace{1.4ex}
 
-      \emph{Suma} $(P\neq Q)$:\; $\lambda=\dfrac{y_1+y_2}{x_1+x_2}$\\[0.4ex]
-      $x_3=\lambda^2+\lambda+x_1+x_2+a$\\[0.2ex]
-      $y_3=\lambda(x_1+x_3)+x_3+y_1$
-      \vspace{0.8ex}
+      \emph{Suma} $(P\neq Q)$,\; $\lambda=\dfrac{y_1+y_2}{x_1+x_2}$:\\[0.7ex]
+      $\boxed{x_3=\lambda^2+\lambda+x_1+x_2+a}$\\[0.5ex]
+      $\boxed{y_3=\lambda(x_1+x_3)+x_3+y_1}$
+      \vspace{2.6ex}
 
-      \emph{Duplicación} $(2P)$:\; $\lambda=x_1+\dfrac{y_1}{x_1}$\\[0.4ex]
-      $x_3=\lambda^2+\lambda+a$,\quad $y_3=x_1^2+(\lambda+1)x_3$
-      \vspace{0.8ex}
+      \emph{Duplicación} $(2P)$,\; $\lambda=x_1+\dfrac{y_1}{x_1}$:\\[0.7ex]
+      $\boxed{x_3=\lambda^2+\lambda+a}$\\[0.5ex]
+      $\boxed{y_3=x_1^2+(\lambda+1)x_3}$
+      \vspace{2.6ex}
 
       $-P=(x_1,\,x_1+y_1)$;\; restar $=$ sumar
     \end{column}
   \end{columns}
-  \vspace{1ex}
-  \centering\small\alert{Ambas requieren una división} (inversión en el cuerpo) para calcular $\lambda$.
-  \note{Formulas explicitas. Primo: lambda con resta/division. Binario: sumas (char 2),
-  lambda tambien con division. En binario -P=(x1,x1+y1) y restar=sumar. Lo clave: las dos
-  necesitan una inversion para lambda.}
+  \note{Formulas explicitas, resultado en recuadro. Primo: lambda con resta/division. Binario:
+  sumas (char 2), lambda tambien con division. En binario -P=(x1,x1+y1) y restar=sumar. La
+  pendiente lambda lleva una division (inversion) que se ve en la siguiente diapositiva.}
 \end{frame}
 
 \begin{frame}{Coordenadas afines y Jacobianas}
@@ -261,17 +311,24 @@
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
       \textbf{Afines}
-      \begin{itemize}\small
-        \item Un punto es $(x,y)\in K^2$ sobre la curva, más $\mathcal{O}$.
-        \item Directas, pero \alert{cada suma exige una inversión} (para $\lambda$).
+      \begin{itemize}\footnotesize
+        \item Un punto es $(x,y)\in K^2$ sobre la curva, más $\mathcal{O}$: la representación
+          \alert{directa y natural}.
+        \item Cada suma o duplicación calcula la pendiente
+          $\lambda=\dfrac{y_2-y_1}{x_2-x_1}$ (o $\dfrac{3x_1^2+a}{2y_1}$): un \alert{cociente}
+          en el cuerpo.
+        \item En $\mathbb{F}_p$ no hay división como tal: $a/b = a\cdot b^{-1}\bmod p$. El
+          \alert{inverso} $b^{-1}$ (Euclides ext.\ o Fermat) es la operación \textbf{más cara}.
+        \item $\Rightarrow$ \alert{una inversión por cada operación} de punto.
       \end{itemize}
-    \end{column}
+\end{column}
     \begin{column}{0.5\textwidth}
       \textbf{Jacobianas (proyectivas)}
-      \begin{itemize}\small
+      \begin{itemize}\footnotesize
         \item Clase $(X:Y:Z)$ con $x=\dfrac{X}{Z^2},\; y=\dfrac{Y}{Z^3}$.
         \item $(X:Y:Z)\sim(\lambda^2 X:\lambda^3 Y:\lambda Z)$;\; $\mathcal{O}=(1:1:0)$.
         \item Curva: $Y^2=X^3+aXZ^4+bZ^6$.
+        \item La coordenada $Z$ \alert{absorbe el denominador}: no se invierte en cada paso.
       \end{itemize}
     \end{column}
   \end{columns}
@@ -543,48 +600,111 @@
 %==============================================================================
 \section{Implementación y metodología}
 
-\begin{frame}{La implementación}
-  \begin{columns}[c]
-    \begin{column}{0.55\textwidth}
-      \textbf{Arquitectura modular}
-      \begin{itemize}
-        \item RSA con descifrado acelerado por \alert{CRT}
-        \item ECC afín y \alert{Jacobiano} sobre $\mathbb{F}_p$
-        \item ECC sobre cuerpos binarios $\mathbb{F}_{2^m}$
-        \item \alert{SHA-256 desde cero} (FIPS 180-4)
-        \item RNG validado, cinco modos CLI
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.45\textwidth}
-      \begin{block}{Stack}
-        C++17 \\ NTL + GMP \\ Docker (reproducibilidad)
-      \end{block}
-      \footnotesize SHA-256 a mano: entender el hash de ECDSA y evitar que librerías
-      externas contaminen los tiempos.
-    \end{column}
-  \end{columns}
-  \note{Modular: RSA+CRT, ECC afin/Jacobiano F_p, ECC binario, SHA-256 propio, RNG, 5 modos
-  CLI. C++17, NTL/GMP, Docker.}
-\end{frame}
+\begin{frame}{Arquitectura del proyecto}
+% Capturamos primero la figura en una caja y despues la escalamos a la diapositiva.
+\begin{lrbox}{\arqbox}%
+\begin{tikzpicture}[
+    every node/.style={font=\small\ttfamily, draw, rounded corners,
+                       minimum height=0.8cm, minimum width=2cm, align=center, fill=blue!5},
+    small/.style={font=\footnotesize\ttfamily, draw, rounded corners, align=center,
+                  minimum height=0.6cm, minimum width=2.4cm, fill=blue!5},
+    band/.style={font=\footnotesize\ttfamily, draw, rounded corners, align=center,
+                 text width=3.4cm, inner sep=3pt, minimum height=0.9cm},
+    cluster/.style={draw, rounded corners, inner sep=6pt,
+                    minimum width=0pt, minimum height=0pt},
+    docker/.style={draw=blue!55!black, dashed, very thick, rounded corners,
+                   fill=none, inner sep=6pt, minimum width=0pt, minimum height=0pt},
+    arrow/.style={->, >=latex, thick},
+    rel/.style={->, >=latex, thick, gray!55!black},
+    cirel/.style={->, >=latex, thick, dashed, violet!60!black},
+    lbl/.style={draw=none, fill=none, font=\scriptsize\sffamily,
+                inner sep=1.5pt, minimum width=0pt, minimum height=0pt},
+    node distance=0.4cm and 0.6cm
+]
 
-\begin{frame}{Metodología: convertir medidas en ciencia}
-  \begin{columns}[c]
-    \begin{column}{0.5\textwidth}
-      \begin{itemize}
-        \item \alert{Docker}: mismo entorno, reproducible.
-        \item \alert{RNG con semilla fija}: comparación \textbf{pareada}, todos ven los
-              mismos datos.
-        \item \alert{Mediana} + calentamiento: robustez frente a outliers y caché fría.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \begin{alertblock}{Justicia de la comparación}
-        Se compara a \textbf{igual nivel de seguridad} (NIST SP 800-57), \emph{nunca} a
-        igual tamaño de clave.
-      \end{alertblock}
-    \end{column}
-  \end{columns}
-  \note{Docker, RNG semilla fija (pareado), mediana+calentamiento, igual seguridad NIST.}
+% ===================== Banda central: codigo fuente =====================
+    \node (main) [fill=orange!15] {main.cpp};
+    % fila de modulos centrada bajo main (ecc y eccb a ambos lados, rsa/sha en los extremos)
+    \node (ecc)  [below left=1.4cm and 0.35cm of main]  {ecc.\{hpp,cpp\}};
+    \node (eccb) [below right=1.4cm and 0.35cm of main] {ecc\_binary.\{hpp,cpp\}};
+    \node (rsa)  [left=0.7cm of ecc]   {rsa.\{hpp,cpp\}};
+    \node (sha)  [right=0.7cm of eccb] {sha256.\{hpp,cpp\}};
+    \node (rng)    [below=1.4cm of ecc, fill=green!10] {rng.\{hpp,cpp\}};
+    \node (common) [right=1.0cm of rng, fill=green!10] {common.hpp};
+
+    \draw [arrow] (main) -- (rsa);
+    \draw [arrow] (main) -- (ecc);
+    \draw [arrow] (main) -- (eccb);
+    \draw [arrow] (main.east) to[bend left=15] (sha);
+    \draw [arrow] (rsa) -- (rng);
+    \draw [arrow] (rsa.south) -- (common.north west);
+    \draw [arrow] (ecc) -- (rng);
+    \draw [arrow] (ecc.south east) -- (common.north);
+    \draw [arrow] (eccb.south west) -- (common.north east);
+    \draw [arrow] (eccb) -- (rng.north east);
+    \draw [arrow] (sha.south) -- (common.north east);
+
+    % --- una sola caja con fit + etiqueta ---
+    \begin{scope}[on background layer]
+        \node[cluster, fill=blue!3, draw=blue!40,
+              fit=(main)(rsa)(ecc)(eccb)(sha)(rng)(common),
+              label={[font=\scriptsize\bfseries, text=blue!45!black, anchor=south west]%
+                     north west:Codigo fuente (C++17)}] (srcbox) {};
+    \end{scope}
+
+% ===================== Banda superior: configuracion y build =====================
+    \node[small, fill=orange!12, anchor=south west] (dockerfile)
+          at ([yshift=12mm]srcbox.north west) {Dockerfile};
+    \node[small, fill=orange!12, right=3mm of dockerfile] (compose)  {docker-compose.yml};
+    \node[small, fill=orange!12, right=3mm of compose]    (makefile) {Makefile};
+    \node[small, fill=orange!12, right=3mm of makefile]   (reqs)     {requirements.txt};
+
+    \begin{scope}[on background layer]
+        \node[cluster, fill=orange!4, draw=orange!55,
+              fit=(dockerfile)(compose)(makefile)(reqs),
+              label={[font=\scriptsize\bfseries, text=orange!55!black, anchor=south west]%
+                     north west:Configuracion y build}] (cfgbox) {};
+    \end{scope}
+
+% ===================== Banda inferior: CI / scripts / artefactos =====================
+    \node[band, fill=teal!15, anchor=north] (scripts) at ([yshift=-12mm]srcbox.south)
+          {{\normalfont\bfseries Scripts}\\ \texttt{scripts/}\\[1pt] *.sh~$\cdot$~*.py};
+    \node[band, fill=violet!15, left=6mm of scripts] (ci)
+          {{\normalfont\bfseries CI/CD}\\ \texttt{.github/workflows/}\\[1pt]
+           ci~$\cdot$~lint~$\cdot$~codeql\\ latex~$\cdot$~docker};
+    \node[band, fill=yellow!20, right=6mm of scripts] (bindir)
+          {{\normalfont\bfseries Bin}\\ \texttt{bin/}\\[1pt] binarios~ECC};
+    \node[band, fill=green!12, right=6mm of bindir] (artef)
+          {{\normalfont\bfseries Artefactos}\\ results/~CSV\\ graficas~PNG\\ memoria~LaTeX};
+
+% ===================== Relaciones entre bandas =====================
+    \draw[rel]  (cfgbox.south) -- node[lbl, right]{compila} (srcbox.north);
+    \draw[rel]  (srcbox.south) -- node[lbl, right]{binario} (scripts.north);
+    \draw[rel]  (scripts.north east) to[bend left=18]
+          node[lbl, above]{genera} (artef.north west);
+    \draw[cirel] (ci.north) to[bend left=10]
+          node[lbl, above, pos=0.6]{build~$\cdot$~test} (srcbox.south west);
+
+% ===================== Contenedor Docker (caja exterior) =====================
+    \coordinate (padTop) at ([yshift=0.85cm]cfgbox.north);
+    \begin{scope}[on background layer]
+        \node[docker, fit=(padTop)(cfgbox)(srcbox)(ci)(scripts)(bindir)(artef),
+              label={[font=\footnotesize\bfseries, text=white, fill=blue!60!black,
+                      rounded corners, inner sep=3pt, anchor=north west,
+                      xshift=8pt, yshift=-3pt]north west:%
+                      {Contenedor Docker -- \texttt{leonfullxr/ecc-benchmarks:latest}}}]
+              (dockerbox) {};
+    \end{scope}
+
+\end{tikzpicture}%
+\end{lrbox}%
+  \centering
+  \resizebox{!}{0.80\textheight}{\usebox{\arqbox}}
+  \note{Arquitectura modular dentro del contenedor Docker reproducible: codigo fuente C++17
+  (main.cpp orquesta rsa, ecc, ecc_binary, sha256; rng y common.hpp compartidos); banda de
+  configuracion y build (Dockerfile, compose, Makefile, requirements); CI/CD en GitHub
+  Actions, scripts que ejecutan los binarios y generan artefactos (CSV, graficas, memoria).
+  Todo encapsulado en la imagen leonfullxr/ecc-benchmarks:latest para reproducibilidad.}
 \end{frame}
 
 \begin{frame}{Metodología - elección de las opciones de compilación}
