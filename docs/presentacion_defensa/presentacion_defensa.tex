@@ -82,27 +82,16 @@
 \section{Motivación y objetivos}
 
 \begin{frame}{Motivación}
-  \begin{itemize}
-    \item RSA (años 70) sigue siendo el pilar de la clave pública, pero su seguridad
-          exige claves \alert{cada vez más grandes}.
-    \item \textbf{1985:} Koblitz y Miller proponen, de forma independiente, usar
-          \alert{curvas elípticas} (ECC).
-    \item Misma seguridad con claves \alert{mucho menores} $\Rightarrow$ idóneas para
-          dispositivos limitados y aplicaciones de alto rendimiento.
+  \footnotesize
+  \begin{itemize}\footnotesize
+    \item RSA (años 70) sigue siendo el pilar de la clave pública, pero exige claves
+          \alert{cada vez más grandes}.
+    \item \textbf{1985:} Koblitz y Miller proponen, de forma independiente, las
+          \alert{curvas elípticas} (ECC): misma seguridad con claves \alert{mucho menores}.
   \end{itemize}
-  \vfill
-  \begin{block}{Pregunta del trabajo}
-    No basta con saber que ECC es ``mejor''. \textbf{¿Cuánto vale esa ventaja en la
-    práctica, y por qué?}
-  \end{block}
-  \note{RSA desde los 70, claves crecientes. Koblitz/Miller 1985. Misma seguridad, claves
-  menores. La pregunta: cuánto vale y por qué.}
-\end{frame}
-
-\begin{frame}{Una breve cronología: de RSA a ECC (y más allá)}
+  \vspace{0.2em}
   \centering
-  \vspace{0.4em}
-  \resizebox{\textwidth}{!}{%
+  \resizebox{0.94\textwidth}{!}{%
   \begin{tikzpicture}
     % eje temporal
     \draw[-{Stealth}, very thick, UGRsoft] (-0.4,0) -- (13.7,0);
@@ -116,13 +105,16 @@
     \evt{11.1}{2018}{1}{\textbf{TLS 1.3}: ECDHE; X25519, Ed25519 (Signal, SSH)}
     \evt{12.85}{2024}{-1}{NIST \textbf{PQC}: ML-KEM/ML-DSA (era híbrida)}
   \end{tikzpicture}}
-  \vfill
-  {\scriptsize De claves RSA \alert{cada vez mayores} al despliegue masivo de \alert{ECC};
-   hoy, transición \alert{híbrida} ECC\,$+$\,post-cuántico.}
-  \note{1977 RSA. 1985 ECC (Koblitz/Miller). 2000 estandarizacion NIST FIPS 186-2 y SECG SEC2
-  (P-256, secp256k1). 2008 TLS 1.2. 2009 Bitcoin secp256k1. 2013 NIST retira RSA-1024, sube a
-  2048/3072. 2018 TLS 1.3 con ECDHE, X25519/Ed25519 en Signal y SSH. 2024 NIST estandariza PQC,
-  era hibrida. Hilo: RSA crece, ECC se generaliza, ahora hibrido post-cuantico.}
+
+  \begin{block}{Pregunta del trabajo}
+    \footnotesize No basta con saber que ECC es ``mejor''. \textbf{¿Cuánto vale esa ventaja
+    en la práctica, y por qué?}
+  \end{block}
+  \note{RSA años 70, claves crecientes. 1985 Koblitz/Miller: ECC, misma seguridad con claves
+  menores. Cronologia: 1977 RSA, 1985 ECC, 2000 estandarizacion NIST/SECG (P-256, secp256k1),
+  2008 TLS 1.2, 2009 Bitcoin secp256k1, 2013 NIST retira RSA-1024 (sube a 2048/3072), 2018 TLS
+  1.3 con ECDHE y X25519/Ed25519, 2024 NIST PQC (era hibrida). La pregunta: cuanto vale la
+  ventaja y por que.}
 \end{frame}
 
 \begin{frame}{Objetivo y los tres ejes de comparación}
@@ -185,10 +177,8 @@
   (sin cúspides ni autointersecciones):\;
   $\text{no singular} \iff \Delta = -16(4a^3 + 27b^2) \neq 0$.
   \begin{center}
-    \figordemo[width=0.68\textwidth]{imagenes/ec_shape.png}
+    \figordemo[width=0.86\textwidth]{imagenes/ec_shape.png}
   \end{center}
-  En un \alert{punto singular} la tangente no es única y $2P$ obligaría a dividir por
-  $2y=0$: la \alert{ley de grupo} dejaría de estar bien definida.
   \note{La forma corta es curva eliptica solo si es no singular: discriminante no nulo, sin
   cuspides ni autointersecciones. Factores 16 y 27 por char != 2,3. Tercer panel: en un punto
   singular la tangente no es unica y 2P divide por 2y=0, por eso la ley de grupo falla alli.}
@@ -389,6 +379,61 @@
   pública.
   \note{kP con double-and-add O(log k). Facil k->Q, inviable Q->k = ECDLP. k privada, Q=kP
   publica. ECDH y ECDSA dependen de su dificultad.}
+\end{frame}
+
+\begin{frame}{Double-and-add: cómo se calcula $kP$}
+  \small
+  Se recorren los \alert{bits de $k$} de izquierda a derecha; en cada bit se \alert{duplica}
+  ($\times2$) y, si el bit vale $1$, se \alert{suma $P$}.\;
+  Ejemplo $k=13=(1101)_2$:
+  \vspace{0.3em}
+
+  \centering
+  \resizebox{0.86\textwidth}{!}{%
+  \begin{tikzpicture}[font=\footnotesize,
+      bit/.style={draw, minimum size=0.72cm, font=\bfseries, inner sep=0pt},
+      acc/.style={draw, rounded corners, fill=UGRsoft!12, minimum height=0.8cm,
+                  minimum width=1.05cm},
+      dbl/.style={-{Stealth}, very thick, UGRsoft},
+      add/.style={-{Stealth}, very thick, UGRaccent}]
+
+    % --- vector de bits ---
+    \node (klbl) {$k=$};
+    \node[bit, right=1.5mm of klbl] (kb3) {1};
+    \node[bit, right=0mm of kb3] (kb2) {1};
+    \node[bit, right=0mm of kb2] (kb1) {0};
+    \node[bit, right=0mm of kb1] (kb0) {1};
+    \node[font=\scriptsize, above=0pt of kb3] {MSB};
+    \node[font=\scriptsize, above=0pt of kb0] {LSB};
+
+    % --- cadena del acumulador (multiplicación del punto) ---
+    \node[acc] (a0) at ([yshift=-1.4cm]kb3.south) {$P$};
+    \node[acc, right=0.95cm of a0] (a1) {$2P$};
+    \node[acc, right=0.95cm of a1] (a2) {$3P$};
+    \node[acc, right=0.95cm of a2] (a3) {$6P$};
+    \node[acc, right=0.95cm of a3] (a4) {$12P$};
+    \node[acc, right=0.95cm of a4, fill=UGRaccent!15] (a5) {$\mathbf{13P}$};
+
+    \draw[dbl] (a0) -- node[above, UGRsoft]{$\times2$}   (a1);
+    \draw[add] (a1) -- node[above, UGRaccent]{$+P$}      (a2);
+    \draw[dbl] (a2) -- node[above, UGRsoft]{$\times2$}   (a3);
+    \draw[dbl] (a3) -- node[above, UGRsoft]{$\times2$}   (a4);
+    \draw[add] (a4) -- node[above, UGRaccent]{$+P$}      (a5);
+
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a0.south) {bit\,1};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a2.south) {bit\,1};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a3.south) {bit\,0};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a5.south) {bit\,1};
+  \end{tikzpicture}}
+  \vspace{0.5em}
+
+  {\footnotesize \alert{$13P$ en 5 operaciones} (\textcolor{UGRsoft}{\textbf{3 duplicaciones}}
+  $+$ \textcolor{UGRaccent}{\textbf{2 sumas}}), no 12 sumas: en general $\sim\!\log_2 k$
+  pasos $\Rightarrow O(\log k)$.}
+  \note{Double-and-add con k=13=1101. Se leen los bits MSB->LSB: primer 1 inicializa R=P;
+  cada bit siguiente duplica y si es 1 suma P. Traza: P, 2P, 3P, 6P, 12P, 13P. Resultado en 5
+  operaciones (3 dobles + 2 sumas) en lugar de 12 sumas. Coste O(log k), lo que hace kP
+  eficiente (y el ECDLP sigue siendo dificil en sentido inverso).}
 \end{frame}
 
 \begin{frame}{Atacar el ECDLP: el algoritmo rho de Pollard}
@@ -832,38 +877,38 @@
 %==============================================================================
 \section{Conclusiones y trabajo futuro}
 
-\begin{frame}{Limitaciones (conscientes, de alcance)}
-  \begin{itemize}
-    \item No es de \alert{tiempo constante} $\Rightarrow$ no apto para producción.
-    \item RSA \alert{de libro}: sin OAEP ni PSS (trabajo futuro).
-    \item El modelo \alert{Jacobiano} solo se implementó para cuerpos primos $\mathbb{F}_p$.
-  \end{itemize}
-  \vfill
-  \begin{exampleblock}{Criterio}
-    Adelantar las limitaciones es integridad académica: son decisiones de alcance
-    documentadas, no olvidos.
-  \end{exampleblock}
-  \note{No constant-time, RSA de libro sin OAEP/PSS, Jacobiano solo F_p. Las digo yo.}
-\end{frame}
-
-\begin{frame}{Conclusiones}
+\begin{frame}{Conclusiones: ECC frente a RSA}
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
-      \begin{block}{Estructural (transferible)}
-        La ventaja de ECC en tamaño de clave es \alert{matemática} (ECDLP exponencial) y
-        \textbf{crece} con la seguridad.
+      \begin{block}{ECC — cuándo elegirla}
+        \footnotesize
+        \textbf{Pros:} claves pequeñas (256\,b $\approx$ RSA-3072); generación de claves y
+        \emph{firma} rápidas; menos ancho de banda, memoria y energía.\\[0.5ex]
+        \textbf{Ideal para:} TLS 1.3 efímero, móvil/IoT, \emph{passkeys}, Signal/WhatsApp,
+        Bitcoin/Ethereum (secp256k1).
       \end{block}
     \end{column}
     \begin{column}{0.5\textwidth}
-      \begin{block}{De implementación (del entorno)}
-        Las cifras de velocidad (Jacobiano $1.8\times$, binario lento) dependen de
-        compilador, arquitectura y bibliotecas.
+      \begin{block}{RSA — cuándo sigue ganando}
+        \footnotesize
+        \textbf{Pros:} \emph{verificación} muy rápida ($e=65537$); esquema simple y ubicuo;
+        enorme base instalada y compatibilidad.\\[0.5ex]
+        \textbf{Ideal para:} PKI/certificados heredados, \emph{tokens}/JWT verificados muchas
+        veces, sistemas legados de larga vida.
       \end{block}
     \end{column}
   \end{columns}
   \vfill
-  \centering \alert{El valor del trabajo: separar el álgebra de la ingeniería.}
-  \note{Estructural (matematica, crece) vs implementacion (depende del entorno). Separarlos.}
+  \footnotesize\centering
+  \alert{No hay ganador absoluto:} la ventaja de ECC en tamaño de clave es \textbf{estructural}
+  (ECDLP exponencial) y \textbf{crece} con la seguridad; RSA conserva la ventaja en
+  \textbf{verificación}. \\[0.3ex]
+  \alert{El valor del trabajo: separar el álgebra de la ingeniería.}
+  \note{ECC: claves pequenas, keygen y firma rapidas, menos ancho de banda/energia; ideal TLS
+  1.3, movil/IoT, passkeys, Signal, Bitcoin. RSA: verificacion muy rapida (e=65537), simple,
+  ubicuo, compatibilidad; ideal PKI heredada, JWT verificados muchas veces, legados. No hay
+  ganador absoluto: ventaja de ECC estructural y crece; RSA gana en verificacion. Separar
+  algebra de ingenieria.}
 \end{frame}
 
 \begin{frame}{ECC hoy en día: ¿dónde se usa?}
@@ -914,6 +959,28 @@
 
 %-------------------------------------------- Backup ---
 \appendix
+
+\begin{frame}{Respaldo - de la ecuación general a la forma corta}
+  \scriptsize
+  Partimos de la \alert{ecuación general de Weierstrass} (char$(K)\neq 2,3$):
+  \[ y^2 + a_1 xy + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6. \]
+
+  \textbf{Paso 1 — completar el cuadrado en $y$} (usa char$\neq 2$). El miembro izquierdo es
+  $y^2 + (a_1 x + a_3)\,y$; con $y \mapsto y - \tfrac{1}{2}(a_1 x + a_3)$ se anula el término
+  lineal en $y$ y queda
+  \[ y^2 = x^3 + \tfrac{b_2}{4}x^2 + \tfrac{b_4}{2}x + \tfrac{b_6}{4},
+     \qquad
+     b_2 = a_1^2 + 4a_2,\;\; b_4 = 2a_4 + a_1 a_3,\;\; b_6 = a_3^2 + 4a_6. \]
+
+  \textbf{Paso 2 — eliminar el término en $x^2$} (usa char$\neq 3$). Para el cúbico
+  $x^3 + p x^2 + qx + r$ (aquí $p=\tfrac{b_2}{4},\,q=\tfrac{b_4}{2},\,r=\tfrac{b_6}{4}$), la
+  traslación $x \mapsto x - \tfrac{p}{3} = x - \tfrac{b_2}{12}$ lo \emph{deprime}:
+  \[ \boxed{\,y^2 = x^3 + a x + b\,},\qquad
+     a = \tfrac{b_4}{2} - \tfrac{b_2^2}{48},\qquad
+     b = \tfrac{b_6}{4} - \tfrac{b_2 b_4}{24} + \tfrac{b_2^3}{864}. \]
+  Las divisiones por $2$ (paso 1) y por $3$ (paso 2) son exactamente la razón de exigir
+  char$(K)\neq 2,3$. El discriminante resulta $\Delta = -16(4a^3 + 27b^2)$.
+\end{frame}
 
 \begin{frame}{Respaldo - corrección de la verificación ECDSA}
   \footnotesize
