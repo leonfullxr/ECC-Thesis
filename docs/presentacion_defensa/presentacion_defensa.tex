@@ -118,8 +118,8 @@
 \end{frame}
 
 \begin{frame}{Objetivo y los tres ejes de comparación}
-  \textbf{Objetivo:} implementar ambos criptosistemas en C++17 y compararlos
-  empíricamente con rigor.
+  \textbf{Objetivo:} implementar ambos criptosistemas y compararlos
+  empíricamente con rigor sin sesgos en un entorno reproducible.
   \vfill
   \begin{columns}[t]
     \begin{column}{0.32\textwidth}
@@ -138,11 +138,10 @@
       \end{block}
     \end{column}
   \end{columns}
-  \vfill
-  \footnotesize El valor del trabajo es separar lo que es \alert{álgebra} de lo que es
-  \alert{ingeniería}.
   \note{Implemento ambos en C++17. Tres ejes, cada uno una pregunta. Separar álgebra de
-  implementación.}
+  implementación. Ademas: arquitectura reproducible (entorno+semilla), medicion sin sesgos
+  (calentamiento+repeticiones+mediana), y eleccion de lenguaje/bibliotecas C++17+NTL/GMP.
+  Detalle en la seccion de implementacion y metodologia.}
 \end{frame}
 
 %==============================================================================
@@ -244,8 +243,6 @@
       \begin{block}{Teorema de Hasse}
         $\bigl|\,\#E(\mathbb{F}_q) - (q+1)\,\bigr| \le 2\sqrt{q}$
       \end{block}
-      \footnotesize Estructura:
-      $E(\mathbb{F}_q)\cong \mathbb{Z}/n_1 \oplus \mathbb{Z}/n_2$, $n_1\mid n_2$. \\[0.5ex]
       En cripto: subgrupo cíclico de \alert{orden primo $n$}, con $\#E = h\cdot n$ (cofactor
       $h$ pequeño). La dificultad del ECDLP es $\sim\!\sqrt{n}$.
     \end{column}
@@ -645,6 +642,52 @@
 %==============================================================================
 \section{Implementación y metodología}
 
+\begin{frame}{Decisiones clave de diseño del benchmark}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \textbf{Reproducibilidad}
+      \begin{itemize}\scriptsize
+        \setlength{\itemsep}{0pt}
+        \item \alert{Docker}: Ubuntu 22.04; GMP 6.3.0 y NTL 11.5.1 compilados desde fuente.
+        \item Compilador \alert{fijo}: \texttt{g++ -std=c++17 -O2} (sin
+          \texttt{-march=native}, por portabilidad).
+        \item \alert{RNG con semilla fija} ($s{=}0$): mismo flujo aleatorio para todos los
+          algoritmos $\Rightarrow$ comparación pareada.
+      \end{itemize}
+      \textbf{Medición del tiempo}
+      \begin{itemize}\scriptsize
+        \setlength{\itemsep}{0pt}
+        \item \texttt{std::chrono::high\_resolution\_clock}, resolución de microsegundos.
+        \item \alert{3 repeticiones de calentamiento}, descartadas antes de medir (cachés,
+          predictor de saltos).
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Rigor estadístico}
+      \begin{itemize}\scriptsize
+        \setlength{\itemsep}{0pt}
+        \item \alert{$N=100$ repeticiones} por combinación algoritmo/tamaño de clave o curva.
+        \item Por medida: media, \alert{mediana}, varianza, desviación típica, mín/máx y
+          percentiles P5/P95.
+        \item La \alert{mediana} es la métrica principal de las tablas del TFG: robusta
+          frente a \emph{outliers} (p.\,ej.\ generación de claves RSA).
+      \end{itemize}
+      \begin{alertblock}{En cifras}
+        \scriptsize 72 configuraciones medidas (24 RSA $+$ 18 ECC afín $+$ 15 Jacobiano
+        $+$ 15 binario)\\[0.3ex]
+        Hardware: AMD Ryzen 9 7950X, 64\,GB RAM, ejecución \alert{monohilo}
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \note{Docker Ubuntu 22.04, GMP 6.3.0 y NTL 11.5.1 desde fuente. Compilador fijo g++ -O2 sin
+  march=native por portabilidad. RNG semilla fija s=0 para comparacion pareada. chrono
+  high_resolution_clock, microsegundos. 3 iteraciones de calentamiento descartadas. N=100
+  repeticiones por configuracion. Se calculan media, mediana, varianza, desviacion tipica,
+  min/max, percentiles P5/P95; la mediana es la metrica principal por ser robusta a outliers.
+  72 configuraciones totales (24 RSA + 18 ECC afin + 15 Jacobiano + 15 binario). Hardware:
+  Ryzen 9 7950X, 64GB RAM, monohilo.}
+\end{frame}
+
 \begin{frame}{Arquitectura del proyecto}
 % Capturamos primero la figura en una caja y despues la escalamos a la diapositiva.
 \begin{lrbox}{\arqbox}%
@@ -751,6 +794,7 @@
   Actions, scripts que ejecutan los binarios y generan artefactos (CSV, graficas, memoria).
   Todo encapsulado en la imagen leonfullxr/ecc-benchmarks:latest para reproducibilidad.}
 \end{frame}
+
 
 \begin{frame}{Metodología - elección de las opciones de compilación}
   \centering
@@ -936,8 +980,8 @@
 
 \begin{frame}{Trabajo futuro}
   \begin{itemize}
-    \item Padding seguro: \alert{OAEP} (cifrado) y \alert{PSS} (firma).
-    \item Optimizaciones: \alert{NAF}, precomputación; portar el binario a Jacobiano.
+    \item Padding seguro: \alert{OAEP} (cifrado) y \alert{PSS} (firma) en RSA.
+    \item Optimizaciones: \alert{Lopez-Dahab} en cuerpos binarios. 
     \item \textbf{Horizonte post-cuántico:} Shor rompe \alert{RSA y ECC a la vez}.
           \\ NIST (2024): ML-KEM, ML-DSA, SLH-DSA (retículos y hashes).
   \end{itemize}
