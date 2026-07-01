@@ -53,6 +53,9 @@ BENCH_ITERS ?= 100
 OPENSSL_SECONDS ?= 50
 # Iteraciones para la comparativa de flags de compilador
 FLAG_ITERS ?= 100
+# Repeticiones (compilacion fija, N ejecuciones) por conjunto de flags, para
+# amortiguar el ruido de una sola ejecucion; se reporta la mediana
+FLAG_REPEATS ?= 5
 RANDOM_SEED := $(shell bash -c "awk 'BEGIN{srand();print( int(65536*rand()) )}'")
 RR := ./
 SEED := $(RANDOM_SEED)
@@ -105,7 +108,7 @@ show-info:
 	@echo "$(IFG) -  make slides$(EC)             Compile the Beamer defense presentation (PDF)"
 	@echo "$(IFG) -  make reproduce$(EC)          Full pipeline: benchmark+openssl+flags+figures"
 	@echo ""
-	@echo "$(IFG)  Variables: OPT, BENCH_ITERS, OPENSSL_SECONDS, FLAG_ITERS, KEY_SIZE, ITERS$(EC)"
+	@echo "$(IFG)  Variables: OPT, BENCH_ITERS, OPENSSL_SECONDS, FLAG_ITERS, FLAG_REPEATS, KEY_SIZE, ITERS$(EC)"
 	@echo "$(IFG)  Ej.: make benchmark OPT=-O2 BENCH_ITERS=100$(EC)"
 	@echo ""
 
@@ -190,8 +193,8 @@ compare-openssl:
 
 # ECC performance vs compiler optimization flags (+ chart)
 compare-compiler-flags:
-	@echo -e "$(LGFG)Comparing compiler flags ($(FLAG_ITERS) iterations)...$(EC)"
-	@bash $(SCRIPTS_DIR)/compare_compiler_flags.sh $(FLAG_ITERS)
+	@echo -e "$(LGFG)Comparing compiler flags ($(FLAG_ITERS) iterations x $(FLAG_REPEATS) repeats)...$(EC)"
+	@bash $(SCRIPTS_DIR)/compare_compiler_flags.sh $(FLAG_ITERS) $(FLAG_REPEATS)
 
 # Full RNG statistical analysis pipeline
 rng-full:
