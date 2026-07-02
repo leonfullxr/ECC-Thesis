@@ -25,6 +25,7 @@
 \definecolor{UGRaccent}{HTML}{A6192E}
 \definecolor{UGRsoft}{HTML}{3E5C76}
 \definecolor{UGRgreen}{HTML}{2E7D32}
+\definecolor{RSAbar}{HTML}{2E6DA4}   % azul de serie (RSA) en las gráficas TikZ
 \setbeamercolor{frametitle}{bg=UGRdark}
 \setbeamercolor{progress bar}{fg=UGRaccent}
 \setbeamercolor{alerted text}{fg=UGRaccent}
@@ -55,6 +56,19 @@
     \node[anchor=north, text width=2.2cm, align=center, font=\tiny] at (#1,-0.5)
       {\textcolor{UGRaccent}{\bfseries #2}\\[1pt] #4};%
   \fi
+}
+
+% --- Macro: grupo de barras RSA/ECC de la gráfica de motivación ---------
+%  \barpair{y}{etiqueta seguridad}{rsa bits}{ecc bits}{razon}
+%  escala: 1 cm = 1536 bits  (RSA-15360 -> 10 cm)
+\newcommand{\barpair}[5]{%
+  \node[anchor=east, font=\scriptsize] at (-0.15,#1-0.30) {#2};%
+  \fill[RSAbar]    (0,#1) rectangle ({#3/1536},#1-0.24);%
+  \fill[UGRaccent] (0,#1-0.32) rectangle ({#4/1536},#1-0.56);%
+  \node[anchor=west, font=\tiny, text=UGRdark] at ({#3/1536+0.06},#1-0.12) {#3};%
+  \node[anchor=west, font=\tiny, text=UGRdark] at ({#4/1536+0.06},#1-0.44) {#4};%
+  \node[anchor=west, font=\scriptsize\bfseries, text=UGRaccent]
+    at (10.95,#1-0.30) {$#5\times$};%
 }
 
 % --- Macro: figura real si existe; si no, recuadro con el nombre --------
@@ -115,16 +129,64 @@
     \evt{11.1}{2018}{1}{\textbf{TLS 1.3}: ECDHE; X25519, Ed25519 (Signal, SSH)}
     \evt{12.85}{2024}{-1}{NIST \textbf{PQC}: ML-KEM/ML-DSA (era híbrida)}
   \end{tikzpicture}}
+  \vspace{0.8em}
 
-  \begin{block}{Pregunta del trabajo}
-    \footnotesize No basta con saber que ECC es ``mejor''. \textbf{¿Cuánto vale esa ventaja
-    en la práctica, y por qué?}
-  \end{block}
+  \footnotesize En 40 años ECC ha pasado de propuesta teórica a sostener TLS, Bitcoin y las
+  \emph{passkeys}. ¿Por qué desplazó a RSA? La respuesta está en el \alert{tamaño de las
+  claves}\,\ldots
   \note{RSA años 70, claves crecientes. 1985 Koblitz/Miller: ECC, misma seguridad con claves
   menores. Cronologia: 1977 RSA, 1985 ECC, 2000 estandarizacion NIST/SECG (P-256, secp256k1),
   2008 TLS 1.2, 2009 Bitcoin secp256k1, 2013 NIST retira RSA-1024 (sube a 2048/3072), 2018 TLS
-  1.3 con ECDHE y X25519/Ed25519, 2024 NIST PQC (era hibrida). La pregunta: cuanto vale la
-  ventaja y por que.}
+  1.3 con ECDHE y X25519/Ed25519, 2024 NIST PQC (era hibrida). Cerrar con: por que ECC
+  desplazo a RSA -> siguiente diapositiva, el tamano de las claves.}
+\end{frame}
+
+\begin{frame}{El problema, en una imagen: bits necesarios a igual seguridad}
+  \centering
+  \begin{tikzpicture}[yscale=0.95]
+    % --- leyenda ---
+    \fill[RSAbar]    (0,0.62) rectangle (0.34,0.80);
+    \node[anchor=west, font=\scriptsize] at (0.40,0.71) {RSA};
+    \fill[UGRaccent] (2.0,0.62) rectangle (2.34,0.80);
+    \node[anchor=west, font=\scriptsize] at (2.40,0.71) {ECC};
+    \node[anchor=west, font=\tiny\itshape, text=black!55] at (4.2,0.71)
+      {longitud de clave (bits) para el mismo nivel de seguridad (NIST SP 800-57)};
+
+    % --- banda que resalta el estándar actual (128 bits) ---
+    \fill[black!6] (-1.75,-1.55) rectangle (11.75,-2.35);
+    \node[anchor=west, font=\tiny\itshape, text=black!55] at (2.35,-2.17)
+      {estándar actual};
+
+    \barpair{0}{80 bits}{1024}{160}{6}
+    \barpair{-0.85}{112 bits}{2048}{224}{9}
+    \barpair{-1.70}{\bfseries 128 bits}{3072}{256}{12}
+    \barpair{-2.55}{192 bits}{7680}{384}{20}
+    \barpair{-3.40}{256 bits}{15360}{512}{30}
+
+    % --- línea base ---
+    \draw[black!30] (0,0.15) -- (0,-4.05);
+  \end{tikzpicture}
+
+  \vspace{0.4em}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \footnotesize\centering \textcolor{RSAbar}{\textbf{RSA}}: factorización $\to$ ataques
+      \alert{subexponenciales} $\Rightarrow$ la clave se dispara.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \footnotesize\centering \textcolor{UGRaccent}{\textbf{ECC}}: ECDLP $\to$ mejor ataque
+      \alert{exponencial}, $O(\sqrt{n})$ $\Rightarrow$ crece lineal.
+    \end{column}
+  \end{columns}
+  \vspace{0.2em}
+  \footnotesize\centering La ventaja es \alert{estructural} y \textbf{crece} con el nivel de
+  seguridad: de $6\times$ a $30\times$.
+  \note{Grafica de barras: bits de clave a igual seguridad segun NIST SP 800-57. A 128 bits
+  (estandar actual): RSA-3072 vs ECC-256, 12x. La razon crece de 6x (80 bits) a 30x (256
+  bits). Por que: RSA se ataca con factorizacion (GNFS, subexponencial L[1/3]) y ECC con el
+  ECDLP, cuyo mejor ataque generico (rho de Pollard, respaldo) es exponencial O(sqrt n). La
+  ventaja es estructural, no de implementacion, y crece con la seguridad. Esta imagen resume
+  el porque del TFG: cuantificar que vale esa ventaja en la practica.}
 \end{frame}
 
 \begin{frame}{Objetivo y los tres ejes de comparación}
@@ -148,53 +210,41 @@
       \end{block}
     \end{column}
   \end{columns}
+  \vfill
+  \footnotesize\centering El instrumento de medida es parte del objetivo: un
+  \alert{banco de pruebas propio} en C++17, contenedorizado y automatizado de extremo a
+  extremo, donde cada resultado se \textbf{reproduce con un comando}.
   \note{Implemento ambos en C++17. Tres ejes, cada uno una pregunta. Separar álgebra de
-  implementación. Ademas: arquitectura reproducible (entorno+semilla), medicion sin sesgos
-  (calentamiento+repeticiones+mediana), y eleccion de lenguaje/bibliotecas C++17+NTL/GMP.
-  Detalle en la seccion de implementacion y metodologia.}
+  implementación. El cuarto elemento es el instrumento: banco de pruebas propio,
+  arquitectura reproducible (Docker+semilla fija), medicion sin sesgos
+  (calentamiento+repeticiones+mediana), C++17+NTL/GMP, todo automatizado (make reproduce).
+  Detalle en la seccion de ingenieria.}
 \end{frame}
 
 %==============================================================================
 \section{Fundamentos: curvas elípticas}
 
-\begin{frame}{¿Qué es una curva elíptica? Formas usadas en el TFG}
-  \small
-  Una \alert{curva elíptica} sobre un cuerpo $K$: soluciones de la \alert{ecuación general de
-  Weierstrass} $y^2 + a_1 xy + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6$, junto con un
-  \alert{punto del infinito} $\mathcal{O}$ (neutro del grupo). En el TFG se usan dos familias
-  de curvas:
+\begin{frame}{¿Qué es una curva elíptica?}
+  \footnotesize
+  El conjunto de soluciones de una ecuación cúbica sobre un cuerpo finito, más un
+  \alert{punto del infinito} $\mathcal{O}$.
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
-      \textbf{Cuerpos primos $\mathbb{F}_p$}
-      \[ \boxed{\,y^2 = x^3 + ax + b\,} \]
-      \footnotesize Curvas del TFG: \alert{secp256k1}, \alert{NIST P-256}, \alert{NIST P-384}.
+      \centering
+      \textbf{Cuerpos primos $\mathbb{F}_p$}\; $\boxed{\,y^2 = x^3 + ax + b\,}$\\[0.4ex]
+      \footnotesize \alert{secp256k1} (Bitcoin), \alert{NIST P-256}, \alert{NIST P-384}
     \end{column}
     \begin{column}{0.5\textwidth}
-      \textbf{Cuerpos binarios $\mathbb{F}_{2^m}$}
-      \[ \boxed{\,y^2 + xy = x^3 + ax^2 + b\,},\quad b \neq 0 \]
-      \footnotesize Curvas \alert{SEC 2} del TFG: \texttt{sect163k1}, \texttt{sect233k1},
-      \texttt{sect283k1} (Koblitz, $a\in\{0,1\}$, $b=1$) y \texttt{sect233r1},
-      \texttt{sect283r1} (aleatorias). No singular $\iff b\neq 0$.
+      \centering
+      \textbf{Cuerpos binarios $\mathbb{F}_{2^m}$}\;
+      $\boxed{\,y^2 + xy = x^3 + ax^2 + b\,}$\\[0.4ex]
+      \footnotesize 5 curvas \alert{SEC 2}: 3 Koblitz (\texttt{sect*k1}) $+$ 2 aleatorias
+      (\texttt{sect*r1})
     \end{column}
   \end{columns}
-  \note{Definicion: soluciones de la general de Weierstrass mas O (neutro). Dos familias de
-  curvas: primos (secp256k1, NIST P-256, NIST P-384) con y^2=x^3+ax+b; binarios SEC2
-  (sect163k1, sect233k1, sect283k1 Koblitz a en 0,1 b=1; sect233r1, sect283r1 aleatorias) con
-  y^2+xy=x^3+ax^2+b, b!=0. La derivacion completa (division por 2 y 3, char!=2,3) esta en el
-  respaldo.}
-\end{frame}
-
-\begin{frame}{Singularidad: ¿cuándo es una curva elíptica válida?}
-  \footnotesize
-  La forma corta $y^2=x^3+ax+b$ define una curva elíptica solo si es \alert{no singular}
-  (sin cúspides ni autointersecciones):\;
-  $\text{no singular} \iff \Delta = -16(4a^3 + 27b^2) \neq 0$.
   \begin{center}
-    \figordemo[width=0.86\textwidth]{imagenes/ec_shape.png}
+    \figordemo[width=0.80\textwidth]{imagenes/ec_shape.png}
   \end{center}
-  \note{La forma corta es curva eliptica solo si es no singular: discriminante no nulo, sin
-  cuspides ni autointersecciones. Factores 16 y 27 por char != 2,3. Tercer panel: en un punto
-  singular la tangente no es unica y 2P divide por 2y=0, por eso la ley de grupo falla alli.}
 \end{frame}
 
 \begin{frame}{La ley de grupo: cómo se ``suman'' puntos}
@@ -207,18 +257,15 @@
         \item \textbf{Duplicación $2P$:} igual, con la \alert{tangente} en $P$.
         \item \textbf{Neutro:} $\mathcal{O}$ (rectas verticales).
       \end{itemize}
-      \vspace{1ex}
-      \footnotesize Suma y duplicación son las \alert{operaciones atómicas}. La
-      \alert{multiplicación escalar} $kP$ no es nueva: es repetirlas (\emph{double-and-add},
-      más adelante).
+      \vspace{0.5ex}
+      \footnotesize Son las \alert{operaciones atómicas}: la \alert{multiplicación
+      escalar} $kP$ es repetirlas (\emph{double-and-add}).
 \end{column}
     \begin{column}{0.58\textwidth}
       \centering
       \figordemo[width=\textwidth]{imagenes/ec_addition.png}
     \end{column}
   \end{columns}
-  \note{Grupo abeliano. Suma: cuerda, tercer corte, reflejar. Duplicacion: tangente. Neutro
-  O. Inverso: reflejo. Operacion atomica. Asociatividad es el axioma no trivial (respaldo).}
 \end{frame}
 
 \begin{frame}{El grupo $(E(K),+)$: estructura y orden}
@@ -455,42 +502,6 @@
   se despeja k. O(sqrt n) tiempo, O(1) memoria. NO confundir con rho para factorizacion.}
 \end{frame}
 
-\begin{frame}{La consecuencia: claves mucho más pequeñas}
-  \begin{columns}[c]
-    \begin{column}{0.46\textwidth}
-      \begin{itemize}
-        \item \textbf{RSA:} factorización $\to$ ataques \alert{subexponenciales}
-              ($L_n[1/3]$).
-        \item \textbf{ECC:} ECDLP $\to$ mejor ataque \alert{exponencial}, $O(\sqrt{n})$.
-      \end{itemize}
-      \vfill
-      \begin{block}{Idea clave}
-        La ventaja de tamaño de clave es \alert{estructural} y \textbf{crece} con el nivel
-        de seguridad.
-      \end{block}
-    \end{column}
-    \begin{column}{0.54\textwidth}
-      \centering
-      \renewcommand{\arraystretch}{1.25}
-      \begin{tabular}{cccc}
-        \toprule
-        \textbf{Seguridad} & \textbf{RSA} & \textbf{ECC} & \textbf{Razón} \\
-        \midrule
-        80 bits  & 1024 b  & 160 b & 6$\times$ \\
-        112 bits & \alert{2048 b}  & 224 b & 9$\times$ \\
-        128 bits & 3072 b  & 256 b & 12$\times$ \\
-        192 bits & 7680 b  & 384 b & 20$\times$ \\
-        256 bits & 15360 b & 512 b & 30$\times$ \\
-        \bottomrule
-      \end{tabular}
-      \\[1ex]
-      \footnotesize Equivalencias NIST SP 800-57. La razón \alert{crece} con la seguridad.
-    \end{column}
-  \end{columns}
-  \note{RSA subexp, ECC exp. Tabla NIST: 2048/224 a 112-bit (9x), 3072/256 a 128 (12x),
-  hasta 30x a 256-bit. La brecha crece. El TFG midio RSA hasta 4096.}
-\end{frame}
-
 %==============================================================================
 \section{Protocolos: ECDH, ECDSA y RSA}
 
@@ -636,52 +647,83 @@
 \end{frame}
 
 %==============================================================================
-\section{Implementación y metodología}
+\section{Ingeniería del banco de pruebas}
 
-\begin{frame}{Decisiones clave de diseño del benchmark}
+\begin{frame}{Elección del \emph{stack}: C++17 + NTL/GMP}
+  \small
   \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
-      \textbf{Reproducibilidad}
-      \begin{itemize}\scriptsize
-        \setlength{\itemsep}{0pt}
-        \item \alert{Docker}: Ubuntu 22.04; GMP 6.3.0 y NTL 11.5.1 compilados desde fuente.
-        \item Compilador \alert{fijo}: \texttt{g++ -std=c++17 -O2} (sin
-          \texttt{-march=native}, por portabilidad).
-        \item \alert{RNG con semilla fija} ($s{=}0$): mismo flujo aleatorio para todos los
-          algoritmos $\Rightarrow$ comparación pareada.
-      \end{itemize}
-      \textbf{Medición del tiempo}
-      \begin{itemize}\scriptsize
-        \setlength{\itemsep}{0pt}
-        \item \texttt{std::chrono::high\_resolution\_clock}, resolución de microsegundos.
-        \item \alert{3 repeticiones de calentamiento}, descartadas antes de medir (cachés,
-          predictor de saltos).
+    \begin{column}{0.54\textwidth}
+      \textbf{Lo elegido}
+      \begin{itemize}\footnotesize
+        \setlength{\itemsep}{2pt}
+        \item \alert{C++17}: control total del camino caliente; sin recolector de basura
+              ni intérprete que contaminen los tiempos.
+        \item \alert{NTL 11.5.1 sobre GMP 6.3.0}: la referencia en aritmética de precisión
+              arbitraria (\texttt{ZZ\_p} para $\mathbb{F}_p$, \texttt{GF2E} para
+              $\mathbb{F}_{2^m}$).
+        \item \alert{SHA-256 propio} (FIPS 180-4): el hash de ECDSA sin dependencias
+              externas que alteren las medidas.
+        \item OpenSSL 3.0.2: \textbf{solo} como \emph{baseline} externo de contraste.
       \end{itemize}
     \end{column}
-    \begin{column}{0.5\textwidth}
-      \textbf{Rigor estadístico}
-      \begin{itemize}\scriptsize
-        \setlength{\itemsep}{0pt}
-        \item \alert{$N=100$ repeticiones} por combinación algoritmo/tamaño de clave o curva.
-        \item Por medida: media, \alert{mediana}, varianza, desviación típica, mín/máx y
-          percentiles P5/P95.
-        \item La \alert{mediana} es la métrica principal de las tablas del TFG: robusta
-          frente a \emph{outliers} (p.\,ej.\ generación de claves RSA).
+    \begin{column}{0.46\textwidth}
+      \textbf{Lo descartado (y por qué)}
+      \begin{itemize}\footnotesize
+        \setlength{\itemsep}{2pt}
+        \item \textbf{Python / Sage}: esconden justo la aritmética que se quiere estudiar
+              y medir.
+        \item \textbf{Rust}: alternativa moderna razonable, pero con un ecosistema de
+              multiprecisión menos maduro que NTL/GMP.
+        \item \textbf{Construir sobre OpenSSL}: mediríamos su ensamblador a mano, no los
+              algoritmos.
       \end{itemize}
+    \end{column}
+  \end{columns}
+  \note{C++17: control del camino caliente, sin GC ni interprete. NTL sobre GMP: estandar de
+  oro en multiprecision; ZZ_p para Fp (delega en ensamblador GMP), GF2E para F2m. SHA-256
+  propio por integridad academica y para que ninguna dependencia altere los tiempos. OpenSSL
+  solo baseline. Descartes: Python/Sage esconden la aritmetica (justo lo que se estudia);
+  Rust razonable pero ecosistema bignum menos maduro; construir sobre OpenSSL mediria su
+  ensamblador, no los algoritmos.}
+\end{frame}
+
+\begin{frame}{Tres retos de ingeniería (y cómo se resolvieron)}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{1. Medir sin engañarse}
+        \scriptsize Ruido del SO, cachés frías, \emph{outliers} $\Rightarrow$
+        \alert{3 iteraciones de calentamiento} descartadas; \alert{$N=100$} medidas por
+        configuración (\texttt{std::chrono}, resolución de µs); \alert{mediana} como
+        métrica principal (robusta a \emph{outliers}, p.\,ej.\ keygen RSA); media,
+        desviación y P5/P95 guardadas en los CSV.
+      \end{block}
+      \begin{block}{2. Entorno determinista}
+        \scriptsize ``En mi máquina sale otra cosa'' $\Rightarrow$ \alert{Docker}
+        (Ubuntu 22.04; GMP 6.3.0 y NTL 11.5.1 compilados desde fuente); compilador fijo
+        \texttt{g++ -O2}, sin \texttt{-march=native}; ejecución \alert{monohilo}.
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{3. Comparar con las mismas entradas}
+        \scriptsize \alert{RNG con semilla fija} ($s{=}0$): todos los algoritmos ven el
+        mismo flujo aleatorio $\Rightarrow$ comparación \alert{pareada}. Y como todo
+        depende de él, el RNG se \alert{validó estadísticamente}: uniformidad ($\chi^2$,
+        Kolmogorov--Smirnov), rachas, autocorrelación y entropía.
+      \end{block}
       \begin{alertblock}{En cifras}
         \scriptsize 72 configuraciones medidas (24 RSA $+$ 18 ECC afín $+$ 15 Jacobiano
         $+$ 15 binario)\\[0.3ex]
-        Hardware: AMD Ryzen 9 7950X, 64\,GB RAM, ejecución \alert{monohilo}
+        Hardware: AMD Ryzen 9 7950X, 64\,GB RAM
       \end{alertblock}
     \end{column}
   \end{columns}
-  \note{Docker Ubuntu 22.04, GMP 6.3.0 y NTL 11.5.1 desde fuente. Compilador fijo g++ -O2 sin
-  march=native por portabilidad. RNG semilla fija s=0 para comparacion pareada. chrono
-  high_resolution_clock, microsegundos. 3 iteraciones de calentamiento descartadas. N=100
-  repeticiones por configuracion. Se calculan media, mediana, varianza, desviacion tipica,
-  min/max, percentiles P5/P95; la mediana es la metrica principal por ser robusta a outliers.
-  72 configuraciones totales (24 RSA + 18 ECC afin + 15 Jacobiano + 15 binario). Hardware:
-  Ryzen 9 7950X, 64GB RAM, monohilo.}
+  \note{Reto 1, medir sin enganarse: ruido del SO y caches frias -> 3 calentamientos
+  descartados, N=100, chrono en microsegundos; mediana como metrica principal (robusta a
+  outliers como keygen RSA); media, desviacion, P5/P95 en los CSV. Reto 2, entorno
+  determinista: Docker Ubuntu 22.04 con GMP/NTL desde fuente, g++ -O2 fijo sin march=native
+  (portabilidad), monohilo. Reto 3, mismas entradas: semilla fija s=0 -> comparacion pareada;
+  el RNG validado estadisticamente (chi cuadrado, KS, rachas, autocorrelacion, entropia).
+  En cifras: 72 configuraciones, Ryzen 9 7950X, 64GB.}
 \end{frame}
 
 \begin{frame}{Arquitectura del proyecto}
@@ -709,12 +751,12 @@
 % ===================== Banda central: codigo fuente =====================
     \node (main) [fill=orange!15] {main.cpp};
     % fila de modulos centrada bajo main (ecc y eccb a ambos lados, rsa/sha en los extremos)
-    \node (ecc)  [below left=1.4cm and 0.35cm of main]  {ecc.\{hpp,cpp\}};
-    \node (eccb) [below right=1.4cm and 0.35cm of main] {ecc\_binary.\{hpp,cpp\}};
-    \node (rsa)  [left=0.7cm of ecc]   {rsa.\{hpp,cpp\}};
-    \node (sha)  [right=0.7cm of eccb] {sha256.\{hpp,cpp\}};
+    \node (ecc)  [below left=1.4cm and 0.9cm of main]  {ecc.\{hpp,cpp\}};
+    \node (eccb) [below right=1.4cm and 0.9cm of main] {ecc\_binary.\{hpp,cpp\}};
+    \node (rsa)  [left=1.4cm of ecc]   {rsa.\{hpp,cpp\}};
+    \node (sha)  [right=1.4cm of eccb] {sha256.\{hpp,cpp\}};
     \node (rng)    [below=1.4cm of ecc, fill=green!10] {rng.\{hpp,cpp\}};
-    \node (common) [right=1.0cm of rng, fill=green!10] {common.hpp};
+    \node (common) [right=2.6cm of rng, fill=green!10] {common.hpp};
 
     \draw [arrow] (main) -- (rsa);
     \draw [arrow] (main) -- (ecc);
@@ -739,9 +781,9 @@
 % ===================== Banda superior: configuracion y build =====================
     \node[small, fill=orange!12, anchor=south west] (dockerfile)
           at ([yshift=12mm]srcbox.north west) {Dockerfile};
-    \node[small, fill=orange!12, right=3mm of dockerfile] (compose)  {docker-compose.yml};
-    \node[small, fill=orange!12, right=3mm of compose]    (makefile) {Makefile};
-    \node[small, fill=orange!12, right=3mm of makefile]   (reqs)     {requirements.txt};
+    \node[small, fill=orange!12, right=9mm of dockerfile] (compose)  {docker-compose.yml};
+    \node[small, fill=orange!12, right=9mm of compose]    (makefile) {Makefile};
+    \node[small, fill=orange!12, right=9mm of makefile]   (reqs)     {requirements.txt};
 
     \begin{scope}[on background layer]
         \node[cluster, fill=orange!4, draw=orange!55,
@@ -753,19 +795,21 @@
 % ===================== Banda inferior: CI / scripts / artefactos =====================
     \node[band, fill=teal!15, anchor=north] (scripts) at ([yshift=-12mm]srcbox.south)
           {{\normalfont\bfseries Scripts}\\ \texttt{scripts/}\\[1pt] *.sh~$\cdot$~*.py};
-    \node[band, fill=violet!15, left=6mm of scripts] (ci)
+    \node[band, fill=violet!15, left=14mm of scripts] (ci)
           {{\normalfont\bfseries CI/CD}\\ \texttt{.github/workflows/}\\[1pt]
            ci~$\cdot$~lint~$\cdot$~codeql\\ latex~$\cdot$~docker};
-    \node[band, fill=yellow!20, right=6mm of scripts] (bindir)
+    \node[band, fill=yellow!20, right=14mm of scripts] (bindir)
           {{\normalfont\bfseries Bin}\\ \texttt{bin/}\\[1pt] binarios~ECC};
-    \node[band, fill=green!12, right=6mm of bindir] (artef)
+    \node[band, fill=green!12, right=14mm of bindir] (artef)
           {{\normalfont\bfseries Artefactos}\\ results/~CSV\\ graficas~PNG\\ memoria~LaTeX};
 
 % ===================== Relaciones entre bandas =====================
     \draw[rel]  (cfgbox.south) -- node[lbl, right]{compila} (srcbox.north);
-    \draw[rel]  (srcbox.south) -- node[lbl, right]{binario} (scripts.north);
+    \draw[rel]  (srcbox.south east) -- node[lbl, right, pos=0.55]{binarios}
+          (bindir.north);
+    \draw[rel]  (scripts.east) -- node[lbl, above]{ejecutan} (bindir.west);
     \draw[rel]  (scripts.north east) to[bend left=18]
-          node[lbl, above]{genera} (artef.north west);
+          node[lbl, above, pos=0.35]{generan} (artef.north west);
     \draw[cirel] (ci.north) to[bend left=10]
           node[lbl, above, pos=0.6]{build~$\cdot$~test} (srcbox.south west);
 
@@ -791,8 +835,135 @@
   Todo encapsulado en la imagen leonfullxr/ecc-benchmarks:latest para reproducibilidad.}
 \end{frame}
 
+\begin{frame}{Orquestación: todo el capítulo de resultados, un comando}
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[font=\scriptsize,
+      stage/.style={draw, rounded corners, align=center, fill=blue!6, inner sep=5pt,
+                    minimum height=1.0cm},
+      art/.style={draw, rounded corners, align=center, fill=green!9, inner sep=5pt,
+                  minimum height=1.0cm},
+      pipe/.style={-{Stealth}, thick, UGRsoft}]
+    \node[stage, fill=orange!14] (make)  {\texttt{make}\\\texttt{reproduce}};
+    \node[stage, right=0.55cm of make]   (bench)  {\texttt{bench} (C++)\\5 modos ·
+                                                   72 configs};
+    \node[stage, right=0.55cm of bench]  (csv)    {CSV\\\texttt{raw} $+$ \texttt{summary}};
+    \node[stage, right=0.55cm of csv]    (py)     {Python\\matplotlib};
+    \node[art, right=0.55cm of py]       (charts) {11 gráficas\\$+$ 3 collages};
+    \node[art, right=0.55cm of charts]   (mem)    {memoria\\LaTeX};
+    \draw[pipe] (make)   -- node[above, font=\tiny]{compila}  (bench);
+    \draw[pipe] (bench)  -- node[above, font=\tiny]{mide}     (csv);
+    \draw[pipe] (csv)    -- node[above, font=\tiny]{analiza}  (py);
+    \draw[pipe] (py)     -- node[above, font=\tiny]{dibuja}   (charts);
+    \draw[pipe] (charts) -- node[above, font=\tiny]{ilustra}  (mem);
+  \end{tikzpicture}}
 
-\begin{frame}{Metodología - elección de las opciones de compilación}
+  \vspace{0.9em}
+  \begin{tikzpicture}[font=\scriptsize,
+      actor/.style={draw, rounded corners, align=center, fill=orange!14, inner sep=5pt,
+                    minimum height=0.95cm, minimum width=1.9cm},
+      hub/.style={draw, rounded corners, align=center, fill=UGRdark, text=white,
+                  inner sep=5pt, minimum height=0.95cm, minimum width=1.9cm},
+      wf/.style={draw=violet!60!black, rounded corners, align=center, fill=violet!8,
+                 inner sep=3pt, minimum width=3.1cm, minimum height=1.15cm},
+      okbadge/.style={circle, fill=UGRgreen, text=white, inner sep=1.4pt,
+                      font=\tiny\bfseries},
+      pipe/.style={-{Stealth}, thick, UGRsoft},
+      trig/.style={-{Stealth}, semithick, violet!60!black}]
+
+    % del commit local a GitHub
+    \node[actor] (dev) {código local\\\texttt{git commit}};
+    \node[hub, right=2.2cm of dev] (gh) {GitHub\\Actions};
+    \draw[pipe] (dev) -- node[above, font=\tiny\ttfamily]{git push} (gh);
+
+    % los workflows, cada uno con su check verde
+    \node[wf, below=0.9cm of gh] (latexwf) {\texttt{latex}\\compila la\\memoria (PDF)};
+    \node[wf, left=0.5cm of latexwf] (ciwf) {\texttt{ci}\\compila $+$ tests\\verificación
+                                             del código C++};
+    \node[wf, right=0.5cm of latexwf] (dock) {\texttt{docker}\\imagen $\to$\\Docker Hub};
+
+    \foreach \w in {ciwf,latexwf,dock}{
+      \draw[trig] (gh.south) -- (\w.north);
+      \node[okbadge] at (\w.north east) {\checkmark};
+    }
+  \end{tikzpicture}
+  \note{Arriba, el pipeline de extremo a extremo: make reproduce compila dentro del
+  contenedor, ejecuta el motor bench (5 modos, 72 configuraciones), vuelca CSV crudos y
+  agregados, los scripts Python generan las 11 graficas y 3 collages, y estas alimentan la
+  memoria LaTeX. Abajo, la integracion continua: cada git push a GitHub dispara los
+  workflows, que deben quedar en verde: ci (compila + smoke test + reproducibilidad con
+  semilla fija + ASan/UBSan; agrupa tambien los linters y el analisis CodeQL de seguridad),
+  latex (compila la memoria y sube el PDF) y docker (publica la imagen en Docker Hub).
+  Mensaje: cada numero y cada grafica se regeneran con un comando en cualquier maquina con
+  Docker.}
+\end{frame}
+
+\begin{frame}{El flujo estadístico: de 100 medidas a una gráfica}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize,
+      fase/.style={draw, rounded corners, align=center, fill=blue!6, inner sep=4pt,
+                   minimum height=1.05cm, minimum width=2.6cm},
+      discard/.style={draw, dashed, rounded corners, align=center, fill=black!6,
+                      text=black!60, inner sep=4pt, minimum height=1.05cm,
+                      minimum width=2.6cm},
+      data/.style={draw, rounded corners, align=center, fill=green!9, inner sep=4pt,
+                   minimum height=1.05cm, minimum width=2.6cm},
+      pick/.style={draw=UGRaccent, thick, rounded corners, align=center,
+                   fill=UGRaccent!10, inner sep=4pt, minimum height=1.05cm,
+                   minimum width=2.6cm},
+      pipe/.style={-{Stealth}, thick, UGRsoft}]
+
+    % ------- fila 1: la medición -------
+    \node[fase] (op) {1 configuración\\\texttt{(algoritmo, curva, op.)}};
+    \node[discard, right=0.55cm of op] (warm) {3 iteraciones de\\calentamiento\\
+                                               \textbf{descartadas}};
+    \node[fase, right=0.55cm of warm] (iters) {\alert{$\times$100} medidas\\
+                                               \texttt{std::chrono} (µs)};
+    \node[data, right=0.55cm of iters] (raw) {\texttt{raw.csv}\\todas las muestras};
+
+    % ------- fila 2: el análisis -------
+    \node[fase, below=0.75cm of op] (stats) {media · desviación\\mín/máx · P5/P95};
+    \node[pick, right=0.55cm of stats] (median) {\textbf{mediana}\\métrica principal};
+    \node[data, right=0.55cm of median] (summary) {\texttt{summary.csv}\\72 configuraciones};
+    \node[data, right=0.55cm of summary] (charts) {gráficas y tablas\\del capítulo de
+                                                   resultados};
+
+    \draw[pipe] (op) -- (warm);
+    \draw[pipe] (warm) -- (iters);
+    \draw[pipe] (iters) -- (raw);
+    \draw[pipe] (raw.south) to[out=-90, in=90] ([xshift=1.2cm]stats.north);
+    \draw[pipe] (stats) -- (median);
+    \draw[pipe] (median) -- (summary);
+    \draw[pipe] (summary) -- (charts);
+
+    % ------- por qué la mediana: outliers reales de keygen RSA -------
+    \begin{scope}[shift={(0.3,-4.35)}]
+      \node[anchor=west, font=\scriptsize\bfseries, text=UGRdark] at (-0.3,0.75)
+        {¿Por qué la mediana?};
+      \draw[black!45] (0,0) -- (11.2,0);
+      \foreach \x in {0.5,0.75,0.95,1.15,1.3,1.5,1.65,1.85,2.05,2.3}
+        \fill[UGRsoft] (\x,0) circle (2.3pt);
+      \fill[UGRsoft] (10.6,0) circle (2.3pt);
+      \node[font=\tiny, text=black!60, anchor=north] at (10.6,-0.18)
+        {\emph{outlier} (búsqueda de primos con mala suerte)};
+      \draw[UGRgreen, very thick] (1.4,-0.22) -- (1.4,0.22)
+        node[above, font=\tiny\bfseries, text=UGRgreen] {mediana};
+      \draw[UGRaccent, very thick] (2.2,-0.22) -- (2.2,0.22)
+        node[above, font=\tiny\bfseries, text=UGRaccent, xshift=0.55cm]
+        {media (arrastrada)};
+    \end{scope}
+  \end{tikzpicture}
+  \note{Flujo estadistico por configuracion: se ejecutan 3 iteraciones de calentamiento que
+  se descartan (caches frias, inicializacion perezosa de NTL), despues 100 medidas con
+  std::chrono en microsegundos; todas las muestras van a raw.csv. Sobre ellas se calculan
+  media, desviacion tipica, min/max y percentiles P5/P95, pero la METRICA PRINCIPAL de
+  tablas y graficas es la mediana. Por que: keygen RSA busca primos por ensayo y error y
+  una busqueda con mala suerte produce outliers enormes (min 6 ms, max 596 ms en RSA-4096);
+  la media se arrastra hacia el outlier, la mediana no. El resultado agregado (summary.csv,
+  72 configuraciones) alimenta las graficas y tablas del capitulo de resultados.}
+\end{frame}
+
+\begin{frame}{Experimento previo: elección de las opciones de compilación}
   \centering
   \figordemo[width=0.62\textwidth]{imagenes/chart_compiler_flags.png}
 
@@ -808,7 +979,7 @@
 
 \begin{frame}{Eje 1 - RSA frente a ECC: generación de claves}
   \centering
-  \figordemo[width=0.74\textwidth]{imagenes/chart_keygen_comparison.png}
+  \figordemo[width=0.88\textwidth]{imagenes/chart_keygen_comparison.png}
 
   \footnotesize RSA debe \alert{buscar primos grandes} por ensayo y error; ECC solo
   \alert{elige un escalar}. RSA-3072 $\approx 58$ ms frente a ECC Jacobiano
@@ -818,42 +989,33 @@
 \end{frame}
 
 \begin{frame}{Eje 1 - RSA frente a ECC: firma y verificación}
-  \begin{columns}[c]
-    \begin{column}{0.62\textwidth}
-      \centering
-      \figordemo[width=\textwidth]{imagenes/chart_sign_verify_comparison.png}
-    \end{column}
-    \begin{column}{0.38\textwidth}
-      \footnotesize
-      \begin{itemize}\footnotesize
-        \item \textbf{Firma:} ECC $\sim$2.6$\times$ más rápida.
-        \item \textbf{Verificación:} \alert{RSA} $\sim$38$\times$ más rápida.
-      \end{itemize}
-      \vspace{1ex}
-      RSA gana en verificación por su exponente público $e=65537$ (solo 2 bits a 1).
-      \vspace{1ex}
+  \centering
+  \figordemo[width=0.88\textwidth]{imagenes/chart_sign_verify_comparison.png}
 
-      \alert{No hay ganador absoluto:} depende del perfil de uso.
-    \end{column}
-  \end{columns}
-  \note{Firma ECC 2.6x. Verificacion RSA 38x por e=65537. No hay ganador absoluto.}
+  \footnotesize \textbf{Firma:} ECC $\sim$2.6$\times$ más rápida \; · \;
+  \textbf{Verificación:} \alert{RSA} $\sim$38$\times$ más rápida (exponente público
+  $e=65537$, solo 2 bits a 1).\\
+  \alert{No hay ganador absoluto:} depende del perfil de uso.
+  \note{Firma ECC 2.6x. Verificacion RSA 38x por e=65537. No hay ganador absoluto: un
+  servidor que emite firmas en masa prefiere ECC; un cliente que valida certificados, RSA.}
 \end{frame}
 
 \begin{frame}{Eje 2 - Coordenadas afines vs Jacobianas}
   \begin{columns}[c]
-    \begin{column}{0.58\textwidth}
+    \begin{column}{0.66\textwidth}
       \centering
       \figordemo[width=\textwidth]{imagenes/chart_jacobian_speedup.png}
     \end{column}
-    \begin{column}{0.42\textwidth}
-      \begin{itemize}
+    \begin{column}{0.34\textwidth}
+      \footnotesize
+      \begin{itemize}\footnotesize
         \item Las Jacobianas \alert{evitan la inversión modular} (visto en fundamentos).
         \item Medido: \alert{1.70--1.93$\times$} (media $\sim$1.8$\times$).
       \end{itemize}
       \vfill
       \begin{block}{La brecha ES el hallazgo}
-        La teoría predice $\sim$8$\times$; NTL/GMP hacen la inversión barata, y el ahorro
-        real es mucho menor.
+        \footnotesize La teoría predice $\sim$8$\times$; NTL/GMP hacen la inversión barata,
+        y el ahorro real es mucho menor.
       \end{block}
     \end{column}
   \end{columns}
@@ -862,28 +1024,15 @@
 \end{frame}
 
 \begin{frame}{Eje 3 - Cuerpos primos vs binarios}
-  \begin{columns}[c]
-    \begin{column}{0.58\textwidth}
-      \centering
-      \figordemo[width=\textwidth]{imagenes/chart_prime_vs_binary.png}
-    \end{column}
-    \begin{column}{0.42\textwidth}
-      \begin{itemize}
-        \item A 128 bits: el binario resulta \alert{$\sim$1.7$\times$ más lento} que el
-              primo (afín).
-      \end{itemize}
-      \vspace{1ex}
-      \footnotesize \textbf{Por qué (honesto):}
-      \begin{itemize}\footnotesize
-        \item \texttt{GF2E} de NTL es genérico vs aritmética sobre ensamblador de GMP.
-        \item El binario solo se midió en \alert{afín}.
-      \end{itemize}
-      \vspace{0.5ex}
-      Es un \alert{artefacto de software}, no del álgebra.
-    \end{column}
-  \end{columns}
-  \note{128-bit: binario 1.7x mas lento (afin). GF2E generico vs GMP asm, solo afin.
-  Artefacto de software. Con PCLMULQDQ el binario gana.}
+  \centering
+  \figordemo[width=0.88\textwidth]{imagenes/chart_prime_vs_binary.png}
+
+  \footnotesize A 128 bits el binario es \alert{$\sim$1.7$\times$ más lento} que el primo
+  (ambos en afín): \texttt{GF2E} genérico frente al ensamblador de GMP.\;
+  Es un \alert{artefacto de software}, no del álgebra.
+  \note{128-bit: binario 1.7x mas lento (afin vs afin, comparacion justa). GF2E generico vs
+  GMP asm, y el binario solo se midio en afin. Artefacto de software, no del algebra. Con
+  PCLMULQDQ o FPGA el binario suele ganar.}
 \end{frame}
 
 \begin{frame}{Validación: contraste con OpenSSL}
@@ -1002,6 +1151,36 @@
 
 %-------------------------------------------- Backup ---
 \appendix
+
+\begin{frame}[noframenumbering]{Respaldo - de dónde sale el $\sim$8$\times$ teórico (y el
+    1{,}8$\times$ real)}
+  \footnotesize
+  Conteo para $kP$ de 256 bits ($\approx$256 duplicaciones $+$ 128 sumas), con
+  $S\approx0{,}8M$:
+  \begin{itemize}\footnotesize
+    \item \textbf{Afín} ($1I+2M+2S$ por paso): $\approx 384\,I + 1280\,M$-equivalentes.
+    \item \textbf{Jacobiana} (dupl.\ $4M+4S$, suma $12M+4S$, $+1$ inversión final):
+          $\approx 3900\,M$-equivalentes.
+  \end{itemize}
+  \vspace{0.5ex}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Con el coste de libro ($I\approx80M$)}
+        Afín $\approx 32\,000\,M$ $\Rightarrow$ razón $\approx$ \alert{8$\times$}
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Con el coste real de GMP ($I\approx14M$)}
+        Afín $\approx 6\,600\,M$ $\Rightarrow$ razón $\approx$ \alert{1{,}7$\times$}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.5ex}
+  Las Jacobianas no eliminan coste: \alert{intercambian} 1 inversión por $\sim$10
+  multiplicaciones extra por paso. El intercambio solo es muy rentable si $I$ es cara, y
+  NTL/GMP la hacen barata ($I/M$ real $\sim$10--20). Por eso el ahorro \textbf{crece} con el
+  tamaño del cuerpo (1{,}72$\times$ en 256 bits $\to$ $\sim$2$\times$ en P-384).
+\end{frame}
 
 \begin{frame}[noframenumbering]{Respaldo - de la ecuación general a la forma corta}
   \scriptsize
