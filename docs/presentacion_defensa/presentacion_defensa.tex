@@ -413,60 +413,6 @@
   publica. ECDH y ECDSA dependen de su dificultad.}
 \end{frame}
 
-\begin{frame}{Double-and-add: cómo se calcula $kP$}
-  \small
-  Se recorren los \alert{bits de $k$} de izquierda a derecha; en cada bit se \alert{duplica}
-  ($\times2$) y, si el bit vale $1$, se \alert{suma $P$}.\;
-  Ejemplo $k=13=(1101)_2$:
-  \vspace{0.3em}
-
-  \centering
-  \resizebox{0.86\textwidth}{!}{%
-  \begin{tikzpicture}[font=\footnotesize,
-      bit/.style={draw, minimum size=0.72cm, font=\bfseries, inner sep=0pt},
-      acc/.style={draw, rounded corners, fill=UGRsoft!12, minimum height=0.8cm,
-                  minimum width=1.05cm},
-      dbl/.style={-{Stealth}, very thick, UGRsoft},
-      add/.style={-{Stealth}, very thick, UGRaccent}]
-
-    % --- vector de bits ---
-    \node (klbl) {$k=$};
-    \node[bit, right=1.5mm of klbl] (kb3) {1};
-    \node[bit, right=0mm of kb3] (kb2) {1};
-    \node[bit, right=0mm of kb2] (kb1) {0};
-    \node[bit, right=0mm of kb1] (kb0) {1};
-    \node[font=\scriptsize, above=0pt of kb3] {MSB};
-    \node[font=\scriptsize, above=0pt of kb0] {LSB};
-
-    % --- cadena del acumulador (multiplicación del punto) ---
-    \node[acc] (a0) at ([yshift=-1.4cm]kb3.south) {$P$};
-    \node[acc, right=0.95cm of a0] (a1) {$2P$};
-    \node[acc, right=0.95cm of a1] (a2) {$3P$};
-    \node[acc, right=0.95cm of a2] (a3) {$6P$};
-    \node[acc, right=0.95cm of a3] (a4) {$12P$};
-    \node[acc, right=0.95cm of a4, fill=UGRaccent!15] (a5) {$\mathbf{13P}$};
-
-    \draw[dbl] (a0) -- node[above, UGRsoft]{$\times2$}   (a1);
-    \draw[add] (a1) -- node[above, UGRaccent]{$+P$}      (a2);
-    \draw[dbl] (a2) -- node[above, UGRsoft]{$\times2$}   (a3);
-    \draw[dbl] (a3) -- node[above, UGRsoft]{$\times2$}   (a4);
-    \draw[add] (a4) -- node[above, UGRaccent]{$+P$}      (a5);
-
-    \node[font=\scriptsize] at ([yshift=-0.7cm]a0.south) {bit\,1};
-    \node[font=\scriptsize] at ([yshift=-0.7cm]a2.south) {bit\,1};
-    \node[font=\scriptsize] at ([yshift=-0.7cm]a3.south) {bit\,0};
-    \node[font=\scriptsize] at ([yshift=-0.7cm]a5.south) {bit\,1};
-  \end{tikzpicture}}
-  \vspace{0.5em}
-
-  {\footnotesize \alert{$13P$ en 5 operaciones} (\textcolor{UGRsoft}{\textbf{3 duplicaciones}}
-  $+$ \textcolor{UGRaccent}{\textbf{2 sumas}}), no 12 sumas: en general $\sim\!\log_2 k$
-  pasos $\Rightarrow O(\log k)$.}
-  \note{Double-and-add con k=13=1101. Se leen los bits MSB->LSB: primer 1 inicializa R=P;
-  cada bit siguiente duplica y si es 1 suma P. Traza: P, 2P, 3P, 6P, 12P, 13P. Resultado en 5
-  operaciones (3 dobles + 2 sumas) en lugar de 12 sumas. Coste O(log k), lo que hace kP
-  eficiente (y el ECDLP sigue siendo dificil en sentido inverso).}
-\end{frame}
 
 \begin{frame}{Atacar el ECDLP: el algoritmo rho de Pollard}
   \begin{columns}[c]
@@ -506,39 +452,6 @@
 
 %==============================================================================
 \section{Protocolos: ECDH, ECDSA y RSA}
-
-\begin{frame}{Parámetros del dominio}
-  \small
-  Para instanciar ECC sobre $\mathbb{F}_p$, todas las partes acuerdan la séxtupla
-  \[ T = (p,\; a,\; b,\; G,\; n,\; h) \]
-  \begin{columns}[t]
-    \begin{column}{0.5\textwidth}
-      \begin{itemize}\footnotesize
-        \item $p$: primo que define $\mathbb{F}_p$.
-        \item $a,b$: coeficientes de $y^2=x^3+ax+b$.
-        \item $G=(G_x,G_y)$: punto generador.
-        \item $n$: orden de $G$ (menor con $nG=\mathcal{O}$).
-        \item $h = \#E(\mathbb{F}_p)/n$: cofactor.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \textbf{Requisitos de seguridad}
-      \begin{itemize}\footnotesize
-        \item $n$ primo (evita Pohlig--Hellman).
-        \item $h$ pequeño, ideal $1$ (evita curva inválida).
-        \item No anómala: $\#E(\mathbb{F}_p)\neq p$.
-        \item Grado de inmersión alto (evita MOV).
-        \item $\Delta = -16(4a^3+27b^2)\neq 0$.
-      \end{itemize}
-    \end{column}
-  \end{columns}
-  \vspace{0.5ex}
-  \footnotesize En el TFG usamos curvas estándar \alert{NIST/SECG}, ya auditadas por la
-  comunidad criptográfica.
-  \note{Sextupla T=(p,a,b,G,n,h). p primo, a,b coeficientes, G generador, n orden de G, h
-  cofactor. Requisitos: n primo, h pequeno, no anomala, inmersion alta, discriminante !=0.
-  Usamos curvas estandar NIST/SECG.}
-\end{frame}
 
 \begin{frame}{Intercambio de claves: ECDH paso a paso}
   \centering
@@ -1043,37 +956,6 @@
   PCLMULQDQ o FPGA el binario suele ganar.}
 \end{frame}
 
-\begin{frame}{Validación: contraste con OpenSSL}
-  \begin{columns}[c]
-    \begin{column}{0.52\textwidth}
-      \footnotesize
-      \begin{tabular}{lc}
-        \toprule
-        & OpenSSL vs propia \\
-        \midrule
-        P-256 (operaciones) & 14--34$\times$ más rápido \\
-        P-384 & 1.7--4$\times$ más rápido \\
-        RSA-4096 verificación & \alert{más lento} ($0.92\times$) \\
-        \bottomrule
-      \end{tabular}
-    \end{column}
-    \begin{column}{0.48\textwidth}
-      \begin{block}{Por qué la diferencia}
-        \footnotesize Ensamblador a mano + \alert{blinding} contra canales laterales que mi
-        versión académica no incorpora. \\[0.5ex]
-        En RSA verify, la excepción: sin padding OAEP/PSS ni las capas EVP de OpenSSL, la
-        versión propia es algo más rápida.
-      \end{block}
-    \end{column}
-  \end{columns}
-  \vfill
-  \footnotesize Objetivo del TFG: \textbf{entender y comparar}, no competir con código de
-  producción.
-  \note{OpenSSL 14-34x P-256 por asm y blinding. RSA-4096 verify: OpenSSL mas lento (0.92x),
-  la propia es 1.08x mas rapida por no tener padding OAEP/PSS ni capas EVP. Honesto sobre el
-  alcance.}
-\end{frame}
-
 %==============================================================================
 \section{Conclusiones y trabajo futuro}
 
@@ -1214,6 +1096,95 @@
   Garner: $m_1=c^{d_p}\bmod p$, $m_2=c^{d_q}\bmod q$, $h=q_{inv}(m_1-m_2)\bmod p$,
   $m=m_2+hq$. Acelera $\approx 3.5\times$ (dos exponenciaciones a la mitad de bits).
 \end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo: Parámetros del dominio}
+  \small
+  Para instanciar ECC sobre $\mathbb{F}_p$, todas las partes acuerdan la séxtupla
+  \[ T = (p,\; a,\; b,\; G,\; n,\; h) \]
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}\footnotesize
+        \item $p$: primo que define $\mathbb{F}_p$.
+        \item $a,b$: coeficientes de $y^2=x^3+ax+b$.
+        \item $G=(G_x,G_y)$: punto generador.
+        \item $n$: orden de $G$ (menor con $nG=\mathcal{O}$).
+        \item $h = \#E(\mathbb{F}_p)/n$: cofactor.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Requisitos de seguridad}
+      \begin{itemize}\footnotesize
+        \item $n$ primo (evita Pohlig--Hellman).
+        \item $h$ pequeño, ideal $1$ (evita curva inválida).
+        \item No anómala: $\#E(\mathbb{F}_p)\neq p$.
+        \item Grado de inmersión alto (evita MOV).
+        \item $\Delta = -16(4a^3+27b^2)\neq 0$.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.5ex}
+  \footnotesize En el TFG usamos curvas estándar \alert{NIST/SECG}, ya auditadas por la
+  comunidad criptográfica.
+  \note{Sextupla T=(p,a,b,G,n,h). p primo, a,b coeficientes, G generador, n orden de G, h
+  cofactor. Requisitos: n primo, h pequeno, no anomala, inmersion alta, discriminante !=0.
+  Usamos curvas estandar NIST/SECG.}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Resplado - Double-and-add}
+  \small
+  Se recorren los \alert{bits de $k$} de izquierda a derecha; en cada bit se \alert{duplica}
+  ($\times2$) y, si el bit vale $1$, se \alert{suma $P$}.\;
+  Ejemplo $k=13=(1101)_2$:
+  \vspace{0.3em}
+
+  \centering
+  \resizebox{0.86\textwidth}{!}{%
+  \begin{tikzpicture}[font=\footnotesize,
+      bit/.style={draw, minimum size=0.72cm, font=\bfseries, inner sep=0pt},
+      acc/.style={draw, rounded corners, fill=UGRsoft!12, minimum height=0.8cm,
+                  minimum width=1.05cm},
+      dbl/.style={-{Stealth}, very thick, UGRsoft},
+      add/.style={-{Stealth}, very thick, UGRaccent}]
+
+    % --- vector de bits ---
+    \node (klbl) {$k=$};
+    \node[bit, right=1.5mm of klbl] (kb3) {1};
+    \node[bit, right=0mm of kb3] (kb2) {1};
+    \node[bit, right=0mm of kb2] (kb1) {0};
+    \node[bit, right=0mm of kb1] (kb0) {1};
+    \node[font=\scriptsize, above=0pt of kb3] {MSB};
+    \node[font=\scriptsize, above=0pt of kb0] {LSB};
+
+    % --- cadena del acumulador (multiplicación del punto) ---
+    \node[acc] (a0) at ([yshift=-1.4cm]kb3.south) {$P$};
+    \node[acc, right=0.95cm of a0] (a1) {$2P$};
+    \node[acc, right=0.95cm of a1] (a2) {$3P$};
+    \node[acc, right=0.95cm of a2] (a3) {$6P$};
+    \node[acc, right=0.95cm of a3] (a4) {$12P$};
+    \node[acc, right=0.95cm of a4, fill=UGRaccent!15] (a5) {$\mathbf{13P}$};
+
+    \draw[dbl] (a0) -- node[above, UGRsoft]{$\times2$}   (a1);
+    \draw[add] (a1) -- node[above, UGRaccent]{$+P$}      (a2);
+    \draw[dbl] (a2) -- node[above, UGRsoft]{$\times2$}   (a3);
+    \draw[dbl] (a3) -- node[above, UGRsoft]{$\times2$}   (a4);
+    \draw[add] (a4) -- node[above, UGRaccent]{$+P$}      (a5);
+
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a0.south) {bit\,1};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a2.south) {bit\,1};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a3.south) {bit\,0};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a5.south) {bit\,1};
+  \end{tikzpicture}}
+  \vspace{0.5em}
+
+  {\footnotesize \alert{$13P$ en 5 operaciones} (\textcolor{UGRsoft}{\textbf{3 duplicaciones}}
+  $+$ \textcolor{UGRaccent}{\textbf{2 sumas}}), no 12 sumas: en general $\sim\!\log_2 k$
+  pasos $\Rightarrow O(\log k)$.}
+  \note{Double-and-add con k=13=1101. Se leen los bits MSB->LSB: primer 1 inicializa R=P;
+  cada bit siguiente duplica y si es 1 suma P. Traza: P, 2P, 3P, 6P, 12P, 13P. Resultado en 5
+  operaciones (3 dobles + 2 sumas) en lugar de 12 sumas. Coste O(log k), lo que hace kP
+  eficiente (y el ECDLP sigue siendo dificil en sentido inverso).}
+\end{frame}
+
 
 \begin{frame}[noframenumbering]{Respaldo - ECC hoy en día: ¿dónde se usa?}
   \footnotesize
