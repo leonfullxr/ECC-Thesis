@@ -29,6 +29,8 @@
 \setbeamercolor{progress bar}{fg=UGRaccent}
 \setbeamercolor{alerted text}{fg=UGRaccent}
 \setbeamercolor{block title}{bg=UGRsoft,fg=white}
+\setbeamercolor{block title alerted}{bg=UGRaccent,fg=white}
+\setbeamercolor{block title example}{bg=UGRgreen,fg=white}
 
 % --- Estilos tikz para los diagramas paso a paso (ECDH/ECDSA/RSA) ----
 \tikzset{
@@ -147,27 +149,31 @@
 %==============================================================================
 \section{Fundamentos: curvas elípticas}
 
-\begin{frame}{¿Qué es una curva elíptica?}
+\begin{frame}{¿Qué es una curva elíptica? Formas usadas en el TFG}
   \small
-  Una \alert{curva elíptica} sobre un cuerpo $K$ es el conjunto de soluciones de la
-  \alert{ecuación general de Weierstrass}
-  \[ y^2 + a_1 xy + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6 \]
-  junto con un \alert{punto del infinito} $\mathcal{O}$ (que será el neutro del grupo).
-  \medskip
-
-  Sobre cuerpos con char$(K)\neq 2,3$ se simplifica en dos pasos:
-  \begin{enumerate}\footnotesize
-    \item \textbf{Completar el cuadrado} en $y$\, $\bigl[y \mapsto y - \tfrac{1}{2}(a_1 x + a_3)\bigr]$,
-      \alert{divide por 2}:\quad $y^2 = x^3 + a_2' x^2 + a_4' x + a_6'$
-    \item \textbf{Eliminar el término cuadrático}\, $\bigl[x \mapsto x - \tfrac{a_2'}{3}\bigr]$,
-      \alert{divide por 3}:
-      \[ \boxed{\,y^2 = x^3 + ax + b\,}\quad\text{(forma corta de Weierstrass)} \]
-  \end{enumerate}
-  \footnotesize Los divisores $2$ y $3$ son exactamente la razón de exigir char$(K)\neq 2,3$.
-  \note{Definicion: soluciones de la general de Weierstrass mas O (neutro). Sobre char != 2,3
-  se simplifica: paso 1 completar cuadrado en y (divide por 2), paso 2 eliminar termino
-  cuadratico (divide por 3). Llegamos a la forma corta y^2=x^3+ax+b. Los divisores 2 y 3 son
-  justo por lo que se exige char != 2,3.}
+  Una \alert{curva elíptica} sobre un cuerpo $K$: soluciones de la \alert{ecuación general de
+  Weierstrass} $y^2 + a_1 xy + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6$, junto con un
+  \alert{punto del infinito} $\mathcal{O}$ (neutro del grupo). En el TFG se usan dos familias
+  de curvas:
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \textbf{Cuerpos primos $\mathbb{F}_p$}
+      \[ \boxed{\,y^2 = x^3 + ax + b\,} \]
+      \footnotesize Curvas del TFG: \alert{secp256k1}, \alert{NIST P-256}, \alert{NIST P-384}.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Cuerpos binarios $\mathbb{F}_{2^m}$}
+      \[ \boxed{\,y^2 + xy = x^3 + ax^2 + b\,},\quad b \neq 0 \]
+      \footnotesize Curvas \alert{SEC 2} del TFG: \texttt{sect163k1}, \texttt{sect233k1},
+      \texttt{sect283k1} (Koblitz, $a\in\{0,1\}$, $b=1$) y \texttt{sect233r1},
+      \texttt{sect283r1} (aleatorias). No singular $\iff b\neq 0$.
+    \end{column}
+  \end{columns}
+  \note{Definicion: soluciones de la general de Weierstrass mas O (neutro). Dos familias de
+  curvas: primos (secp256k1, NIST P-256, NIST P-384) con y^2=x^3+ax+b; binarios SEC2
+  (sect163k1, sect233k1, sect283k1 Koblitz a en 0,1 b=1; sect233r1, sect283r1 aleatorias) con
+  y^2+xy=x^3+ax^2+b, b!=0. La derivacion completa (division por 2 y 3, char!=2,3) esta en el
+  respaldo.}
 \end{frame}
 
 \begin{frame}{Singularidad: ¿cuándo es una curva elíptica válida?}
@@ -181,24 +187,6 @@
   \note{La forma corta es curva eliptica solo si es no singular: discriminante no nulo, sin
   cuspides ni autointersecciones. Factores 16 y 27 por char != 2,3. Tercer panel: en un punto
   singular la tangente no es unica y 2P divide por 2y=0, por eso la ley de grupo falla alli.}
-\end{frame}
-
-\begin{frame}{Curvas sobre cuerpos binarios $\mathbb{F}_{2^m}$}
-  \small
-  En char $2$ \alert{no se puede dividir entre 2}: falla el primer paso. Para curvas
-  \alert{ordinarias} (no supersingulares), un cambio de variable adecuado conduce a la forma
-  que usamos:
-  \[ \boxed{\,y^2 + xy = x^3 + ax^2 + b\,},\qquad b \neq 0 \]
-  \begin{itemize}\footnotesize
-    \item Es la forma de las curvas binarias \alert{SEC 2} del TFG: \texttt{sect163k1},
-      \texttt{sect233k1}, \texttt{sect283k1} (Koblitz) y \texttt{sect233r1},
-      \texttt{sect283r1} (aleatorias).
-    \item Curvas de \alert{Koblitz}: $a\in\{0,1\}$, $b=1$; admiten optimización por el
-      endomorfismo de Frobenius (no aprovechada en nuestra versión afín).
-    \item No singular $\iff b\neq 0$ (aquí $\Delta = b$).
-  \end{itemize}
-  \note{Char 2 no divide por 2. Curvas ordinarias: y^2+xy=x^3+ax^2+b. Es la forma SEC2 que
-  usamos. Koblitz a en 0,1 y b=1, optimizables por Frobenius (no usado). No singular si b!=0.}
 \end{frame}
 
 \begin{frame}{La ley de grupo: cómo se ``suman'' puntos}
@@ -252,78 +240,78 @@
   pequeno, ECDLP ~ sqrt(n).}
 \end{frame}
 
-\begin{frame}{Suma de puntos: fórmulas en $\mathbb{F}_p$ y $\mathbb{F}_{2^m}$}
-  \scriptsize
+\begin{frame}{Suma y duplicación: coordenadas afines}
+  \small
+  \setlength{\fboxsep}{2pt}
+  \setlength{\parskip}{0pt}
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
-      \textbf{Cuerpo primo}\; $y^2=x^3+ax+b$
-      \vspace{1.4ex}
+      {\color{UGRsoft}\textbf{Cuerpo primo}}\; $y^2=x^3+ax+b$
+      \vspace{0.6ex}
 
-      \emph{Suma} $(P\neq Q)$,\; $\lambda=\dfrac{y_2-y_1}{x_2-x_1}$:\\[0.7ex]
-      $\boxed{x_3=\lambda^2-x_1-x_2}$\\[0.5ex]
-      $\boxed{y_3=\lambda(x_1-x_3)-y_1}$
-      \vspace{2.6ex}
+      \emph{Suma} $(P\neq Q)$:\\[0.5ex]
+      $\boxed{x_3=\frac{(y_2-y_1)^2}{(x_2-x_1)^2}-x_1-x_2}$\\[0.5ex]
+      $\boxed{y_3=\frac{(y_2-y_1)(x_1-x_3)}{x_2-x_1}-y_1}$
+      \vspace{0.8ex}
 
-      \emph{Duplicación} $(2P)$,\; $\lambda=\dfrac{3x_1^2+a}{2y_1}$:\\[0.7ex]
-      $\boxed{x_3=\lambda^2-2x_1}$\\[0.5ex]
-      $\boxed{y_3=\lambda(x_1-x_3)-y_1}$
-      \vspace{2.6ex}
-
-      $-P=(x_1,\,-y_1)$
+      \emph{Duplicación} $(2P)$:\\[0.5ex]
+      $\boxed{x_3=\frac{(3x_1^2+a)^2}{4y_1^2}-2x_1}$\\[0.5ex]
+      $\boxed{y_3=\frac{(3x_1^2+a)(x_1-x_3)}{2y_1}-y_1}$
     \end{column}
     \begin{column}{0.5\textwidth}
-      \textbf{Cuerpo binario}\; $y^2+xy=x^3+ax^2+b$
-      \vspace{1.4ex}
+      {\color{UGRsoft}\textbf{Cuerpo binario}}\; $y^2+xy=x^3+ax^2+b$
+      \vspace{0.6ex}
 
-      \emph{Suma} $(P\neq Q)$,\; $\lambda=\dfrac{y_1+y_2}{x_1+x_2}$:\\[0.7ex]
-      $\boxed{x_3=\lambda^2+\lambda+x_1+x_2+a}$\\[0.5ex]
-      $\boxed{y_3=\lambda(x_1+x_3)+x_3+y_1}$
-      \vspace{2.6ex}
+      \emph{Suma} $(P\neq Q)$:\\[0.5ex]
+      $\boxed{x_3=\frac{(y_1+y_2)^2}{(x_1+x_2)^2}+\frac{y_1+y_2}{x_1+x_2}+x_1+x_2+a}$\\[0.5ex]
+      $\boxed{y_3=\frac{(y_1+y_2)(x_1+x_3)}{x_1+x_2}+x_3+y_1}$
+      \vspace{0.8ex}
 
-      \emph{Duplicación} $(2P)$,\; $\lambda=x_1+\dfrac{y_1}{x_1}$:\\[0.7ex]
-      $\boxed{x_3=\lambda^2+\lambda+a}$\\[0.5ex]
-      $\boxed{y_3=x_1^2+(\lambda+1)x_3}$
-      \vspace{2.6ex}
-
-      $-P=(x_1,\,x_1+y_1)$;\; restar $=$ sumar
+      \emph{Duplicación} $(2P)$:\\[0.5ex]
+      $\boxed{x_3=\frac{(x_1^2+y_1)^2}{x_1^2}+\frac{x_1^2+y_1}{x_1}+a}$\\[0.5ex]
+      $\boxed{y_3=x_1^2+\Bigl(\frac{x_1^2+y_1}{x_1}+1\Bigr)x_3}$
     \end{column}
   \end{columns}
-  \note{Formulas explicitas, resultado en recuadro. Primo: lambda con resta/division. Binario:
-  sumas (char 2), lambda tambien con division. En binario -P=(x1,x1+y1) y restar=sumar. La
-  pendiente lambda lleva una division (inversion) que se ve en la siguiente diapositiva.}
+  \vspace{1ex}
+  Cada operación necesita una \alert{división} (inversión modular) en el cuerpo.
+  \note{Formulas finales expandidas, sin nombrar la pendiente lambda como variable aparte (esta
+  ya sustituida dentro de x3, y3). Afin primo: resta/division al cuadrado; afin binario: sumas
+  (char 2), division. Cada suma o duplicacion afin necesita una inversion modular, la operacion
+  mas cara del cuerpo; eso motiva las Jacobianas de la siguiente diapositiva.}
 \end{frame}
 
-\begin{frame}{Coordenadas afines y Jacobianas}
+\begin{frame}{Suma y duplicación: coordenadas Jacobianas (cuerpo primo)}
   \small
+  \setlength{\fboxsep}{2pt}
+  \setlength{\parskip}{0pt}
+  Punto como clase $(X{:}Y{:}Z)$ con $x=\dfrac{X}{Z^2}$, $y=\dfrac{Y}{Z^3}$:
+  la $Z$ absorbe el denominador y \alert{no se invierte en cada paso}.
+  \vspace{1ex}
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
-      \textbf{Afines}
-      \begin{itemize}\footnotesize
-        \item Un punto es $(x,y)\in K^2$ sobre la curva, más $\mathcal{O}$: la representación
-          \alert{directa y natural}.
-        \item Cada suma o duplicación calcula la pendiente
-          $\lambda=\dfrac{y_2-y_1}{x_2-x_1}$ (o $\dfrac{3x_1^2+a}{2y_1}$): un \alert{cociente}
-          en el cuerpo.
-        \item En $\mathbb{F}_p$ no hay división como tal: $a/b = a\cdot b^{-1}\bmod p$. El
-          \alert{inverso} $b^{-1}$ (Euclides ext.\ o Fermat) es la operación \textbf{más cara}.
-        \item $\Rightarrow$ \alert{una inversión por cada operación} de punto.
-      \end{itemize}
-\end{column}
+      \emph{Suma} $(P\neq Q)$:\\[0.4ex]
+      $U_1{=}X_1Z_2^2$, \quad $U_2{=}X_2Z_1^2$,\\
+      $S_1{=}Y_1Z_2^3$, \quad $S_2{=}Y_2Z_1^3$,\\
+      $H{=}U_2{-}U_1$, \quad $R{=}S_2{-}S_1$:\\[0.8ex]
+      $\boxed{X_3=R^2-H^3-2U_1H^2}$\\[0.5ex]
+      $\boxed{Y_3=R(U_1H^2-X_3)-S_1H^3}$\\[0.5ex]
+      $\boxed{Z_3=HZ_1Z_2}$
+    \end{column}
     \begin{column}{0.5\textwidth}
-      \textbf{Jacobianas (proyectivas)}
-      \begin{itemize}\footnotesize
-        \item Clase $(X:Y:Z)$ con $x=\dfrac{X}{Z^2},\; y=\dfrac{Y}{Z^3}$.
-        \item $(X:Y:Z)\sim(\lambda^2 X:\lambda^3 Y:\lambda Z)$;\; $\mathcal{O}=(1:1:0)$.
-        \item Curva: $Y^2=X^3+aXZ^4+bZ^6$.
-        \item La coordenada $Z$ \alert{absorbe el denominador}: no se invierte en cada paso.
-      \end{itemize}
+      \emph{Duplicación} $(2P)$:\\[0.4ex]
+      $A{=}Y_1^2$, \quad $B{=}4X_1A$,\\
+      $C{=}8A^2$, \quad $D{=}3X_1^2+aZ_1^4$:\\[0.8ex]
+      $\boxed{X_3=D^2-2B}$\\[0.5ex]
+      $\boxed{Y_3=D(B-X_3)-C}$\\[0.5ex]
+      $\boxed{Z_3=2Y_1Z_1}$
     \end{column}
   \end{columns}
-  \vfill
-  \footnotesize Al no normalizar (no dividir por $Z$) se \alert{difiere una única inversión}
-  al final, en lugar de una por cada operación.
-  \note{Afin: (x,y), cada suma una inversion. Jacobiana: clase (X:Y:Z), x=X/Z^2, y=Y/Z^3,
-  O=(1:1:0). Se difiere UNA inversion al final.}
+  \vspace{1ex}
+  Suma: $12M+4S$ \quad · \quad Duplicación: $4M+4S$ \quad · \quad \alert{Sin inversiones}
+  \note{Jacobiana primo: punto es clase (X:Y:Z) con x=X/Z^2, y=Y/Z^3 (Z absorbe el denominador,
+  no se invierte en cada paso); suma con auxiliares U1,U2,S1,S2,H,R (12M+4S); duplicacion con
+  A,B,C,D (4M+4S); ninguna necesita inversion. El porque del ahorro se explica en la siguiente
+  diapositiva.}
 \end{frame}
 
 \begin{frame}{¿Por qué las Jacobianas son más eficientes?}
@@ -900,21 +888,24 @@
         \midrule
         P-256 (operaciones) & 14--34$\times$ más rápido \\
         P-384 & 1.7--4$\times$ más rápido \\
-        RSA-4096 verificación & \alert{a la par} (1.08$\times$) \\
+        RSA-4096 verificación & \alert{más lento} ($0.92\times$) \\
         \bottomrule
       \end{tabular}
     \end{column}
     \begin{column}{0.48\textwidth}
       \begin{block}{Por qué la diferencia}
-        Ensamblador a mano + \alert{blinding} contra canales laterales que mi versión
-        académica no incorpora.
+        \footnotesize Ensamblador a mano + \alert{blinding} contra canales laterales que mi
+        versión académica no incorpora. \\[0.5ex]
+        En RSA verify, la excepción: sin padding OAEP/PSS ni las capas EVP de OpenSSL, la
+        versión propia es algo más rápida.
       \end{block}
     \end{column}
   \end{columns}
   \vfill
   \footnotesize Objetivo del TFG: \textbf{entender y comparar}, no competir con código de
   producción.
-  \note{OpenSSL 14-34x P-256 por asm y blinding. RSA-4096 verify a la par. Honesto sobre el
+  \note{OpenSSL 14-34x P-256 por asm y blinding. RSA-4096 verify: OpenSSL mas lento (0.92x),
+  la propia es 1.08x mas rapida por no tener padding OAEP/PSS ni capas EVP. Honesto sobre el
   alcance.}
 \end{frame}
 
@@ -1004,7 +995,7 @@
 %-------------------------------------------- Backup ---
 \appendix
 
-\begin{frame}{Respaldo - de la ecuación general a la forma corta}
+\begin{frame}[noframenumbering]{Respaldo - de la ecuación general a la forma corta}
   \scriptsize
   Partimos de la \alert{ecuación general de Weierstrass} (char$(K)\neq 2,3$):
   \[ y^2 + a_1 xy + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6. \]
@@ -1026,7 +1017,7 @@
   char$(K)\neq 2,3$. El discriminante resulta $\Delta = -16(4a^3 + 27b^2)$.
 \end{frame}
 
-\begin{frame}{Respaldo - corrección de la verificación ECDSA}
+\begin{frame}[noframenumbering]{Respaldo - corrección de la verificación ECDSA}
   \footnotesize
   Si la firma es honesta, $s = k^{-1}(e + d\,r)\bmod n$, luego
   \[ k = s^{-1}(e + d\,r) = \underbrace{s^{-1}e}_{u_1} + \underbrace{s^{-1}r}_{u_2}\,d
@@ -1035,24 +1026,24 @@
   $x_{R'}\bmod n = x_R \bmod n = r$ y la firma se acepta. \qed
 \end{frame}
 
-\begin{frame}{Respaldo - panorama completo de tiempos}
+\begin{frame}[noframenumbering]{Respaldo - panorama completo de tiempos}
   \centering
   \figordemo[height=0.86\textheight,keepaspectratio]{imagenes/chart_summary_table.png}
 \end{frame}
 
-\begin{frame}{Respaldo - razón de rendimiento RSA/ECC}
+\begin{frame}[noframenumbering]{Respaldo - razón de rendimiento RSA/ECC}
   \centering
   \figordemo[width=0.78\textwidth]{imagenes/chart_speedup_ratios.png}
 \end{frame}
 
-\begin{frame}{Respaldo - CRT en el descifrado RSA}
+\begin{frame}[noframenumbering]{Respaldo - CRT en el descifrado RSA}
   \footnotesize
   Se calcula $d_p=d\bmod(p-1)$, $d_q=d\bmod(q-1)$, $q_{inv}=q^{-1}\bmod p$. Recombinación de
   Garner: $m_1=c^{d_p}\bmod p$, $m_2=c^{d_q}\bmod q$, $h=q_{inv}(m_1-m_2)\bmod p$,
   $m=m_2+hq$. Acelera $\approx 3.5\times$ (dos exponenciaciones a la mitad de bits).
 \end{frame}
 
-\begin{frame}{Respaldo - la asociatividad de la ley de grupo}
+\begin{frame}[noframenumbering]{Respaldo - la asociatividad de la ley de grupo}
   \footnotesize
   $(E(K),+)$ es grupo abeliano. Neutro $\mathcal{O}$, inversos (reflexión) y conmutatividad
   son inmediatos. El axioma no trivial es la \alert{asociatividad}: se prueba con el teorema

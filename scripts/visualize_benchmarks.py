@@ -4,7 +4,7 @@ visualize_benchmarks.py
 Generates comparative charts from RSA vs ECC benchmark CSV data.
 Supports: RSA, ECC (affine), ECC_JACOBIAN, ECC_BINARY
 Author: Leon Elliott Fuller
-Date: 2026-03-18
+Date: 2026-07-02
 
 Usage:
     python3 visualize_benchmarks.py <summary.csv> <raw.csv> <output_dir>
@@ -781,52 +781,77 @@ def chart_prime_vs_binary(df, output_dir):
 # ============================================================================
 
 def chart_jacobian_speedup_summary(df, output_dir):
-    """Horizontal bar chart showing Jacobian speedup factor per curve per operation."""
+    """Grouped horizontal bar chart: Jacobian speedup by operation (y-axis) and
+    curve (color). Operations are read as bold tick labels; curves are told apart
+    by distinct colours plus a legend, so both dimensions are unambiguous."""
     affine = df[df['algorithm'] == 'ECC']
     jacobian = df[df['algorithm'] == 'ECC_JACOBIAN']
 
     if affine.empty or jacobian.empty:
         return
 
-    entries = []
+    # Fixed, readable ordering for both axes.
+    op_order = ['keygen', 'scalar_mult', 'ecdh', 'sign', 'verify']
+    op_labels = {
+        'keygen': 'Keygen', 'scalar_mult': 'Scalar mult', 'ecdh': 'ECDH',
+        'sign': 'Sign', 'verify': 'Verify',
+    }
+    curve_order = ['secp256k1', 'P-256', 'P-384']
+    # Distinct hues (not three shades of red) so curves are easy to separate.
+    curve_colors = {'secp256k1': '#F59E0B', 'P-256': '#DC2626', 'P-384': '#4F46E5'}
+
+    # speedup[curve][op] = affine median / Jacobian median
+    speedup = {c: {} for c in curve_order}
     for _, a_row in affine.iterrows():
-        j_row = jacobian[(jacobian['params'] == a_row['params']) &
-                         (jacobian['operation'] == a_row['operation'])]
+        c, op = a_row['params'], a_row['operation']
+        if c not in speedup or op not in op_order:
+            continue
+        j_row = jacobian[(jacobian['params'] == c) & (jacobian['operation'] == op)]
         if j_row.empty:
             continue
-        a_val = a_row['median_us']
-        j_val = j_row['median_us'].values[0]
-        if j_val > 0 and a_val > 0:
-            entries.append({
-                'label': f"{a_row['operation'].capitalize()} ({a_row['params']})",
-                'speedup': a_val / j_val,
-                'curve': a_row['params'],
-            })
+        a_val, j_val = a_row['median_us'], j_row['median_us'].values[0]
+        if a_val > 0 and j_val > 0:
+            speedup[c][op] = a_val / j_val
 
-    if not entries:
+    ops = [op for op in op_order if any(op in speedup[c] for c in curve_order)]
+    curves = [c for c in curve_order if speedup[c]]
+    if not ops or not curves:
         return
 
-    entries.sort(key=lambda e: e['speedup'], reverse=True)
+    n_ops, n_curves = len(ops), len(curves)
+    group_h = 0.82
+    bar_h = group_h / n_curves
+    y_base = np.arange(n_ops)
+    max_spd = max(v for c in curves for v in speedup[c].values())
 
-    fig, ax = plt.subplots(figsize=(10, max(4, len(entries) * 0.4)))
+    fig, ax = plt.subplots(figsize=(10, max(4.5, n_ops * n_curves * 0.34 + 1.2)))
 
-    labels = [e['label'] for e in entries]
-    speedups = [e['speedup'] for e in entries]
-    colors = [PARAM_COLORS.get(e['curve'], ECCJ_COLOR) for e in entries]
+    for i, curve in enumerate(curves):
+        # Center the group of bars around each operation tick.
+        offset = (i - (n_curves - 1) / 2) * bar_h
+        ys = y_base + offset
+        vals = [speedup[curve].get(op, 0.0) for op in ops]
+        bars = ax.barh(ys, vals, height=bar_h * 0.9, color=curve_colors[curve],
+                       edgecolor='white', linewidth=0.6, label=curve, zorder=3)
+        for bar, v in zip(bars, vals):
+            if v > 0:
+                ax.text(v + max_spd * 0.012, bar.get_y() + bar.get_height() / 2,
+                        f'{v:.2f}x', ha='left', va='center', fontsize=8.5,
+                        fontweight='bold', color='#374151')
 
-    y = range(len(labels))
-    bars = ax.barh(y, speedups, color=colors, edgecolor='white', height=0.6, alpha=0.8)
+    # Break-even reference (speedup = 1x).
+    ax.axvline(x=1, color='gray', linestyle='--', linewidth=1.3, alpha=0.8, zorder=2)
 
-    ax.axvline(x=1, color='gray', linestyle='-', linewidth=1.5, alpha=0.7)
-
-    for bar, spd in zip(bars, speedups):
-        ax.text(bar.get_width() + 0.05, bar.get_y() + bar.get_height()/2,
-                f'{spd:.2f}x', ha='left', va='center', fontsize=9, fontweight='bold')
-
-    ax.set_yticks(y)
-    ax.set_yticklabels(labels, fontsize=9)
-    ax.set_xlabel('Speedup Factor (Affine time / Jacobian time)')
-    ax.set_title('Jacobian Coordinate Speedup over Affine')
+    ax.set_yticks(y_base)
+    ax.set_yticklabels([op_labels[op] for op in ops], fontsize=11, fontweight='bold')
+    ax.invert_yaxis()  # first operation on top
+    ax.set_xlim(0, max_spd * 1.14)
+    ax.set_xlabel('Speedup factor  (affine time / Jacobian time)')
+    ax.set_title('Jacobian coordinate speedup over affine\nby operation and curve')
+    ax.grid(axis='y', visible=False)
+    # Legend outside the plot so it never covers the (long) bars.
+    ax.legend(title='Curve', loc='upper left', bbox_to_anchor=(1.01, 1.0),
+              framealpha=0.95, fontsize=10)
 
     plt.tight_layout()
     path = os.path.join(output_dir, 'chart_jacobian_speedup.png')
