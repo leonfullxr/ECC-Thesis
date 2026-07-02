@@ -151,8 +151,8 @@ def label_point(ax, xy, text, dx, dy, color, ha="left"):
 def make_ec_addition(out_path):
     # smooth curve y^2 = x^3 - x + 1  (Delta = -16*23 != 0)
     a, b = -1.0, 1.0
-    x_min, x_max = -1.9, 2.7
-    y_min, y_max = -3.2, 3.2
+    x_min, x_max = -1.9, 2.3
+    y_min, y_max = -2.9, 2.9
 
     # narrower figure + tight wspace: with equal-aspect axes this halves the
     # inter-panel gap and makes the figure taller (= bigger on the slide).
@@ -166,9 +166,12 @@ def make_ec_addition(out_path):
     plot_curve(ax, a, b, x_min, x_max)
     style_axes(ax, x_min, x_max, y_min, y_max)
 
-    Px, Py = -1.0, 1.0
-    Qx = 2.0
-    Qy = float(np.sqrt(Qx**3 + a * Qx + b))  # (2, sqrt(7))
+    # P and Q chosen so the three intersections (-1.2, 0.05, 1.2) are
+    # well separated and no marker/label overlaps another.
+    Px = -1.2
+    Py = float(np.sqrt(Px**3 + a * Px + b))
+    Qx = 1.2
+    Qy = float(np.sqrt(Qx**3 + a * Qx + b))
     lam = (Qy - Py) / (Qx - Px)
     Rx = lam**2 - Px - Qx           # x of third intersection / of P+Q
     Ry_line = lam * (Rx - Px) + Py  # y on the secant at Rx = third intersection
@@ -181,15 +184,15 @@ def make_ec_addition(out_path):
     ax.plot([Rx, Rx], [Ry_line, Sy], color=THIRD_COLOR, linestyle=":",
             linewidth=1.6, zorder=2)
 
-    ax.scatter([Px, Qx], [Py, Qy], color=POINT_COLOR, s=55, zorder=5)
+    ax.scatter([Px, Qx], [Py, Qy], color=POINT_COLOR, s=95, zorder=5)
     ax.scatter([Rx], [Ry_line], facecolors="white", edgecolors=THIRD_COLOR,
-               s=55, linewidths=1.6, zorder=5)
-    ax.scatter([Rx], [Sy], color=RESULT_COLOR, s=70, zorder=5)
+               s=95, linewidths=2.0, zorder=5)
+    ax.scatter([Rx], [Sy], color=RESULT_COLOR, s=125, zorder=5)
 
-    label_point(ax, (Px, Py), "P", -0.05, 0.28, POINT_COLOR, ha="right")
-    label_point(ax, (Qx, Qy), "Q", 0.1, 0.05, POINT_COLOR)
-    label_point(ax, (Rx, Ry_line), r"$-(P{+}Q)$", 0.12, 0.18, THIRD_COLOR)
-    label_point(ax, (Rx, Sy), r"$P+Q$", 0.12, -0.45, RESULT_COLOR)
+    label_point(ax, (Px, Py), "P", -0.10, 0.25, POINT_COLOR, ha="right")
+    label_point(ax, (Qx, Qy), "Q", 0.14, 0.05, POINT_COLOR)
+    label_point(ax, (Rx, Ry_line), r"$-(P{+}Q)$", 0.12, 0.22, THIRD_COLOR)
+    label_point(ax, (Rx, Sy), r"$P+Q$", 0.14, -0.45, RESULT_COLOR)
     ax.set_title(r"Suma:  $P + Q$  (cuerda)")
 
     # -------------------------------------------------- right: 2P -------
@@ -210,14 +213,15 @@ def make_ec_addition(out_path):
     ax.plot([Tx, Tx], [Ty_line, Dy], color=THIRD_COLOR, linestyle=":",
             linewidth=1.6, zorder=2)
 
-    ax.scatter([P2x], [P2y], color=POINT_COLOR, s=55, zorder=5)
+    ax.scatter([P2x], [P2y], color=POINT_COLOR, s=95, zorder=5)
     ax.scatter([Tx], [Ty_line], facecolors="white", edgecolors=THIRD_COLOR,
-               s=55, linewidths=1.6, zorder=5)
-    ax.scatter([Tx], [Dy], color=RESULT_COLOR, s=70, zorder=5)
+               s=95, linewidths=2.0, zorder=5)
+    ax.scatter([Tx], [Dy], color=RESULT_COLOR, s=125, zorder=5)
 
-    label_point(ax, (P2x, P2y), "P", 0.12, 0.12, POINT_COLOR)
-    label_point(ax, (Tx, Ty_line), r"$-2P$", 0.12, -0.45, THIRD_COLOR)
-    label_point(ax, (Tx, Dy), r"$2P$", 0.12, 0.18, RESULT_COLOR)
+    # label P below the tangent so neither the line nor the curve hides it
+    label_point(ax, (P2x, P2y), "P", 0.16, -0.42, POINT_COLOR)
+    label_point(ax, (Tx, Ty_line), r"$-2P$", 0.15, -0.52, THIRD_COLOR)
+    label_point(ax, (Tx, Dy), r"$2P$", -0.12, 0.30, RESULT_COLOR, ha="right")
     ax.set_title(r"Duplicacion:  $2P$  (tangente)")
 
     fig.savefig(out_path, dpi=DPI, bbox_inches="tight")
