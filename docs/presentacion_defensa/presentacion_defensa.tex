@@ -16,6 +16,7 @@
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{animate}   % rho de Pollard animado dentro de una sola diapositiva
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,arrows,calc,fit,backgrounds}
 \newsavebox{\arqbox}   % caja para capturar el diagrama de arquitectura
@@ -210,15 +211,6 @@
       \end{block}
     \end{column}
   \end{columns}
-  \vfill
-  \footnotesize\centering El instrumento de medida es parte del objetivo: un
-  \alert{banco de pruebas propio} en C++17, contenedorizado y automatizado de extremo a
-  extremo, donde cada resultado se \textbf{reproduce con un comando}.
-  \note{Implemento ambos en C++17. Tres ejes, cada uno una pregunta. Separar álgebra de
-  implementación. El cuarto elemento es el instrumento: banco de pruebas propio,
-  arquitectura reproducible (Docker+semilla fija), medicion sin sesgos
-  (calentamiento+repeticiones+mediana), C++17+NTL/GMP, todo automatizado (make reproduce).
-  Detalle en la seccion de ingenieria.}
 \end{frame}
 
 %==============================================================================
@@ -478,28 +470,38 @@
 
 \begin{frame}{Atacar el ECDLP: el algoritmo rho de Pollard}
   \begin{columns}[c]
-    \begin{column}{0.44\textwidth}
-      \footnotesize
-      Mejor ataque \alert{genérico} conocido:
-      \begin{itemize}\footnotesize
-        \item Paseo \alert{pseudoaleatorio} sobre el grupo de puntos.
-        \item Por la \alert{paradoja del cumpleaños}, aparece pronto una \alert{colisión}:
-              el camino entra en un ciclo (forma de $\rho$: cola $+$ ciclo).
-        \item Detección de ciclo con poca memoria (Floyd: tortuga/liebre). De la colisión se
-              despeja $k$.
-      \end{itemize}
-      \vspace{0.5ex}
-      \begin{block}{Coste}
-        $O(\sqrt{n})$ en tiempo, $O(1)$ en memoria $\Rightarrow$ \alert{exponencial} en bits.
-      \end{block}
-    \end{column}
-    \begin{column}{0.56\textwidth}
+    \begin{column}{0.64\textwidth}
       \centering
-      \figordemo[width=\textwidth]{imagenes/attack_pollard_rho.png}
+      % Animación en UNA sola página: 9 fotogramas (extraídos de
+      % results/pollard_rho.gif, regenerable y visualizable con `make pollard`).
+      % Se reproduce en bucle en visores con JavaScript (Adobe Acrobat, Foxit,
+      % PDF-XChange); en el resto (Okular, Evince...) queda el fotograma final
+      % como imagen fija (poster=last). Demo en vivo: `make pollard`.
+      \animategraphics[autoplay,loop,poster=last,width=\textwidth]{2}%
+        {imagenes/pollard/rho-}{0}{8}
+    \end{column}
+    \begin{column}{0.34\textwidth}
+      \centering
+      \figordemo[height=0.55\textheight]{imagenes/attack_pollard_rho_ciclo.png}
     \end{column}
   \end{columns}
-  \note{Rho de Pollard: paseo pseudoaleatorio, colision por cumpleanos, forma de rho, Floyd,
-  se despeja k. O(sqrt n) tiempo, O(1) memoria. NO confundir con rho para factorizacion.}
+
+  \vspace{0.3em}
+  \scriptsize\centering Paseo \alert{pseudoaleatorio} con cada punto escrito como
+  $R_i = a_i P + b_i Q$; por la \alert{paradoja del cumpleaños} llega la \alert{colisión}
+  $R_i = R_j$ y se despeja
+  $\boxed{\,k \equiv (a_i - a_j)\,(b_j - b_i)^{-1} \pmod{n}\,}$\\[0.3ex]
+  \textbf{Coste:} $O(\sqrt{n})$ tiempo, $O(1)$ memoria $\Rightarrow$ \alert{exponencial}
+  en bits.
+  \note{Rho de Pollard animado: paseo pseudoaleatorio sobre la curva y^2=x^3+2x+3 mod 83,
+  P=(0,13), n=43, Q=14P. Tortuga un paso, liebre dos (Floyd); colision en el paso 10 y se
+  despeja d=14, verificado. Derecha: estructura rho abstracta, cola lambda + ciclo mu (de
+  ahi el nombre del algoritmo). Formula: cada punto del paseo es R_i = a_i P + b_i Q; en la
+  colision R_i = R_j se igualan y se despeja k = (a_i-a_j)/(b_j-b_i) mod n. Por la paradoja
+  del cumpleanos la colision llega en ~sqrt(pi n/2) ~ 1.25 sqrt(n) pasos. O(sqrt n) tiempo,
+  O(1) memoria: exponencial en bits. NO confundir con el rho de factorizacion. La animacion
+  se reproduce sola en Acrobat/Foxit; en Okular/Evince se ve el fotograma final. Demo en
+  vivo: make pollard abre el GIF.}
 \end{frame}
 
 %==============================================================================
@@ -647,7 +649,7 @@
 \end{frame}
 
 %==============================================================================
-\section{Ingeniería del banco de pruebas}
+\section{Metodología experimental e implementación}
 
 \begin{frame}{Elección del \emph{stack}: C++17 + NTL/GMP}
   \small
@@ -656,18 +658,16 @@
       \textbf{Lo elegido}
       \begin{itemize}\footnotesize
         \setlength{\itemsep}{2pt}
-        \item \alert{C++17}: control total del camino caliente; sin recolector de basura
+        \item \alert{C++17}: control total; sin recolector de basura
               ni intérprete que contaminen los tiempos.
         \item \alert{NTL 11.5.1 sobre GMP 6.3.0}: la referencia en aritmética de precisión
               arbitraria (\texttt{ZZ\_p} para $\mathbb{F}_p$, \texttt{GF2E} para
               $\mathbb{F}_{2^m}$).
-        \item \alert{SHA-256 propio} (FIPS 180-4): el hash de ECDSA sin dependencias
-              externas que alteren las medidas.
-        \item OpenSSL 3.0.2: \textbf{solo} como \emph{baseline} externo de contraste.
+        \item OpenSSL 3.0.2: \textbf{solo} como baseline externo de contraste.
       \end{itemize}
     \end{column}
     \begin{column}{0.46\textwidth}
-      \textbf{Lo descartado (y por qué)}
+      \textbf{Lo descartado}
       \begin{itemize}\footnotesize
         \setlength{\itemsep}{2pt}
         \item \textbf{Python / Sage}: esconden justo la aritmética que se quiere estudiar
@@ -687,28 +687,37 @@
   ensamblador, no los algoritmos.}
 \end{frame}
 
-\begin{frame}{Tres retos de ingeniería (y cómo se resolvieron)}
+\begin{frame}{Los retos}
   \begin{columns}[t]
     \begin{column}{0.5\textwidth}
-      \begin{block}{1. Medir sin engañarse}
-        \scriptsize Ruido del SO, cachés frías, \emph{outliers} $\Rightarrow$
-        \alert{3 iteraciones de calentamiento} descartadas; \alert{$N=100$} medidas por
-        configuración (\texttt{std::chrono}, resolución de µs); \alert{mediana} como
-        métrica principal (robusta a \emph{outliers}, p.\,ej.\ keygen RSA); media,
-        desviación y P5/P95 guardadas en los CSV.
+      \begin{block}{1. Medición precisa}
+        \scriptsize
+        \begin{itemize}\scriptsize
+          \setlength{\itemsep}{1pt}
+          \item Enemigos: ruido del SO, cachés frías, \emph{outliers}
+          \item \alert{3 calentamientos} descartados
+          \item \alert{$N=100$} medidas (\texttt{std::chrono}, µs)
+          \item \alert{Mediana} como métrica principal
+        \end{itemize}
       \end{block}
       \begin{block}{2. Entorno determinista}
-        \scriptsize ``En mi máquina sale otra cosa'' $\Rightarrow$ \alert{Docker}
-        (Ubuntu 22.04; GMP 6.3.0 y NTL 11.5.1 compilados desde fuente); compilador fijo
-        \texttt{g++ -O2}, sin \texttt{-march=native}; ejecución \alert{monohilo}.
+        \scriptsize
+        \begin{itemize}\scriptsize
+          \setlength{\itemsep}{1pt}
+          \item \alert{Docker}: Ubuntu 22.04, GMP/NTL desde fuente
+          \item \texttt{g++ -O2} fijo, sin \texttt{-march=native}
+          \item Ejecución \alert{monohilo}
+        \end{itemize}
       \end{block}
     \end{column}
     \begin{column}{0.5\textwidth}
       \begin{block}{3. Comparar con las mismas entradas}
-        \scriptsize \alert{RNG con semilla fija} ($s{=}0$): todos los algoritmos ven el
-        mismo flujo aleatorio $\Rightarrow$ comparación \alert{pareada}. Y como todo
-        depende de él, el RNG se \alert{validó estadísticamente}: uniformidad ($\chi^2$,
-        Kolmogorov--Smirnov), rachas, autocorrelación y entropía.
+        \scriptsize
+        \begin{itemize}\scriptsize
+          \setlength{\itemsep}{1pt}
+          \item \alert{Semilla fija} ($s{=}0$) $\Rightarrow$ comparación \alert{pareada}
+          \item RNG \alert{validado}: $\chi^2$, K--S, rachas, autocorrelación, entropía
+        \end{itemize}
       \end{block}
       \begin{alertblock}{En cifras}
         \scriptsize 72 configuraciones medidas (24 RSA $+$ 18 ECC afín $+$ 15 Jacobiano
@@ -921,36 +930,36 @@
                                                \texttt{std::chrono} (µs)};
     \node[data, right=0.55cm of iters] (raw) {\texttt{raw.csv}\\todas las muestras};
 
-    % ------- fila 2: el análisis -------
-    \node[fase, below=0.75cm of op] (stats) {media · desviación\\mín/máx · P5/P95};
-    \node[pick, right=0.55cm of stats] (median) {\textbf{mediana}\\métrica principal};
-    \node[data, right=0.55cm of median] (summary) {\texttt{summary.csv}\\72 configuraciones};
-    \node[data, right=0.55cm of summary] (charts) {gráficas y tablas\\del capítulo de
-                                                   resultados};
+    % ------- fila 2: el análisis (en serpiente, de derecha a izquierda) -------
+    \node[fase, below=0.55cm of raw] (stats) {media · desviación\\mín/máx · P5/P95};
+    \node[pick, left=0.55cm of stats] (median) {\textbf{mediana}\\métrica principal};
+    \node[data, left=0.55cm of median] (summary) {\texttt{summary.csv}\\72 configuraciones};
+    \node[data, left=0.55cm of summary] (charts) {gráficas y tablas\\del capítulo de
+                                                  resultados};
 
     \draw[pipe] (op) -- (warm);
     \draw[pipe] (warm) -- (iters);
     \draw[pipe] (iters) -- (raw);
-    \draw[pipe] (raw.south) to[out=-90, in=90] ([xshift=1.2cm]stats.north);
+    \draw[pipe] (raw) -- (stats);
     \draw[pipe] (stats) -- (median);
     \draw[pipe] (median) -- (summary);
     \draw[pipe] (summary) -- (charts);
 
     % ------- por qué la mediana: outliers reales de keygen RSA -------
-    \begin{scope}[shift={(0.3,-4.35)}]
-      \node[anchor=west, font=\scriptsize\bfseries, text=UGRdark] at (-0.3,0.75)
+    \begin{scope}[shift={(0.3,-3.75)}]
+      \node[anchor=west, font=\scriptsize\bfseries, text=UGRdark] at (-0.3,0.62)
         {¿Por qué la mediana?};
-      \draw[black!45] (0,0) -- (11.2,0);
+      \draw[black!45] (0,0) -- (10.8,0);
       \foreach \x in {0.5,0.75,0.95,1.15,1.3,1.5,1.65,1.85,2.05,2.3}
         \fill[UGRsoft] (\x,0) circle (2.3pt);
-      \fill[UGRsoft] (10.6,0) circle (2.3pt);
-      \node[font=\tiny, text=black!60, anchor=north] at (10.6,-0.18)
+      \fill[UGRsoft] (10.2,0) circle (2.3pt);
+      \node[font=\tiny, text=black!60, anchor=north east] at (10.9,-0.18)
         {\emph{outlier} (búsqueda de primos con mala suerte)};
-      \draw[UGRgreen, very thick] (1.4,-0.22) -- (1.4,0.22)
-        node[above, font=\tiny\bfseries, text=UGRgreen] {mediana};
-      \draw[UGRaccent, very thick] (2.2,-0.22) -- (2.2,0.22)
-        node[above, font=\tiny\bfseries, text=UGRaccent, xshift=0.55cm]
-        {media (arrastrada)};
+      \draw[UGRgreen, very thick] (1.4,-0.22) -- (1.4,0.22);
+      \node[font=\tiny\bfseries, text=UGRgreen, anchor=east] at (1.25,0.42) {mediana};
+      \draw[UGRaccent, very thick] (2.4,-0.22) -- (2.4,0.22);
+      \node[font=\tiny\bfseries, text=UGRaccent, anchor=west] at (2.55,0.42)
+        {media (arrastrada por el \emph{outlier})};
     \end{scope}
   \end{tikzpicture}
   \note{Flujo estadistico por configuracion: se ejecutan 3 iteraciones de calentamiento que
@@ -995,7 +1004,6 @@
   \footnotesize \textbf{Firma:} ECC $\sim$2.6$\times$ más rápida \; · \;
   \textbf{Verificación:} \alert{RSA} $\sim$38$\times$ más rápida (exponente público
   $e=65537$, solo 2 bits a 1).\\
-  \alert{No hay ganador absoluto:} depende del perfil de uso.
   \note{Firma ECC 2.6x. Verificacion RSA 38x por e=65537. No hay ganador absoluto: un
   servidor que emite firmas en masa prefiere ECC; un cliente que valida certificados, RSA.}
 \end{frame}
@@ -1009,7 +1017,7 @@
     \begin{column}{0.34\textwidth}
       \footnotesize
       \begin{itemize}\footnotesize
-        \item Las Jacobianas \alert{evitan la inversión modular} (visto en fundamentos).
+        \item Las Jacobianas \alert{evitan la inversión modular}.
         \item Medido: \alert{1.70--1.93$\times$} (media $\sim$1.8$\times$).
       \end{itemize}
       \vfill
@@ -1101,29 +1109,6 @@
   ubicuo, compatibilidad; ideal PKI heredada, JWT verificados muchas veces, legados. No hay
   ganador absoluto: ventaja de ECC estructural y crece; RSA gana en verificacion. Separar
   algebra de ingenieria.}
-\end{frame}
-
-\begin{frame}{ECC hoy en día: ¿dónde se usa?}
-  \footnotesize
-  \begin{itemize}\footnotesize
-    \item \textbf{Web (TLS 1.3):} $\sim$97--98\% de los handshakes usan ECDHE; \alert{X25519}
-      por defecto en navegadores.
-    \item \textbf{Passkeys / FIDO2:} firmadas con \alert{ECDSA P-256}.
-    \item \textbf{Mensajería y redes:} Signal, WhatsApp, SSH, WireGuard $\to$
-      \alert{Curve25519 / Ed25519}.
-    \item \textbf{Criptomonedas:} Bitcoin y Ethereum $\to$ \alert{secp256k1} (la curva de
-      Koblitz del TFG).
-    \item \textbf{Documentos:} pasaportes electrónicos (ICAO Doc 9303).
-  \end{itemize}
-  \vspace{0.5ex}
-  \begin{alertblock}{La transición post-cuántica es \emph{híbrida}, no una retirada}
-    \scriptsize \texttt{X25519MLKEM768} (X25519 $+$ ML-KEM-768) ya cubre $>$40\% del tráfico
-    HTTPS humano en Cloudflare, por defecto en Chrome, Firefox, OpenSSL y Apple. X25519 sigue
-    como \alert{salvaguarda clásica}.
-  \end{alertblock}
-  \note{TLS 97-98 por ciento ECDHE, X25519 default. Passkeys ECDSA P-256. Signal/WhatsApp/SSH/WireGuard
-  Curve25519/Ed25519. Bitcoin/Ethereum secp256k1. Pasaportes ICAO. Post-cuantico HIBRIDO:
-  X25519MLKEM768 >40 por ciento trafico Cloudflare, default en navegadores. ECC no se retira.}
 \end{frame}
 
 \begin{frame}{Trabajo futuro}
@@ -1228,6 +1213,26 @@
   Se calcula $d_p=d\bmod(p-1)$, $d_q=d\bmod(q-1)$, $q_{inv}=q^{-1}\bmod p$. Recombinación de
   Garner: $m_1=c^{d_p}\bmod p$, $m_2=c^{d_q}\bmod q$, $h=q_{inv}(m_1-m_2)\bmod p$,
   $m=m_2+hq$. Acelera $\approx 3.5\times$ (dos exponenciaciones a la mitad de bits).
+\end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo - ECC hoy en día: ¿dónde se usa?}
+  \footnotesize
+  \begin{itemize}\footnotesize
+    \item \textbf{Web (TLS 1.3):} $\sim$97--98\% de los handshakes usan ECDHE; \alert{X25519}
+      por defecto en navegadores.
+    \item \textbf{Passkeys / FIDO2:} firmadas con \alert{ECDSA P-256}.
+    \item \textbf{Mensajería y redes:} Signal, WhatsApp, SSH, WireGuard $\to$
+      \alert{Curve25519 / Ed25519}.
+    \item \textbf{Criptomonedas:} Bitcoin y Ethereum $\to$ \alert{secp256k1} (la curva de
+      Koblitz del TFG).
+    \item \textbf{Documentos:} pasaportes electrónicos (ICAO Doc 9303).
+  \end{itemize}
+  \vspace{0.5ex}
+  \begin{alertblock}{La transición post-cuántica es \emph{híbrida}, no una retirada}
+    \scriptsize \texttt{X25519MLKEM768} (X25519 $+$ ML-KEM-768) ya cubre $>$40\% del tráfico
+    HTTPS humano en Cloudflare, por defecto en Chrome, Firefox, OpenSSL y Apple. X25519 sigue
+    como \alert{salvaguarda clásica}.
+  \end{alertblock}
 \end{frame}
 
 \begin{frame}[noframenumbering]{Respaldo - la asociatividad de la ley de grupo}

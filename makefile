@@ -105,6 +105,7 @@ show-info:
 	@echo "$(IFG) -  make visualize$(EC)          Regenerate all charts + collages"
 	@echo "$(IFG) -  make figures$(EC)            Regenerate charts and copy to imagenes/ (memoria + slides)"
 	@echo "$(IFG) -  make illustrations$(EC)      Regenerate static slide figures (curve shapes, group law)"
+	@echo "$(IFG) -  make pollard$(EC)            Generate the Pollard rho attack GIF and open it"
 	@echo "$(IFG) -  make slides$(EC)             Compile the Beamer defense presentation (PDF)"
 	@echo "$(IFG) -  make reproduce$(EC)          Full pipeline: benchmark+openssl+flags+figures"
 	@echo ""
@@ -171,7 +172,7 @@ test-rsa-py:
 # ============================================================================
 # Full experiments and reproducibility (memoria)
 # ============================================================================
-.PHONY: benchmark compare-openssl compare-compiler-flags rng-full rng-visualize visualize figures illustrations slides reproduce
+.PHONY: benchmark compare-openssl compare-compiler-flags rng-full rng-visualize visualize figures illustrations pollard slides reproduce
 
 # Full RSA vs ECC comparative benchmark (3 axes) + charts
 benchmark: $(BIN_DIR)/bench
@@ -231,6 +232,18 @@ figures: visualize
 illustrations:
 	@echo -e "$(LGFG)Generating slide illustrations (ec_shape, ec_addition)...$(EC)"
 	@$(PYTHON) $(SCRIPTS_DIR)/generate_slide_illustrations.py $(SLIDES_IMAGES)
+
+# Generate the Pollard rho attack animation and open it with the default
+# viewer. --prime 83 is the run embedded in the slides: collision at step 10
+# and d=14 recovered (verified). The PDF frames in imagenes/pollard/ were
+# extracted from this GIF. Run the script without --save for the interactive
+# real-time version (space bar pauses).
+POLLARD_GIF := $(RESULTS_DIR)/pollard_rho.gif
+pollard:
+	@echo -e "$(LGFG)Generating Pollard rho animation (this takes a moment)...$(EC)"
+	@$(PYTHON) $(SCRIPTS_DIR)/visual_pollard_rho_animated.py --prime 83 --save $(POLLARD_GIF)
+	@echo -e "$(LGFG)Saved: $(POLLARD_GIF) - opening viewer...$(EC)"
+	@xdg-open $(POLLARD_GIF) >/dev/null 2>&1 &
 
 # Compile the Beamer defense presentation (two passes for TOC/progress bar)
 slides:

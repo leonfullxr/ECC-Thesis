@@ -714,6 +714,8 @@ def chart_prime_vs_binary(df, output_dir):
     """Compare prime field (affine + Jacobian) vs binary field at same security."""
     # Security 128 bits: P-256 vs sect283k1
     # Security 112 bits: (no prime at 112, but we can compare sect233k1/r1)
+    # Optional 4th tuple element: explicit bar color. Needed when two curves of
+    # the same algorithm share a panel (both would get the same group color).
     comparisons = [
         ('~128-bit security', [
             ('ECC', 'P-256', 'P-256 (Affine)'),
@@ -722,7 +724,7 @@ def chart_prime_vs_binary(df, output_dir):
         ]),
         ('~112-bit security', [
             ('ECC_BINARY', 'sect233k1', 'sect233k1 (Koblitz)'),
-            ('ECC_BINARY', 'sect233r1', 'sect233r1 (Random)'),
+            ('ECC_BINARY', 'sect233r1', 'sect233r1 (Random)', '#D97706'),
         ]),
     ]
 
@@ -742,7 +744,8 @@ def chart_prime_vs_binary(df, output_dir):
         total_width = 0.8
         bar_width = total_width / max(n, 1)
 
-        for i, (algo, param, label) in enumerate(entries):
+        for i, entry in enumerate(entries):
+            algo, param, label = entry[:3]
             data = df[(df['algorithm'] == algo) & (df['params'] == param)]
             if data.empty:
                 continue
@@ -753,7 +756,7 @@ def chart_prime_vs_binary(df, output_dir):
                 vals.append(row['median_us'].values[0] if not row.empty else 0)
 
             offset = (i - n/2 + 0.5) * bar_width
-            color = group_colors.get(algo, '#888')
+            color = entry[3] if len(entry) > 3 else group_colors.get(algo, '#888')
             bars = ax.bar(x + offset, vals, bar_width, label=label,
                           color=color, edgecolor='white', alpha=0.85)
 
@@ -766,7 +769,9 @@ def chart_prime_vs_binary(df, output_dir):
         ax.set_xticklabels([op_labels.get(op, op) for op in ops])
         ax.set_ylabel('Time (us)')
         ax.set_title(title)
-        ax.legend(fontsize=8)
+        # legend outside the axes: anywhere inside lands on a bar or its label
+        ax.legend(fontsize=9, loc='upper center', bbox_to_anchor=(0.5, -0.09),
+                  ncols=len(entries), frameon=False)
 
     plt.suptitle('Field Arithmetic Comparison: Fp (Prime) vs GF(2^m) (Binary)', fontsize=14)
     plt.tight_layout()
