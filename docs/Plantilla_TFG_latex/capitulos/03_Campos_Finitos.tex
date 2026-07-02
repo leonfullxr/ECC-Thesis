@@ -130,7 +130,7 @@ Los elementos de $\mathbb{F}_{31}$ son $\{0,1,2,\dots,30\}$. A continuación se 
 \end{ejemplo}
 
 \subsection{Suma en \texorpdfstring{$\mathbb{F}_p$}{Fp}}
-Para sumar dos elementos de \(\mathbb{F}_p\cong\mathbb{Z}/p\mathbb{Z}\), representados como enteros únicos en \([0,p-1]\), basta sumar los enteros y comprobar si el resultado es \(\ge p\); en tal caso restamos \(p\) para obtener un valor en \([0,p-1]\). De forma análoga, tras restar dos enteros, sumamos \(p\) si el resultado es negativo. El coste total sigue siendo \(O(n)\) operaciones a nivel de bit, donde \(n=\lg p\) es el número de bits necesarios para representar un elemento del cuerpo.
+Para sumar dos elementos de \(\mathbb{F}_p\cong\mathbb{Z}/p\mathbb{Z}\), representados como enteros únicos en \([0,p-1]\), basta sumar los enteros y comprobar si el resultado es \(\ge p\); en tal caso restamos \(p\) para obtener un valor en \([0,p-1]\). De forma análoga, tras restar dos enteros, sumamos \(p\) si el resultado es negativo. El coste total sigue siendo \(O(n)\) operaciones a nivel de bit, donde \(n=\lg p\)\footnote{A lo largo de la memoria, \(\lg\) denota el logaritmo en base 2, es decir, \(\lg x = \log_2 x\).} es el número de bits necesarios para representar un elemento del cuerpo.
 
 Para sumar o restar dos elementos de \(\mathbb{F}_q\cong(\mathbb{Z}/p\mathbb{Z})[x]/(f)\), simplemente sumamos o restamos los coeficientes correspondientes de los polinomios, con un coste total de \(O(d\lg p)\) operaciones de bit, donde \(d=\deg f\). Nuevamente, si definimos \(n=\lg q=d\lg p\), el coste es \(O(n)\) operaciones de bit.
 
@@ -161,10 +161,10 @@ Los cuerpos finitos de orden $2^m$, también llamados \emph{cuerpos binarios}, s
   \mathbb{F}_{2^m}\cong\mathbb{F}_2[x]/(f(x)),
 \]
 donde $f(x)$ es un polinomio irreducible de grado $m$ sobre $\mathbb{F}_2$.
-En tal cuerpo, cada elemento puede representarse como un polinomio de grado < $m$ con coeficientes en ${0,1}$ (equivalentemente, como un vector binario de $m$ bits).
+En tal cuerpo, cada elemento puede representarse como un polinomio de grado \(m\) < m con coeficientes en ${0,1}$ (equivalentemente, como un vector binario de $m$ bits).
 
 \subsection{Representación polinomial}
-Sea \(f(z)\) un polinomio binario irreducible de grado \(m\), y escríbalo como
+Sea \(f(z)\) un polinomio binario irreducible de grado \(m\), se puede escribir como
 \[
   f(z) = z^m + r(z).
 \]
@@ -362,7 +362,7 @@ Si \(c\in\{\pm1\}\) se dice que el OEF es de \emph{Tipo I} (y \(p\) es primo de 
     \hline
     \(p\)               & \(f(z)\)       & Parámetros                 & Tipo     \\
     \hline
-    \(2^7+3\)          & \(z^{13}-5\)   & \(n=7\), \(c=-3\), \(m=13\), \(\omega=5\)   & –        \\
+    \(2^7+3\)          & \(z^{13}-5\)   & \(n=7\), \(c=-3\), \(m=13\), \(\omega=5\)   & -        \\
     \(2^{13}-1\)       & \(z^{13}-2\)   & \(n=13\), \(c=1\), \(m=13\), \(\omega=2\)   & I, II    \\
     \(2^{31}-19\)      & \(z^{6}-2\)    & \(n=31\), \(c=19\), \(m=6\), \(\omega=2\)    & II       \\
     \(2^{31}-1\)       & \(z^{6}-7\)    & \(n=31\), \(c=1\), \(m=6\), \(\omega=7\)     & I        \\

@@ -9,7 +9,7 @@ Los sistemas criptográficos basados en curvas elípticas dependen, en última i
     \label{fig:ECDSA_esquema}
 \end{figure}
 
-Este capítulo desarrolla los fundamentos teóricos necesarios para abordar el capítulo de criptografía y la implementación. La sección~\ref{sec:historia_curvas_elipticas} ofrece un breve recorrido histórico desde las integrales elípticas hasta su uso criptográfico moderno. La sección~\ref{sec:definicion_curvas_elipticas} introduce la definición formal de curva elíptica como modelo de Weierstrass generalizado, junto con sus invariantes asociados (discriminante, condición de no singularidad, punto en el infinito). En la sección~\ref{sec:simplificaciones_weierstrass_curvas_elipticas} se obtienen las formas simplificadas según la característica del cuerpo base, distinguiendo los casos \(\mathrm{char}(K)\neq2,3\), \(\mathrm{char}(K)=2\) y \(\mathrm{char}(K)=3\). La sección~\ref{sec:ley_de_grupo} construye la \emph{ley de grupo} sobre los puntos de la curva mediante la regla de la cuerda y la tangente, primero de forma geométrica y después en fórmulas algebraicas explícitas para cada caso. La sección~\ref{sec:curvas_sobre_cuerpos_finitos} estudia el comportamiento del grupo de puntos cuando el cuerpo base es finito \(\mathbb{F}_q\), incluyendo el teorema de Hasse sobre el orden del grupo. Finalmente, la sección~\ref{sec:representacion_puntos} introduce las \emph{coordenadas proyectivas} (afines, Jacobianas, Chudnovsky y López–Dahab), motivadas por la necesidad de evitar la inversión modular en cada operación, lo cual conecta directamente con las decisiones de implementación detalladas en el capítulo~\ref{ch:implementacion}.
+Este capítulo desarrolla los fundamentos teóricos necesarios para abordar el capítulo de criptografía y la implementación. La sección~\ref{sec:historia_curvas_elipticas} ofrece un breve recorrido histórico desde las integrales elípticas hasta su uso criptográfico moderno. La sección~\ref{sec:definicion_curvas_elipticas} introduce la definición formal de curva elíptica como modelo de Weierstrass generalizado, junto con sus invariantes asociados (discriminante, condición de no singularidad, punto en el infinito). En la sección~\ref{sec:simplificaciones_weierstrass_curvas_elipticas} se obtienen las formas simplificadas según la característica del cuerpo base, distinguiendo los casos \(\mathrm{char}(K)\neq2,3\), \(\mathrm{char}(K)=2\) y \(\mathrm{char}(K)=3\). La sección~\ref{sec:ley_de_grupo} construye la \emph{ley de grupo} sobre los puntos de la curva mediante la regla de la cuerda y la tangente, primero de forma geométrica y después en fórmulas algebraicas explícitas para cada caso. La sección~\ref{sec:curvas_sobre_cuerpos_finitos} estudia el comportamiento del grupo de puntos cuando el cuerpo base es finito \(\mathbb{F}_q\), incluyendo el teorema de Hasse sobre el orden del grupo. Finalmente, la sección~\ref{sec:representacion_puntos} introduce las \emph{coordenadas proyectivas} (afines, Jacobianas, Chudnovsky y López-Dahab), motivadas por la necesidad de evitar la inversión modular en cada operación, lo cual conecta directamente con las decisiones de implementación detalladas en el capítulo~\ref{ch:implementacion}.
 
 
 \subsection{Historia}\label{sec:historia_curvas_elipticas}
@@ -299,11 +299,11 @@ La condición de \emph{supersingularidad} (discriminante especial, ver cada caso
 Sea \(E\) una curva elíptica definida sobre un cuerpo \(K\). El conjunto de puntos \(E(K)\), junto con un elemento especial \(\mathcal{O}\) 
 (punto en el infinito), adquiere una estructura de grupo abeliano mediante la llamada \emph{regla de la cuerda y la tangente}.
 
-La idea geométrica es sencilla y constituye el corazón de toda la aritmética de curva, por lo que conviene entenderla bien:, porque es la operación 
+La idea geométrica es sencilla y constituye el corazón de toda la aritmética de curva, por lo que conviene entenderla bien, ya que, es la operación 
 elemental que después se repite miles de veces en la multiplicación escalar (sección~\ref{subsec:ecc-mult-escalar}) y, por tanto, la que domina el 
 coste de cualquier protocolo basado en ECC. Para \emph{sumar} dos puntos distintos \(P\) y \(Q\) se traza la recta (la \emph{cuerda}) que los une. 
 Dado que la ecuación de Weierstrass es cúbica en \(x\), una recta no vertical corta a la curva exactamente en un tercer punto, 
-al que llamamos \(R'\) que el resultado de la suma se define como el reflejo de \(R'\) respecto al eje de simetría de la curva 
+al que llamamos \(R'\). El resultado de la suma se define como el reflejo de \(R'\) respecto al eje de simetría de la curva 
 (el eje de abscisas en la forma corta), de modo que \(R = P+Q\). Cuando los dos sumandos coinciden (\(P = Q\)) no existe una cuerda que los una, 
 así que se emplea la recta \emph{tangente} a la curva en \(P\) (su segundo corte con la curva), una vez reflejado, proporciona la duplicación \(2P\). 
 La figura~\ref{fig:grupo_elipticas} ilustra ambas situaciones, que son las dos únicas que requieren cálculo real y el resto de casos 
@@ -346,7 +346,7 @@ de los dos operandos. Sean \(P=(x_1,y_1)\) y \(Q=(x_2,y_2)\) dos puntos de \(E(K
     \]
 \end{enumerate}
 
-\noindent Como se anticipaba, solo los casos 3 y 4 requieren aritmética no trivial en el cuerpo; ambos siguen el mismo patrón ---calcular una pendiente \(\lambda\), de ella la nueva abscisa \(x_3\) y, finalmente, la ordenada \(y_3\)--- y se diferencian únicamente en cómo se obtiene \(\lambda\) (por diferencia de puntos en la cuerda o por derivación en la tangente). Las fórmulas concretas se exponen a continuación, primero para característica \(\neq 2,3\) y después para cuerpos binarios.
+\noindent Como se anticipaba, solo los casos 3 y 4 requieren aritmética no trivial en el cuerpo; ambos siguen el mismo patrón --calcular una pendiente \(\lambda\), de ella la nueva abscisa \(x_3\) y, finalmente, la ordenada \(y_3\)-- y se diferencian únicamente en cómo se obtiene \(\lambda\) (por diferencia de puntos en la cuerda o por derivación en la tangente). Las fórmulas concretas se exponen a continuación, primero para característica \(\neq 2,3\) y después para cuerpos binarios.
 
 \subsubsection*{Propiedades del grupo abeliano}
 El conjunto de puntos de la curva, junto con la operación $+$ y el elemento neutro $\mathcal{O}$, forma un \emph{grupo abeliano} que denotamos
@@ -580,7 +580,7 @@ llevando la curva a
 \[
   Y^2Z = X^3 + a\,X Z^2 + b\,Z^3,
 \]
-que es homogénea de grado 3 en \((X,Y,Z)\).
+que es homogénea\footnote{Un polinomio es \emph{homogéneo} de grado \(n\) cuando todos sus monomios tienen el mismo grado total \(n\). Esta propiedad es la que da nombre a las \emph{coordenadas homogéneas} (otra denominación de las coordenadas proyectivas \((X:Y:Z)\)): al escalar el triple por un mismo factor \(\lambda\neq0\), la ecuación se multiplica por \(\lambda^n\) y, por tanto, sus soluciones quedan invariantes.} de grado 3 en \((X,Y,Z)\).
 
 \subsection{\texorpdfstring{Coordenadas en $\mathbb{F}_p$}{Coordenadas en Fp}}\label{sec:proj_Fp}
 Para curvas en forma corta de Weierstrass
@@ -659,10 +659,10 @@ la inversión en el cuerpo puede ser muy cara en software, por lo que resulta ú
   \[
     -(X:Y:Z) \;=\; (X:\;X+Y:\;Z).
   \]
-  \item \emph{Ventaja principal:} Todas las fórmulas de suma y duplicación usan únicamente multiplicaciones y sumas en \(\mathbb{F}_{2^m}\), sin inversiones explícitas, lo que reduce drásticamente el coste en implementaciones software sobre hardware general.
+  \item \emph{Ventaja principal:} Todas las fórmulas de suma y duplicación usan únicamente multiplicaciones y sumas en \(\mathbb{F}_{2^m}\), sin inversiones explícitas, lo que reduce drásticamente el coste en implementaciones software sobre hardware general. No obstante, las fórmulas que derivan de esta ecuación para sumar y duplicar puntos arrastran ineficiencias porque los pesos de los monomios no son eficientes de calcular al no ser cuadrados perfectos (el término \(X^3\) tiene peso 3, mientras que \(A X^2 Z^2\) tiene peso 4 y \(B Z^6\) tiene peso 6). Esto se corrige con las coordenadas de López-Dahab.
 \end{itemize}
 
-\subsubsection*{3. Coordenadas de López–Dahab (LD) \((c=1,\,d=2)\)}
+\subsubsection*{3. Coordenadas de López-Dahab (LD) \((c=1,\,d=2)\)}
 
 \begin{itemize}
   \item \emph{Correspondencia con afines:}
@@ -688,12 +688,13 @@ la inversión en el cuerpo puede ser muy cara en software, por lo que resulta ú
 \begin{itemize}
   \item \textbf{Sin inversiones:} el principal beneficio de las coordenadas proyectivas es evitar el paso costoso de la inversión en \(K\), cambiándolo por un mayor número de multiplicaciones y cuadrados, mucho más rápidos en hardware y software moderno.
   \item \textbf{Redundancia:} el almacenamiento adicional (el parámetro \(Z\) y, en Chudnovsky, \(Z^2,Z^3\)) aumenta el uso de memoria y complica la normalización final si necesitamos el resultado en afín.
-  \item \textbf{Flexibilidad:} diferentes elecciones \((c,d)\) adaptan la curva a remates algorítmicos específicos (e.g. a = –3 permite optimizar el término \(\;3X_1^2 + aZ_1^4\)\,).
+  \item \textbf{Flexibilidad:} diferentes elecciones \((c,d)\) adaptan la curva a remates algorítmicos específicos (e.g. a = -3 permite optimizar el término \(\;3X_1^2 + aZ_1^4\)\,).
 \end{itemize}
 
-En la práctica, para curvas de uso criptográfico sobre primos grandes, las coordenadas de Jacobi con \(a=-3\) son el estándar de facto, pues combinan rapidez en duplicación y sencillez de implementación.
+En la práctica, para curvas de uso criptográfico sobre primos grandes, las coordenadas Jacobianas con \(a=-3\) son el estándar, pues combinan rapidez en duplicación y sencillez de implementación.
+Para las curvas binarias, las coordenadas de López-Dahab son las más empleadas en software.
 
 
 \section{Selección de parámetros}\label{sec:seleccion_parametros_ch4}
 
-La elección de los parámetros del dominio de una curva elíptica ---el cuerpo base \(\mathbb{F}_q\), los coeficientes \((a,b)\) (o \((a,b,c)\) en característica~2), el punto generador \(G\), su orden \(n\) y el cofactor \(h\)--- determina simultáneamente la seguridad y el rendimiento del criptosistema resultante. Como esta selección está íntimamente ligada al uso criptográfico (tamaño de clave equivalente, resistencia frente al ECDLP, ataques especializados como Pohlig–Hellman, MOV/Frey–Rück o Smart–Semaev–Satoh), su discusión se difiere al capítulo~\ref{ch:ecc}: en particular, la sección~\ref{subsec:ecc-comparativa-claves} compara tamaños de clave entre RSA y ECC para distintos niveles de seguridad, la sección~\ref{subsec:ecc-parametros-dominio} enumera los requisitos formales que debe satisfacer un dominio seguro, y la sección~\ref{subsec:ecc-curvas-estandar} describe las curvas estandarizadas usadas en la práctica (NIST P-256, P-384, secp256k1, Curve25519, las cinco curvas binarias SEC~2 implementadas en este trabajo, etc.).
+La elección de los parámetros del dominio de una curva elíptica, como el cuerpo base \(\mathbb{F}_q\), los coeficientes \((a,b)\) (o \((a,b,c)\) en característica~2), el punto generador \(G\), su orden \(n\) y el cofactor \(h\) determina simultáneamente la seguridad y el rendimiento del criptosistema resultante. Como esta selección está íntimamente ligada al uso criptográfico (tamaño de clave equivalente, resistencia frente al ECDLP, ataques especializados como Pohlig-Hellman, MOV/Frey-Rück o Smart-Semaev-Satoh), su discusión se difiere al capítulo~\ref{ch:ecc}: en particular, la sección~\ref{subsec:ecc-comparativa-claves} compara tamaños de clave entre RSA y ECC para distintos niveles de seguridad, la sección~\ref{subsec:ecc-parametros-dominio} enumera los requisitos formales que debe satisfacer un dominio seguro, y la sección~\ref{subsec:ecc-curvas-estandar} describe las curvas estandarizadas usadas en la práctica (NIST P-256, P-384, secp256k1, Curve25519, las cinco curvas binarias SEC~2 implementadas en este trabajo, etc.).

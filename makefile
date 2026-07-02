@@ -11,9 +11,10 @@
 ######################### Compilation
 CXX      := g++
 PREFIX   ?= /usr/local
-# Nivel de optimizacion (sobreescribible: make OPT=-O2 para reproducir los
-# tiempos de la memoria, que se midieron sin -march=native).
-OPT      ?= -O2 -march=native
+# Nivel de optimizacion. -O2 es el estandar del TFG: las cifras de la memoria
+# se midieron asi (sin -march=native), por portabilidad y reproducibilidad.
+# Sobreescribible, p.ej. para un binario local mas rapido: make OPT="-O2 -march=native".
+OPT      ?= -O2
 CXXFLAGS := -std=c++17 $(OPT)
 # Include paths are kept in a separate variable so that overriding CXXFLAGS
 # on the command line (e.g. for sanitizer builds) does not lose -Iinclude.
@@ -52,6 +53,9 @@ BENCH_ITERS ?= 100
 OPENSSL_SECONDS ?= 50
 # Iteraciones para la comparativa de flags de compilador
 FLAG_ITERS ?= 100
+# Repeticiones (compilacion fija, N ejecuciones) por conjunto de flags, para
+# amortiguar el ruido de una sola ejecucion; se reporta la mediana
+FLAG_REPEATS ?= 5
 RANDOM_SEED := $(shell bash -c "awk 'BEGIN{srand();print( int(65536*rand()) )}'")
 RR := ./
 SEED := $(RANDOM_SEED)
@@ -95,15 +99,17 @@ show-info:
 	@echo "$(IFG) -  make compare-openssl$(EC)    OpenSSL baseline ($(OPENSSL_SECONDS)s/op)"
 	@echo "$(IFG) -  make compare-compiler-flags$(EC)  ECC vs compiler flags + chart"
 	@echo "$(IFG) -  make rng-full$(EC)           Full RNG statistical analysis"
+	@echo "$(IFG) -  make rng-visualize$(EC)      RNG visualizations only -> results/plots/"
 	@echo ""
 	@echo "$(IFG)  Figures / reproducibility:$(EC)"
 	@echo "$(IFG) -  make visualize$(EC)          Regenerate all charts + collages"
 	@echo "$(IFG) -  make figures$(EC)            Regenerate charts and copy to imagenes/ (memoria + slides)"
 	@echo "$(IFG) -  make illustrations$(EC)      Regenerate static slide figures (curve shapes, group law)"
+	@echo "$(IFG) -  make pollard$(EC)            Generate the Pollard rho attack GIF and open it"
 	@echo "$(IFG) -  make slides$(EC)             Compile the Beamer defense presentation (PDF)"
 	@echo "$(IFG) -  make reproduce$(EC)          Full pipeline: benchmark+openssl+flags+figures"
 	@echo ""
-	@echo "$(IFG)  Variables: OPT, BENCH_ITERS, OPENSSL_SECONDS, FLAG_ITERS, KEY_SIZE, ITERS$(EC)"
+	@echo "$(IFG)  Variables: OPT, BENCH_ITERS, OPENSSL_SECONDS, FLAG_ITERS, FLAG_REPEATS, KEY_SIZE, ITERS$(EC)"
 	@echo "$(IFG)  Ej.: make benchmark OPT=-O2 BENCH_ITERS=100$(EC)"
 	@echo ""
 
@@ -166,7 +172,7 @@ test-rsa-py:
 # ============================================================================
 # Full experiments and reproducibility (memoria)
 # ============================================================================
-.PHONY: benchmark compare-openssl compare-compiler-flags rng-full visualize figures illustrations slides reproduce
+.PHONY: benchmark compare-openssl compare-compiler-flags rng-full rng-visualize visualize figures illustrations pollard slides reproduce
 
 # Full RSA vs ECC comparative benchmark (3 axes) + charts
 benchmark: $(BIN_DIR)/bench
@@ -188,13 +194,22 @@ compare-openssl:
 
 # ECC performance vs compiler optimization flags (+ chart)
 compare-compiler-flags:
-	@echo -e "$(LGFG)Comparing compiler flags ($(FLAG_ITERS) iterations)...$(EC)"
-	@bash $(SCRIPTS_DIR)/compare_compiler_flags.sh $(FLAG_ITERS)
+	@echo -e "$(LGFG)Comparing compiler flags ($(FLAG_ITERS) iterations x $(FLAG_REPEATS) repeats)...$(EC)"
+	@bash $(SCRIPTS_DIR)/compare_compiler_flags.sh $(FLAG_ITERS) $(FLAG_REPEATS)
 
 # Full RNG statistical analysis pipeline
 rng-full:
 	@echo -e "$(LGFG)Running full RNG analysis...$(EC)"
 	@bash $(SCRIPTS_DIR)/run_rng_analysis.sh
+
+# RNG visualizations only: one dataset -> plots in results/plots/
+# (lighter than rng-full: no multi-seed sweep, no text report)
+rng-visualize: $(BIN_DIR)/rng_analysis
+	@echo -e "$(LGFG)Generating RNG visualizations...$(EC)"
+	@mkdir -p $(RESULTS_DIR)/data $(RESULTS_DIR)/plots
+	@$(BIN_DIR)/rng_analysis -n 1000000 -r 1000 -s fixed -o $(RESULTS_DIR)/data/bounded.csv -v
+	@$(PYTHON) $(SCRIPTS_DIR)/analyze_randomness.py $(RESULTS_DIR)/data/bounded.csv $(RESULTS_DIR)/plots
+	@echo -e "$(LGFG)RNG plots in $(RESULTS_DIR)/plots/$(EC)"
 
 # Regenerate all charts and collages from the latest results
 visualize:
@@ -217,6 +232,18 @@ figures: visualize
 illustrations:
 	@echo -e "$(LGFG)Generating slide illustrations (ec_shape, ec_addition)...$(EC)"
 	@$(PYTHON) $(SCRIPTS_DIR)/generate_slide_illustrations.py $(SLIDES_IMAGES)
+
+# Generate the Pollard rho attack animation and open it with the default
+# viewer. --prime 83 is the run embedded in the slides: collision at step 10
+# and d=14 recovered (verified). The PDF frames in imagenes/pollard/ were
+# extracted from this GIF. Run the script without --save for the interactive
+# real-time version (space bar pauses).
+POLLARD_GIF := $(RESULTS_DIR)/pollard_rho.gif
+pollard:
+	@echo -e "$(LGFG)Generating Pollard rho animation (this takes a moment)...$(EC)"
+	@$(PYTHON) $(SCRIPTS_DIR)/visual_pollard_rho_animated.py --prime 83 --save $(POLLARD_GIF)
+	@echo -e "$(LGFG)Saved: $(POLLARD_GIF) - opening viewer...$(EC)"
+	@xdg-open $(POLLARD_GIF) >/dev/null 2>&1 &
 
 # Compile the Beamer defense presentation (two passes for TOC/progress bar)
 slides:

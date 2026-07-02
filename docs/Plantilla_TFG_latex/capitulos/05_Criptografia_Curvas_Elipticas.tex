@@ -74,7 +74,7 @@ Sea $E$ una curva elíptica definida sobre un cuerpo finito $\mathbb{F}_q$ y sea
 \]
 \end{definicion}
 
-La operación $d \cdot P$ (multiplicación escalar) es eficiente: usando el algoritmo \textit{double-and-add} se calcula en $O(\log d)$ operaciones de grupo, es decir, $O(\log n)$ sumas y duplicaciones de puntos en la curva. Sin embargo, la operación inversa ---dado $Q$ y $P$, encontrar $d$--- no admite ningún algoritmo eficiente conocido en el caso general.
+La operación $d \cdot P$ (multiplicación escalar) es eficiente: usando el algoritmo \textit{double-and-add} se calcula en $O(\log d)$ operaciones de grupo, es decir, $O(\log n)$ sumas y duplicaciones de puntos en la curva. Sin embargo, la operación inversa --dado $Q$ y $P$, encontrar $d$-- no admite ningún algoritmo eficiente conocido en el caso general.
 
 \paragraph{Comparación con el DLP en $\mathbb{F}_p^*$.}
 En el grupo multiplicativo $\mathbb{F}_p^*$, el problema del logaritmo discreto clásico (dado $g$ y $h = g^a \bmod p$, encontrar $a$) admite algoritmos sub-exponenciales como el \textit{index calculus}, cuya complejidad es $L_p\big[\tfrac{1}{3}, c\big] = e^{c(\ln p)^{1/3}(\ln \ln p)^{2/3}}$. Estos métodos explotan la estructura aritmética de $\mathbb{Z}/p\mathbb{Z}$ para ``factorizar'' elementos del grupo sobre una base de factores.
@@ -349,7 +349,7 @@ El algoritmo \ref{alg:pollard-rho} detalla el procedimiento completo con la lóg
 \State $\ell \leftarrow P$;\; $a_\ell \leftarrow 1$;\; $b_\ell \leftarrow 0$
     \Comment{Liebre: igual inicio}
 \Repeat
-    \State \Comment{--- Tortuga: un paso ---}
+    \State \Comment{-- Tortuga: un paso --}
     \If{$x_t \equiv 0 \pmod{3}$}
         \State $t \leftarrow t + Q$;\; $b_t \leftarrow b_t + 1$
     \ElsIf{$x_t \equiv 1 \pmod{3}$}
@@ -357,7 +357,7 @@ El algoritmo \ref{alg:pollard-rho} detalla el procedimiento completo con la lóg
     \Else
         \State $t \leftarrow t + P$;\; $a_t \leftarrow a_t + 1$
     \EndIf
-    \State \Comment{--- Liebre: dos pasos ---}
+    \State \Comment{-- Liebre: dos pasos --}
     \For{$j = 1$ \textbf{to} $2$}
         \If{$x_\ell \equiv 0 \pmod{3}$}
             \State $\ell \leftarrow \ell + Q$;\; $b_\ell \leftarrow b_\ell + 1$
@@ -662,14 +662,15 @@ Sean Alice y Bob dos entidades que desean establecer un secreto compartido. Ambo
     \draw[msg] (7,-5.1) -- node[mlbl,above]{$Q_B$} (0,-5.1);
 
     % Generacion de claves (en paralelo)
-    \node[noteA] (aKey) at (0,-2.1)
+    \node[noteA, align=center] (aKey) at (0,-2.1)
         {\textbf{1. Generación de claves}\\
-         $d_A \xleftarrow{\$} [1,n-1]$\\
-         $Q_A = d_A \cdot G$};
-    \node[noteB] (bKey) at (7,-2.1)
+        $d_A \gets [1,n-1]$\\
+        $Q_A = d_A \cdot G$};
+        
+    \node[noteB, align=center] (bKey) at (7,-2.1)
         {\textbf{1. Generación de claves}\\
-         $d_B \xleftarrow{\$} [1,n-1]$\\
-         $Q_B = d_B \cdot G$};
+        $d_B \gets [1,n-1]$\\
+        $Q_B = d_B \cdot G$};
 
     % Calculo independiente del mismo secreto compartido
     \node[noteA] (aSec) at (0,-7.0)
@@ -698,10 +699,10 @@ Sean Alice y Bob dos entidades que desean establecer un secreto compartido. Ambo
 \textbf{Fase} & \textbf{Operación} \\
 \hline
 Acuerdo público & Parámetros $T = (p, a, b, G, n, h)$ \\
-Generación de claves & Alice: $d_A \xleftarrow{\$} [1, n-1]$,\; $Q_A = d_A \cdot G$ \\
-                      & Bob:\; $d_B \xleftarrow{\$} [1, n-1]$,\; $Q_B = d_B \cdot G$ \\
-Intercambio público & Alice $\to$ Bob: $Q_A$;\; Bob $\to$ Alice: $Q_B$ \\
-Secreto compartido & Alice: $S = d_A \cdot Q_B$;\; Bob: $S = d_B \cdot Q_A$ \\
+Generación de claves & Alice: $d_A \gets [1, n-1],\; Q_A = d_A \cdot G$ \\
+                      & Bob: \quad $d_B \gets [1, n-1],\; Q_B = d_B \cdot G$ \\
+Intercambio público & Alice $\to$ Bob: $Q_A$ \quad Bob $\to$ Alice: $Q_B$ \\
+Secreto compartido & Alice: $S = d_A \cdot Q_B$ \quad Bob: $S = d_B \cdot Q_A$ \\
 \hline
 \end{tabular}
 \caption{Resumen del intercambio de claves ECDH.}
@@ -789,7 +790,7 @@ Existen varias variantes del intercambio ECDH que mejoran distintos aspectos del
          2) Clave: $k = x_{S'} \bmod 2^{b}$\\
          3) Descifrado: $m = \mathrm{Dec}_k(c)$};
 \end{tikzpicture}
-\caption{Esquema de cifrado híbrido \emph{simplificado}, construido con las primitivas del prototipo. Bob publica su clave pública de largo plazo $Q_B$. Alice genera una clave efímera $(d_e, R)$, calcula el secreto ECDH $S = d_e Q_B$ y deriva la clave de sesión tomando la coordenada $x_S$ truncada a $b$ bits, $k = x_S \bmod 2^{b}$ ---\emph{sin} función de derivación (KDF) y \emph{sin} código de autenticación (MAC)---, tal como hace la implementación (sección~\ref{subsec:ecdh-kdf}). Bob reconstruye el mismo secreto ($S' = d_B R = d_e Q_B$, de donde $x_{S'} = x_S$) y descifra. El prototipo implementa y mide el acuerdo de claves ECDH y la derivación por truncamiento (Figura~\ref{fig:ecdh-secuencia}); el cifrado simétrico $\mathrm{Enc}_k / \mathrm{Dec}_k$ representa el uso natural de la clave derivada y no forma parte del banco de pruebas. Compárese con el esquema ECIES completo (con KDF, cifrado y MAC) descrito arriba; aquí $\Vert$ denota concatenación.}
+\caption{Esquema de cifrado híbrido \emph{simplificado}, construido con las primitivas del prototipo. Bob publica su clave pública de largo plazo $Q_B$. Alice genera una clave efímera $(d_e, R)$, calcula el secreto ECDH $S = d_e Q_B$ y deriva la clave de sesión tomando la coordenada $x_S$ truncada a $b$ bits, $k = x_S \bmod 2^{b}$ --\emph{sin} función de derivación (KDF) y \emph{sin} código de autenticación (MAC)--, tal como hace la implementación (sección~\ref{subsec:ecdh-kdf}). Bob reconstruye el mismo secreto ($S' = d_B R = d_e Q_B$, de donde $x_{S'} = x_S$) y descifra. El prototipo implementa y mide el acuerdo de claves ECDH y la derivación por truncamiento (Figura~\ref{fig:ecdh-secuencia}); el cifrado simétrico $\mathrm{Enc}_k / \mathrm{Dec}_k$ representa el uso natural de la clave derivada y no forma parte del banco de pruebas. Compárese con el esquema ECIES completo (con KDF, cifrado y MAC) descrito arriba; aquí $\Vert$ denota concatenación.}
 \label{fig:ecies-simplificado}
 \end{figure}
 
@@ -824,7 +825,7 @@ Dados los parámetros del dominio $T = (p, a, b, G, n, h)$ y un par de claves $(
 
 \begin{enumerate}
     \item Calcular $e = H(m)$.
-    \item Seleccionar un entero aleatorio $k \xleftarrow{\$} [1, n-1]$ (\emph{nonce} o valor efímero).
+    \item Seleccionar un entero aleatorio $k \leftarrow [1, n-1]$ (\emph{nonce} o valor efímero).
     \item Calcular el punto $R = k \cdot G = (x_R, y_R)$.
     \item Calcular $r = x_R \bmod n$. Si $r = 0$, volver al paso 2.
     \item Calcular

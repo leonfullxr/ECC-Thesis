@@ -19,15 +19,15 @@ Leon Elliott Fuller\\
 \end{center}
 
 %\vspace{0.7cm}
-\noindent{\textbf{Palabras clave}: curvas elípticas, criptografía, aritmética de campos finitos, coordenadas Jacobianas, campos binarios, NTL, GMP, C++, benchmarking, Docker, ECDH, ECDSA, ECC, RSA, SHA-256}\\
+\noindent{\textbf{Palabras clave}: curvas elípticas, criptografía, aritmética de cuerpos finitos, coordenadas Jacobianas, cuerpos binarios, NTL, GMP, C++, benchmarking, Docker, ECDH, ECDSA, ECC, RSA, SHA-256}\\
 
 \vspace{0.7cm}
 \noindent{\textbf{Resumen}}\\
 En 1985 Neal Koblitz y Victor Miller propusieron de forma independiente el uso de curvas elípticas en criptografía. Hoy en día, los esquemas basados en curvas elípticas (ECC) se han consolidado como una alternativa eficiente a RSA, pues ofrecen niveles de seguridad comparables con tamaños de clave notablemente menores, lo que los hace idóneos para dispositivos con recursos limitados y para aplicaciones que requieren alto rendimiento.
 
-Más allá de los fundamentos teóricos, este trabajo desarrolla una implementación completa en C++17 de ambos criptosistemas y un estudio comparativo sistemático de su rendimiento. La implementación, construida sobre las bibliotecas NTL y GMP, incluye RSA con descifrado acelerado mediante el Teorema del Resto Chino, los protocolos Elliptic Curve Diffie-Hellman (ECDH) y Elliptic Curve Digital Signature Algorithm (ECDSA), una función resumen SHA-256 desarrollada desde cero conforme a la norma FIPS PUB 180-4 y la aritmética de curvas tanto sobre campos primos $\mathbb{F}_p$ como sobre campos binarios $\mathbb{F}_{2^m}$.
+Más allá de los fundamentos teóricos, este trabajo desarrolla una implementación completa en C++17 de ambos criptosistemas y un estudio comparativo sistemático de su rendimiento. La implementación, construida sobre las bibliotecas NTL y GMP, incluye RSA con descifrado acelerado mediante el Teorema del Resto Chino, los protocolos Elliptic Curve Diffie-Hellman (ECDH) y Elliptic Curve Digital Signature Algorithm (ECDSA), una función resumen SHA-256 desarrollada desde cero conforme a la norma FIPS PUB 180-4 y la aritmética de curvas tanto sobre cuerpos primos $\mathbb{F}_p$ como sobre cuerpos binarios $\mathbb{F}_{2^m}$.
 
-El análisis empírico se articula en torno a tres ejes de comparación. En primer lugar, RSA frente a ECC a niveles de seguridad equivalentes según el estándar NIST SP 800-57. En segundo lugar, coordenadas afines frente a coordenadas Jacobianas proyectivas, que eliminan las costosas inversiones modulares. En tercer lugar, campos primos frente a campos binarios. Las mediciones abarcan la generación de claves, la firma y verificación, y la multiplicación escalar, y se obtienen en un entorno determinista y reproducible mediante contenedores Docker y un generador de números aleatorios con semilla fija.
+El análisis empírico se articula en torno a tres ejes de comparación. En primer lugar, RSA frente a ECC a niveles de seguridad equivalentes según el estándar NIST SP 800-57. En segundo lugar, coordenadas afines frente a coordenadas Jacobianas proyectivas, que eliminan las costosas inversiones modulares. En tercer lugar, cuerpos primos frente a cuerpos binarios. Las mediciones abarcan la generación de claves, la firma y verificación, y la multiplicación escalar, y se obtienen en un entorno determinista y reproducible mediante contenedores Docker y un generador de números aleatorios con semilla fija.
 
 En el plano teórico se estudian el problema del logaritmo discreto en curvas elípticas (ECDLP) y los principales ataques clásicos que lo abordan, como son la paradoja del cumpleaños, el algoritmo rho de Pollard y el método de Pohlig-Hellman, así como la amenaza cuántica que el algoritmo de Shor supone para la criptografía de clave pública actual.
 
@@ -73,7 +73,7 @@ de Ingenierías Informática y de Telecomunicación de la Universidad de Granada
 \vspace{2cm}
 
 \begin{flushright}
-Granada a X de junio de 2026.
+Granada a 19 de junio de 2026.
 \end{flushright}
 
 

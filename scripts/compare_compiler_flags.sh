@@ -5,16 +5,23 @@
 # grafica correspondiente.
 #
 # Uso:
-#   bash scripts/compare_compiler_flags.sh [ITERACIONES]
+#   bash scripts/compare_compiler_flags.sh [ITERACIONES] [REPETICIONES]
 # Ejemplo:
-#   bash scripts/compare_compiler_flags.sh 100
+#   bash scripts/compare_compiler_flags.sh 100 5
+#
+# Cada conjunto de flags se compila una vez pero se ejecuta REPETICIONES veces;
+# se reporta la mediana de esas repeticiones. Esto evita que el ruido de una
+# sola ejecucion (planificacion del SO, turbo boost, etc.) decida el orden
+# entre -O2/-O3/-Ofast/-O2-native, cuya diferencia real es pequena porque el
+# grueso del tiempo se pasa dentro de NTL/GMP (ya precompilados, no afectados
+# por estos flags).
 #
 # Genera:
 #   results/compiler_flags.csv      (una fila por conjunto de flags)
 #   results/chart_compiler_flags.png (grafica, via visualize_compiler_flags.py)
 #
 # Autor: Leon Elliott Fuller
-# Date: 2026-05-29
+# Date: 2026-07-01
 set -euo pipefail
 
 # ============================================================================
@@ -22,6 +29,7 @@ set -euo pipefail
 # ============================================================================
 
 ITERATIONS=${1:-100}
+REPEATS=${2:-5}
 SEED_MODE="fixed"
 CURVE="secp256k1"
 RESULTS_DIR="results"
@@ -61,6 +69,7 @@ echo "============================================================"
 echo "  Comparativa de opciones de compilacion (ECC $CURVE)"
 echo "============================================================"
 echo "  Iteraciones:    $ITERATIONS"
+echo "  Repeticiones:   $REPEATS (por conjunto de flags, se reporta la mediana)"
 echo "  Layout fuentes: $SRC_DIR"
 echo ""
 
@@ -69,6 +78,16 @@ extract_median() {
     local csv="$1" op="$2"
     awk -F',' -v op="$op" -v curve="$CURVE" \
         '$1=="ECC" && $2==op && $3==curve { print $7 }' "$csv"
+}
+
+# Mediana de una lista de numeros (para agregar entre repeticiones)
+median_of() {
+    printf '%s\n' "$@" | sort -n | awk '
+        { a[NR] = $1 }
+        END {
+            if (NR % 2 == 1) print a[(NR + 1) / 2]
+            else print (a[NR / 2] + a[NR / 2 + 1]) / 2
+        }'
 }
 
 for entry in "${FLAG_SETS[@]}"; do
@@ -80,18 +99,25 @@ for entry in "${FLAG_SETS[@]}"; do
     # shellcheck disable=SC2086
     g++ $BASE_STD $flags $INCLUDES -o "$bin" $SRC_FILES $LIBS
 
-    echo "    Ejecutando ECC ($CURVE, $ITERATIONS iteraciones)..."
-    tmp_summary="$RESULTS_DIR/_tmp_${tag}.csv"
-    "./$bin" -a ECC -c "$CURVE" -i "$ITERATIONS" -s "$SEED_MODE" \
-        -r "$RESULTS_DIR/_tmp_${tag}_raw.csv" -v \
-        > "$tmp_summary" 2>/dev/null
+    echo "    Ejecutando ECC ($CURVE, $ITERATIONS iteraciones x $REPEATS repeticiones)..."
+    sm_values=()
+    dh_values=()
+    for _ in $(seq 1 "$REPEATS"); do
+        tmp_summary="$RESULTS_DIR/_tmp_${tag}.csv"
+        "./$bin" -a ECC -c "$CURVE" -i "$ITERATIONS" -s "$SEED_MODE" \
+            -r "$RESULTS_DIR/_tmp_${tag}_raw.csv" -v \
+            > "$tmp_summary" 2>/dev/null
+        sm_values+=("$(extract_median "$tmp_summary" "scalar_mult")")
+        dh_values+=("$(extract_median "$tmp_summary" "ecdh")")
+        rm -f "$tmp_summary" "$RESULTS_DIR/_tmp_${tag}_raw.csv"
+    done
 
-    sm=$(extract_median "$tmp_summary" "scalar_mult")
-    dh=$(extract_median "$tmp_summary" "ecdh")
+    sm=$(median_of "${sm_values[@]}")
+    dh=$(median_of "${dh_values[@]}")
     echo "    scalar_mult=${sm}us  ecdh=${dh}us"
     echo "${flags},${sm},${dh}" >> "$OUT"
 
-    rm -f "$tmp_summary" "$RESULTS_DIR/_tmp_${tag}_raw.csv" "$bin"
+    rm -f "$bin"
     echo ""
 done
 

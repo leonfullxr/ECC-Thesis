@@ -1,0 +1,1246 @@
+%==============================================================================
+%  Presentación de defensa - TFG
+%  Implementación y análisis comparativo de rendimiento de RSA y ECC
+%  Leon Elliott Fuller - Universidad de Granada
+%  Compilar con: pdflatex presentacion_defensa.tex  (dos veces).  Tema: Metropolis.
+%  Figuras en ./imagenes/  (gráficas del Cap. 7 + ec_shape.png, ec_addition.png).
+%==============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usetheme{metropolis}
+\metroset{block=fill, sectionpage=progressbar, numbering=fraction}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{animate}   % rho de Pollard animado dentro de una sola diapositiva
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,arrows,calc,fit,backgrounds}
+\newsavebox{\arqbox}   % caja para capturar el diagrama de arquitectura
+
+% --- Paleta -------------------------------------------
+\definecolor{UGRdark}{HTML}{1F2933}
+\definecolor{UGRaccent}{HTML}{A6192E}
+\definecolor{UGRsoft}{HTML}{3E5C76}
+\definecolor{UGRgreen}{HTML}{2E7D32}
+\definecolor{RSAbar}{HTML}{2E6DA4}   % azul de serie (RSA) en las gráficas TikZ
+\setbeamercolor{frametitle}{bg=UGRdark}
+\setbeamercolor{progress bar}{fg=UGRaccent}
+\setbeamercolor{alerted text}{fg=UGRaccent}
+\setbeamercolor{block title}{bg=UGRsoft,fg=white}
+\setbeamercolor{block title alerted}{bg=UGRaccent,fg=white}
+\setbeamercolor{block title example}{bg=UGRgreen,fg=white}
+
+% --- Estilos tikz para los diagramas paso a paso (ECDH/ECDSA/RSA) ----
+\tikzset{
+  sec/.style={draw=UGRgreen, fill=UGRgreen!10, rounded corners, align=left, inner sep=4pt},
+  pub/.style={draw=UGRsoft, fill=UGRsoft!14, rounded corners, align=left, inner sep=4pt},
+  sh/.style ={draw=UGRaccent, fill=UGRaccent!10, rounded corners, align=center, inner sep=4pt},
+  hdr/.style={align=center, font=\footnotesize\bfseries},
+  lbl/.style={UGRaccent, font=\scriptsize\bfseries},
+  flow/.style={-{Stealth}, thick, UGRaccent},
+}
+
+% --- Macro: hito de la cronología -------------------------------------
+%  \evt{x}{año}{dir: 1 arriba / -1 abajo}{texto}
+\newcommand{\evt}[4]{%
+  \fill[UGRaccent] (#1,0) circle (2.2pt);%
+  \ifnum#3=1
+    \draw[UGRaccent, semithick] (#1,0) -- (#1,0.45);%
+    \node[anchor=south, text width=2.2cm, align=center, font=\tiny] at (#1,0.5)
+      {\textcolor{UGRaccent}{\bfseries #2}\\[1pt] #4};%
+  \else
+    \draw[UGRaccent, semithick] (#1,0) -- (#1,-0.45);%
+    \node[anchor=north, text width=2.2cm, align=center, font=\tiny] at (#1,-0.5)
+      {\textcolor{UGRaccent}{\bfseries #2}\\[1pt] #4};%
+  \fi
+}
+
+% --- Macro: grupo de barras RSA/ECC de la gráfica de motivación ---------
+%  \barpair{y}{etiqueta seguridad}{rsa bits}{ecc bits}{razon}
+%  escala: 1 cm = 1536 bits  (RSA-15360 -> 10 cm)
+\newcommand{\barpair}[5]{%
+  \node[anchor=east, font=\scriptsize] at (-0.15,#1-0.30) {#2};%
+  \fill[RSAbar]    (0,#1) rectangle ({#3/1536},#1-0.24);%
+  \fill[UGRaccent] (0,#1-0.32) rectangle ({#4/1536},#1-0.56);%
+  \node[anchor=west, font=\tiny, text=UGRdark] at ({#3/1536+0.06},#1-0.12) {#3};%
+  \node[anchor=west, font=\tiny, text=UGRdark] at ({#4/1536+0.06},#1-0.44) {#4};%
+  \node[anchor=west, font=\scriptsize\bfseries, text=UGRaccent]
+    at (10.95,#1-0.30) {$#5\times$};%
+}
+
+% --- Macro: figura real si existe; si no, recuadro con el nombre --------
+\newcommand{\figordemo}[2][width=0.92\textwidth]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \setlength{\fboxsep}{10pt}%
+    \fcolorbox{UGRsoft}{black!4}{\parbox[c][0.45\textheight][c]{0.85\textwidth}{%
+      \centering {\ttfamily\small\detokenize{#2}}\\[1.2ex]
+      {\itshape\footnotesize (figura: sustituir por la gráfica real)}}}}}
+
+\title{Curvas elípticas en criptografía}
+\subtitle{Trabajo Fin de Grado - Ingeniería Informática}
+\author{Leon Elliott Fuller}
+\institute{Tutor: Jesús García Miranda \\ E.T.S. de Ingenierías Informática y de Telecomunicación \\ Universidad de Granada}
+\date{Julio de 2026}
+
+\begin{document}
+
+\begin{frame}[plain,noframenumbering]
+  \titlepage
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=south east, xshift=-0.7cm, yshift=0.6cm] at (current page.south east) {%
+      \includegraphics[height=0.9cm]{imagenes/ugr2.png}\hspace{0.5cm}%
+      \includegraphics[height=0.9cm]{imagenes/etsiit_logo.png}%
+    };
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}{Índice}
+  \setbeamertemplate{section in toc}[sections numbered]
+  \tableofcontents[hideallsubsections]
+\end{frame}
+
+%==============================================================================
+\section{Motivación y objetivos}
+
+\begin{frame}{Motivación}
+  \footnotesize
+  \begin{itemize}\footnotesize
+    \item RSA (años 70) sigue siendo el pilar de la clave pública, pero exige claves
+          \alert{cada vez más grandes}.
+    \item \textbf{1985:} Koblitz y Miller proponen, de forma independiente, las
+          \alert{curvas elípticas} (ECC): misma seguridad con claves \alert{mucho menores}.
+  \end{itemize}
+  \vspace{0.2em}
+  \centering
+  \resizebox{0.94\textwidth}{!}{%
+  \begin{tikzpicture}
+    % eje temporal
+    \draw[-{Stealth}, very thick, UGRsoft] (-0.4,0) -- (13.7,0);
+
+    \evt{0.6}{1977}{1}{Nace \textbf{RSA}}
+    \evt{2.35}{1985}{-1}{\textbf{ECC} propuesta (Koblitz, Miller)}
+    \evt{4.1}{2000}{1}{Estándar NIST/SECG: P-256, secp256k1}
+    \evt{5.85}{2008}{-1}{\textbf{TLS 1.2} (RFC 5246)}
+    \evt{7.6}{2009}{1}{\textbf{Bitcoin} usa secp256k1}
+    \evt{9.35}{2013}{-1}{NIST retira \textbf{RSA-1024}; mín. RSA-2048/3072}
+    \evt{11.1}{2018}{1}{\textbf{TLS 1.3}: ECDHE; X25519, Ed25519 (Signal, SSH)}
+    \evt{12.85}{2024}{-1}{NIST \textbf{PQC}: ML-KEM/ML-DSA (era híbrida)}
+  \end{tikzpicture}}
+  \vspace{0.8em}
+
+  \footnotesize En 40 años ECC ha pasado de propuesta teórica a sostener TLS, Bitcoin y las
+  \emph{passkeys}. ¿Por qué desplazó a RSA? La respuesta está en el \alert{tamaño de las
+  claves}\,\ldots
+  \note{RSA años 70, claves crecientes. 1985 Koblitz/Miller: ECC, misma seguridad con claves
+  menores. Cronologia: 1977 RSA, 1985 ECC, 2000 estandarizacion NIST/SECG (P-256, secp256k1),
+  2008 TLS 1.2, 2009 Bitcoin secp256k1, 2013 NIST retira RSA-1024 (sube a 2048/3072), 2018 TLS
+  1.3 con ECDHE y X25519/Ed25519, 2024 NIST PQC (era hibrida). Cerrar con: por que ECC
+  desplazo a RSA -> siguiente diapositiva, el tamano de las claves.}
+\end{frame}
+
+\begin{frame}{El problema, en una imagen: bits necesarios a igual seguridad}
+  \centering
+  \begin{tikzpicture}[yscale=0.95]
+    % --- leyenda ---
+    \fill[RSAbar]    (0,0.62) rectangle (0.34,0.80);
+    \node[anchor=west, font=\scriptsize] at (0.40,0.71) {RSA};
+    \fill[UGRaccent] (2.0,0.62) rectangle (2.34,0.80);
+    \node[anchor=west, font=\scriptsize] at (2.40,0.71) {ECC};
+    \node[anchor=west, font=\tiny\itshape, text=black!55] at (4.2,0.71)
+      {longitud de clave (bits) para el mismo nivel de seguridad (NIST SP 800-57)};
+
+    % --- banda que resalta el estándar actual (128 bits) ---
+    \fill[black!6] (-1.75,-1.55) rectangle (11.75,-2.35);
+    \node[anchor=west, font=\tiny\itshape, text=black!55] at (2.35,-2.17)
+      {estándar actual};
+
+    \barpair{0}{80 bits}{1024}{160}{6}
+    \barpair{-0.85}{112 bits}{2048}{224}{9}
+    \barpair{-1.70}{\bfseries 128 bits}{3072}{256}{12}
+    \barpair{-2.55}{192 bits}{7680}{384}{20}
+    \barpair{-3.40}{256 bits}{15360}{512}{30}
+
+    % --- línea base ---
+    \draw[black!30] (0,0.15) -- (0,-4.05);
+  \end{tikzpicture}
+
+  \vspace{0.4em}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \footnotesize\centering \textcolor{RSAbar}{\textbf{RSA}}: factorización $\to$ ataques
+      \alert{subexponenciales} $\Rightarrow$ la clave se dispara.
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \footnotesize\centering \textcolor{UGRaccent}{\textbf{ECC}}: ECDLP $\to$ mejor ataque
+      \alert{exponencial}, $O(\sqrt{n})$ $\Rightarrow$ crece lineal.
+    \end{column}
+  \end{columns}
+  \vspace{0.2em}
+  \footnotesize\centering La ventaja es \alert{estructural} y \textbf{crece} con el nivel de
+  seguridad: de $6\times$ a $30\times$.
+  \note{Grafica de barras: bits de clave a igual seguridad segun NIST SP 800-57. A 128 bits
+  (estandar actual): RSA-3072 vs ECC-256, 12x. La razon crece de 6x (80 bits) a 30x (256
+  bits). Por que: RSA se ataca con factorizacion (GNFS, subexponencial L[1/3]) y ECC con el
+  ECDLP, cuyo mejor ataque generico (rho de Pollard, respaldo) es exponencial O(sqrt n). La
+  ventaja es estructural, no de implementacion, y crece con la seguridad. Esta imagen resume
+  el porque del TFG: cuantificar que vale esa ventaja en la practica.}
+\end{frame}
+
+\begin{frame}{Objetivo y los tres ejes de comparación}
+  \textbf{Objetivo:} implementar ambos criptosistemas y compararlos
+  empíricamente con rigor sin sesgos en un entorno reproducible.
+  \vfill
+  \begin{columns}[t]
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Eje 1}
+        \textbf{RSA vs ECC} \\ a igual nivel de seguridad (NIST SP 800-57)
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Eje 2}
+        \textbf{Afines vs Jacobianas} \\ efecto de las coordenadas proyectivas
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Eje 3}
+        \textbf{$\mathbb{F}_p$ vs $\mathbb{F}_{2^m}$} \\ cuerpos primos vs binarios
+      \end{block}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+%==============================================================================
+\section{Fundamentos: curvas elípticas}
+
+\begin{frame}{¿Qué es una curva elíptica?}
+  \footnotesize
+  El conjunto de soluciones de una ecuación cúbica sobre un cuerpo finito, más un
+  \alert{punto del infinito} $\mathcal{O}$.
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \centering
+      \textbf{Cuerpos primos $\mathbb{F}_p$}\; $\boxed{\,y^2 = x^3 + ax + b\,}$\\[0.4ex]
+      \footnotesize \alert{secp256k1} (Bitcoin), \alert{NIST P-256}, \alert{NIST P-384}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \centering
+      \textbf{Cuerpos binarios $\mathbb{F}_{2^m}$}\;
+      $\boxed{\,y^2 + xy = x^3 + ax^2 + b\,}$\\[0.4ex]
+      \footnotesize 5 curvas \alert{SEC 2}: 3 Koblitz (\texttt{sect*k1}) $+$ 2 aleatorias
+      (\texttt{sect*r1})
+    \end{column}
+  \end{columns}
+  \begin{center}
+    \figordemo[width=0.80\textwidth]{imagenes/ec_shape.png}
+  \end{center}
+\end{frame}
+
+\begin{frame}{La ley de grupo: cómo se ``suman'' puntos}
+  \begin{columns}[c]
+    \begin{column}{0.42\textwidth}
+      Los puntos forman un \alert{grupo abeliano} $(E(K),+)$:
+      \begin{itemize}
+        \item \textbf{Suma $P+Q$:} la recta por $P$ y $Q$ corta la curva en un tercer
+              punto; su \alert{reflexión} es $P+Q$.
+        \item \textbf{Duplicación $2P$:} igual, con la \alert{tangente} en $P$.
+        \item \textbf{Neutro:} $\mathcal{O}$ (rectas verticales).
+      \end{itemize}
+      \vspace{0.5ex}
+      \footnotesize Son las \alert{operaciones atómicas}: la \alert{multiplicación
+      escalar} $kP$ es repetirlas (\emph{double-and-add}).
+\end{column}
+    \begin{column}{0.58\textwidth}
+      \centering
+      \figordemo[width=\textwidth]{imagenes/ec_addition.png}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{El grupo $(E(K),+)$: estructura y orden}
+  \small
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \textbf{Grupo abeliano.} Para todo $P,Q,R$:
+      \begin{itemize}\small
+        \item Clausura: $P+Q\in E(K)$
+        \item Asociatividad: $(P+Q)+R=P+(Q+R)$
+        \item Neutro: $P+\mathcal{O}=P$
+        \item Inverso: $P+(-P)=\mathcal{O}$
+        \item Conmutatividad: $P+Q=Q+P$
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Orden} $\#E(\mathbb{F}_q)$ (número de puntos):
+      \begin{block}{Teorema de Hasse}
+        $\bigl|\,\#E(\mathbb{F}_q) - (q+1)\,\bigr| \le 2\sqrt{q}$
+      \end{block}
+      En cripto: subgrupo cíclico de \alert{orden primo $n$}, con $\#E = h\cdot n$ (cofactor
+      $h$ pequeño). La dificultad del ECDLP es $\sim\!\sqrt{n}$.
+    \end{column}
+  \end{columns}
+  \note{Cinco axiomas de grupo abeliano; asociatividad la dificil. Orden = numero de puntos.
+  Hasse: cerca de q+1. Estructura Z/n1 + Z/n2. Cripto: subgrupo de orden primo n, cofactor h
+  pequeno, ECDLP ~ sqrt(n).}
+\end{frame}
+
+\begin{frame}{Suma y duplicación: coordenadas afines}
+  \small
+  \setlength{\fboxsep}{2pt}
+  \setlength{\parskip}{0pt}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      {\color{UGRsoft}\textbf{Cuerpo primo}}\; $y^2=x^3+ax+b$
+      \vspace{0.6ex}
+
+      \emph{Suma} $(P\neq Q)$:\\[0.5ex]
+      $\boxed{x_3=\frac{(y_2-y_1)^2}{(x_2-x_1)^2}-x_1-x_2}$\\[0.5ex]
+      $\boxed{y_3=\frac{(y_2-y_1)(x_1-x_3)}{x_2-x_1}-y_1}$
+      \vspace{0.8ex}
+
+      \emph{Duplicación} $(2P)$:\\[0.5ex]
+      $\boxed{x_3=\frac{(3x_1^2+a)^2}{4y_1^2}-2x_1}$\\[0.5ex]
+      $\boxed{y_3=\frac{(3x_1^2+a)(x_1-x_3)}{2y_1}-y_1}$
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      {\color{UGRsoft}\textbf{Cuerpo binario}}\; $y^2+xy=x^3+ax^2+b$
+      \vspace{0.6ex}
+
+      \emph{Suma} $(P\neq Q)$:\\[0.5ex]
+      $\boxed{x_3=\frac{(y_1+y_2)^2}{(x_1+x_2)^2}+\frac{y_1+y_2}{x_1+x_2}+x_1+x_2+a}$\\[0.5ex]
+      $\boxed{y_3=\frac{(y_1+y_2)(x_1+x_3)}{x_1+x_2}+x_3+y_1}$
+      \vspace{0.8ex}
+
+      \emph{Duplicación} $(2P)$:\\[0.5ex]
+      $\boxed{x_3=\frac{(x_1^2+y_1)^2}{x_1^2}+\frac{x_1^2+y_1}{x_1}+a}$\\[0.5ex]
+      $\boxed{y_3=x_1^2+\Bigl(\frac{x_1^2+y_1}{x_1}+1\Bigr)x_3}$
+    \end{column}
+  \end{columns}
+  \vspace{1ex}
+  Cada operación necesita una \alert{división} (inversión modular) en el cuerpo.
+  \note{Formulas finales expandidas, sin nombrar la pendiente lambda como variable aparte (esta
+  ya sustituida dentro de x3, y3). Afin primo: resta/division al cuadrado; afin binario: sumas
+  (char 2), division. Cada suma o duplicacion afin necesita una inversion modular, la operacion
+  mas cara del cuerpo; eso motiva las Jacobianas de la siguiente diapositiva.}
+\end{frame}
+
+\begin{frame}{Suma y duplicación: coordenadas Jacobianas (cuerpo primo)}
+  \small
+  \setlength{\fboxsep}{2pt}
+  \setlength{\parskip}{0pt}
+  Punto como clase $(X{:}Y{:}Z)$ con $x=\dfrac{X}{Z^2}$, $y=\dfrac{Y}{Z^3}$:
+  la $Z$ absorbe el denominador y \alert{no se invierte en cada paso}.
+  \vspace{1ex}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \emph{Suma} $(P\neq Q)$:\\[0.4ex]
+      $U_1{=}X_1Z_2^2$, \quad $U_2{=}X_2Z_1^2$,\\
+      $S_1{=}Y_1Z_2^3$, \quad $S_2{=}Y_2Z_1^3$,\\
+      $H{=}U_2{-}U_1$, \quad $R{=}S_2{-}S_1$:\\[0.8ex]
+      $\boxed{X_3=R^2-H^3-2U_1H^2}$\\[0.5ex]
+      $\boxed{Y_3=R(U_1H^2-X_3)-S_1H^3}$\\[0.5ex]
+      $\boxed{Z_3=HZ_1Z_2}$
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \emph{Duplicación} $(2P)$:\\[0.4ex]
+      $A{=}Y_1^2$, \quad $B{=}4X_1A$,\\
+      $C{=}8A^2$, \quad $D{=}3X_1^2+aZ_1^4$:\\[0.8ex]
+      $\boxed{X_3=D^2-2B}$\\[0.5ex]
+      $\boxed{Y_3=D(B-X_3)-C}$\\[0.5ex]
+      $\boxed{Z_3=2Y_1Z_1}$
+    \end{column}
+  \end{columns}
+  \vspace{1ex}
+  Suma: $12M+4S$ \quad · \quad Duplicación: $4M+4S$ \quad · \quad \alert{Sin inversiones}
+  \note{Jacobiana primo: punto es clase (X:Y:Z) con x=X/Z^2, y=Y/Z^3 (Z absorbe el denominador,
+  no se invierte en cada paso); suma con auxiliares U1,U2,S1,S2,H,R (12M+4S); duplicacion con
+  A,B,C,D (4M+4S); ninguna necesita inversion. El porque del ahorro se explica en la siguiente
+  diapositiva.}
+\end{frame}
+
+\begin{frame}{¿Por qué las Jacobianas son más eficientes?}
+  \small
+  \begin{columns}[c]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}\small
+        \item La \alert{inversión modular} es la operación más cara del cuerpo.
+        \item Modelo clásico: $I \approx 80\text{--}100\,M$ (multiplicaciones).
+        \item Recuento de una \emph{duplicación}:
+          \begin{itemize}\footnotesize
+            \item Afín: $1I + 2M + 2S$
+            \item Jacobiana: $4M + 6S$\; (\alert{sin $I$})
+          \end{itemize}
+        \item Si $I\gg M$, ganan las Jacobianas: \alert{una sola inversión al final}.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{Conexión con los benchmarks}
+        La teoría predice $\sim$8$\times$; nosotros medimos $\sim$1.8$\times$.\\[0.6ex]
+        NTL/GMP hacen la inversión tan rápida que el cociente real $I/M$ es mucho menor que
+        $80$--$100$, y el ahorro se reduce.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \note{Inversion cara, I~80-100 M. Duplicacion afin 1I+2M+2S vs Jacobiana 4M+6S sin I. Ganan si
+  I>>M, una inversion al final. Pero GMP hace I barata: I/M real << 80-100, por eso medimos
+  1.8x y no 8x. Esto explica el Eje 2.}
+\end{frame}
+
+\begin{frame}{Multiplicación escalar y el problema difícil}
+  \textbf{Multiplicación escalar:} $\;kP = \underbrace{P + P + \dots + P}_{k\ \text{veces}}$,
+  calculada con \alert{double-and-add} en $O(\log k)$ pasos.
+  \vfill
+  \begin{columns}[c]
+    \begin{column}{0.5\textwidth}
+      \begin{exampleblock}{Fácil}
+        Dados $k$ y $P$, calcular $Q = kP$.
+      \end{exampleblock}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{alertblock}{Inviable (ECDLP)}
+        Dados $P$ y $Q=kP$, hallar $k$.
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \vfill
+  Esta asimetría es el \alert{Problema del Logaritmo Discreto en Curvas Elípticas (ECDLP)}.
+  Sobre él descansan \textbf{ECDH} y \textbf{ECDSA}: $k$ es la clave privada, $Q=kP$ la
+  pública.
+  \note{kP con double-and-add O(log k). Facil k->Q, inviable Q->k = ECDLP. k privada, Q=kP
+  publica. ECDH y ECDSA dependen de su dificultad.}
+\end{frame}
+
+\begin{frame}{Double-and-add: cómo se calcula $kP$}
+  \small
+  Se recorren los \alert{bits de $k$} de izquierda a derecha; en cada bit se \alert{duplica}
+  ($\times2$) y, si el bit vale $1$, se \alert{suma $P$}.\;
+  Ejemplo $k=13=(1101)_2$:
+  \vspace{0.3em}
+
+  \centering
+  \resizebox{0.86\textwidth}{!}{%
+  \begin{tikzpicture}[font=\footnotesize,
+      bit/.style={draw, minimum size=0.72cm, font=\bfseries, inner sep=0pt},
+      acc/.style={draw, rounded corners, fill=UGRsoft!12, minimum height=0.8cm,
+                  minimum width=1.05cm},
+      dbl/.style={-{Stealth}, very thick, UGRsoft},
+      add/.style={-{Stealth}, very thick, UGRaccent}]
+
+    % --- vector de bits ---
+    \node (klbl) {$k=$};
+    \node[bit, right=1.5mm of klbl] (kb3) {1};
+    \node[bit, right=0mm of kb3] (kb2) {1};
+    \node[bit, right=0mm of kb2] (kb1) {0};
+    \node[bit, right=0mm of kb1] (kb0) {1};
+    \node[font=\scriptsize, above=0pt of kb3] {MSB};
+    \node[font=\scriptsize, above=0pt of kb0] {LSB};
+
+    % --- cadena del acumulador (multiplicación del punto) ---
+    \node[acc] (a0) at ([yshift=-1.4cm]kb3.south) {$P$};
+    \node[acc, right=0.95cm of a0] (a1) {$2P$};
+    \node[acc, right=0.95cm of a1] (a2) {$3P$};
+    \node[acc, right=0.95cm of a2] (a3) {$6P$};
+    \node[acc, right=0.95cm of a3] (a4) {$12P$};
+    \node[acc, right=0.95cm of a4, fill=UGRaccent!15] (a5) {$\mathbf{13P}$};
+
+    \draw[dbl] (a0) -- node[above, UGRsoft]{$\times2$}   (a1);
+    \draw[add] (a1) -- node[above, UGRaccent]{$+P$}      (a2);
+    \draw[dbl] (a2) -- node[above, UGRsoft]{$\times2$}   (a3);
+    \draw[dbl] (a3) -- node[above, UGRsoft]{$\times2$}   (a4);
+    \draw[add] (a4) -- node[above, UGRaccent]{$+P$}      (a5);
+
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a0.south) {bit\,1};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a2.south) {bit\,1};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a3.south) {bit\,0};
+    \node[font=\scriptsize] at ([yshift=-0.7cm]a5.south) {bit\,1};
+  \end{tikzpicture}}
+  \vspace{0.5em}
+
+  {\footnotesize \alert{$13P$ en 5 operaciones} (\textcolor{UGRsoft}{\textbf{3 duplicaciones}}
+  $+$ \textcolor{UGRaccent}{\textbf{2 sumas}}), no 12 sumas: en general $\sim\!\log_2 k$
+  pasos $\Rightarrow O(\log k)$.}
+  \note{Double-and-add con k=13=1101. Se leen los bits MSB->LSB: primer 1 inicializa R=P;
+  cada bit siguiente duplica y si es 1 suma P. Traza: P, 2P, 3P, 6P, 12P, 13P. Resultado en 5
+  operaciones (3 dobles + 2 sumas) en lugar de 12 sumas. Coste O(log k), lo que hace kP
+  eficiente (y el ECDLP sigue siendo dificil en sentido inverso).}
+\end{frame}
+
+\begin{frame}{Atacar el ECDLP: el algoritmo rho de Pollard}
+  \begin{columns}[c]
+    \begin{column}{0.64\textwidth}
+      \centering
+      % Animación en UNA sola página: 9 fotogramas (extraídos de
+      % results/pollard_rho.gif, regenerable y visualizable con `make pollard`).
+      % Se reproduce en bucle en visores con JavaScript (Adobe Acrobat, Foxit,
+      % PDF-XChange); en el resto (Okular, Evince...) queda el fotograma final
+      % como imagen fija (poster=last). Demo en vivo: `make pollard`.
+      \animategraphics[autoplay,loop,poster=last,width=\textwidth]{2}%
+        {imagenes/pollard/rho-}{0}{8}
+    \end{column}
+    \begin{column}{0.34\textwidth}
+      \centering
+      \figordemo[height=0.55\textheight]{imagenes/attack_pollard_rho_ciclo.png}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.3em}
+  \scriptsize\centering Paseo \alert{pseudoaleatorio} con cada punto escrito como
+  $R_i = a_i P + b_i Q$; por la \alert{paradoja del cumpleaños} llega la \alert{colisión}
+  $R_i = R_j$ y se despeja
+  $\boxed{\,k \equiv (a_i - a_j)\,(b_j - b_i)^{-1} \pmod{n}\,}$\\[0.3ex]
+  \textbf{Coste:} $O(\sqrt{n})$ tiempo, $O(1)$ memoria $\Rightarrow$ \alert{exponencial}
+  en bits.
+  \note{Rho de Pollard animado: paseo pseudoaleatorio sobre la curva y^2=x^3+2x+3 mod 83,
+  P=(0,13), n=43, Q=14P. Tortuga un paso, liebre dos (Floyd); colision en el paso 10 y se
+  despeja d=14, verificado. Derecha: estructura rho abstracta, cola lambda + ciclo mu (de
+  ahi el nombre del algoritmo). Formula: cada punto del paseo es R_i = a_i P + b_i Q; en la
+  colision R_i = R_j se igualan y se despeja k = (a_i-a_j)/(b_j-b_i) mod n. Por la paradoja
+  del cumpleanos la colision llega en ~sqrt(pi n/2) ~ 1.25 sqrt(n) pasos. O(sqrt n) tiempo,
+  O(1) memoria: exponencial en bits. NO confundir con el rho de factorizacion. La animacion
+  se reproduce sola en Acrobat/Foxit; en Okular/Evince se ve el fotograma final. Demo en
+  vivo: make pollard abre el GIF.}
+\end{frame}
+
+%==============================================================================
+\section{Protocolos: ECDH, ECDSA y RSA}
+
+\begin{frame}{Parámetros del dominio}
+  \small
+  Para instanciar ECC sobre $\mathbb{F}_p$, todas las partes acuerdan la séxtupla
+  \[ T = (p,\; a,\; b,\; G,\; n,\; h) \]
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}\footnotesize
+        \item $p$: primo que define $\mathbb{F}_p$.
+        \item $a,b$: coeficientes de $y^2=x^3+ax+b$.
+        \item $G=(G_x,G_y)$: punto generador.
+        \item $n$: orden de $G$ (menor con $nG=\mathcal{O}$).
+        \item $h = \#E(\mathbb{F}_p)/n$: cofactor.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \textbf{Requisitos de seguridad}
+      \begin{itemize}\footnotesize
+        \item $n$ primo (evita Pohlig--Hellman).
+        \item $h$ pequeño, ideal $1$ (evita curva inválida).
+        \item No anómala: $\#E(\mathbb{F}_p)\neq p$.
+        \item Grado de inmersión alto (evita MOV).
+        \item $\Delta = -16(4a^3+27b^2)\neq 0$.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.5ex}
+  \footnotesize En el TFG usamos curvas estándar \alert{NIST/SECG}, ya auditadas por la
+  comunidad criptográfica.
+  \note{Sextupla T=(p,a,b,G,n,h). p primo, a,b coeficientes, G generador, n orden de G, h
+  cofactor. Requisitos: n primo, h pequeno, no anomala, inmersion alta, discriminante !=0.
+  Usamos curvas estandar NIST/SECG.}
+\end{frame}
+
+\begin{frame}{Intercambio de claves: ECDH paso a paso}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[hdr] (A) at (0,0) {Alice};
+    \node[hdr] (B) at (9,0) {Bob};
+    \draw[dashed, gray!60] (A) -- (0,-6.5);
+    \draw[dashed, gray!60] (B) -- (9,-6.5);
+
+    \node[sh, text width=6.2cm] (T) at (4.5,-0.95)
+      {\textbf{0.} Acuerdan el dominio $T=(p,a,b,G,n,h)$ \;($G$ es público)};
+
+    \node[sec, text width=3.2cm, anchor=north] (ka) at (0,-1.9)
+      {\textbf{1.} genera su clave\\ $d_A \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(privada)}\\ $Q_A = d_A\,G$ \;(pública)};
+    \node[sec, text width=3.2cm, anchor=north] (kb) at (9,-1.9)
+      {\textbf{1.} genera su clave\\ $d_B \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(privada)}\\ $Q_B = d_B\,G$ \;(pública)};
+
+    \draw[flow] (1.7,-4.05) -- node[above]{$Q_A$} (7.3,-4.05);
+    \draw[flow] (7.3,-4.55) -- node[below]{$Q_B$} (1.7,-4.55);
+    \node[lbl] at (4.5,-4.3) {2. canal público};
+
+    \node[pub, text width=2.7cm, anchor=north] (sa) at (0,-5.0)
+      {\textbf{3.} $S = d_A\,Q_B$};
+    \node[pub, text width=2.7cm, anchor=north] (sb) at (9,-5.0)
+      {\textbf{3.} $S = d_B\,Q_A$};
+
+    \node[sh, text width=7.6cm, anchor=north] (res) at (4.5,-6.0)
+      {\textbf{4.} $S = d_A Q_B = d_B Q_A = d_A d_B\,G$ \;(el \alert{mismo} punto)\\[2pt]
+       $\Rightarrow$ clave de sesión $=\mathrm{KDF}(x_S)$};
+  \end{tikzpicture}
+
+  \vspace{0.3em}
+  {\scriptsize \textcolor{UGRgreen}{verde = secreto} \quad azul = público \quad
+   $\bullet$ un intruso ve $G,Q_A,Q_B$, pero hallar $d_A,d_B$ es el \alert{ECDLP}.}
+  \note{Alice y Bob: privado d, publico Q=dG. Intercambian Q_A, Q_B por canal publico. Cada
+  uno calcula S = d_A Q_B = d_B Q_A = d_A d_B G. Clave de sesion = KDF(x_S). El intruso ve los
+  Q pero no los d (ECDLP). ECDH da confidencialidad; en efimero (ECDHE), secreto perfecto
+  hacia adelante. NO autentica por si solo: hace falta firma/certificado contra MITM.}
+\end{frame}
+
+\begin{frame}{Firma digital: ECDSA paso a paso}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[hdr, anchor=north] (Sh) at (0,0.1) {Firmante (Alice): privada $d$};
+    \node[sec, text width=5.0cm, anchor=north] (sign) at (0,-0.4)
+      {\textbf{1.} $e = H(m)$\\
+       \textbf{2.} nonce $k \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(secreto, único)}\\
+       \textbf{3.} $R = kG = (x_R,y_R)$,\; $r = x_R \bmod n$\\
+       \textbf{4.} $s = k^{-1}(e + d\,r) \bmod n$\\[2pt]
+       $\Rightarrow$ firma $\boxed{(r,s)}$};
+
+    \node[hdr, anchor=north] (Vh) at (8.8,0.1) {Verificador (Bob): pública $Q=dG$};
+    \node[pub, text width=5.0cm, anchor=north] (ver) at (6.4,-0.4)
+      {\textbf{1.} $e = H(m)$,\; $w = s^{-1} \bmod n$\\
+       \textbf{2.} $u_1 = e\,w$,\; $u_2 = r\,w \pmod n$\\
+       \textbf{3.} $R' = u_1 G + u_2 Q$\\
+       \textbf{4.} aceptar si $x_{R'} \bmod n = r$};
+
+    \draw[flow] (sign.east) -- node[above, font=\scriptsize]{$m,\,(r,s)$} (ver.west);
+
+    \node[sh, text width=6.4cm, anchor=north] (ok) at (4.4,-3.6)
+      {\textbf{Por qué cuadra:} $k = u_1 + u_2\,d \Rightarrow R' = (u_1+u_2 d)G = kG = R$};
+  \end{tikzpicture}
+
+  \vspace{0.2em}
+  \begin{alertblock}{El nonce $k$ es crítico}
+    \footnotesize Reutilizarlo o predecirlo $\Rightarrow$ se despeja la clave privada $d$
+    (casos PlayStation 3 y Bitcoin). Solución: nonce determinista (RFC 6979).
+  \end{alertblock}
+  \note{Firma: e=H(m), nonce k, R=kG, r=x_R mod n, s=k^-1(e+dr). Firma (r,s). Verificacion:
+  w=s^-1, u1=ew, u2=rw, R'=u1 G+u2 Q, aceptar si x_R' mod n = r. Correccion: k=u1+u2 d.
+  Nonce k critico: reuso -> se despeja d (PS3, Bitcoin). RFC 6979 determinista.}
+\end{frame}
+
+\begin{frame}{El contraste: RSA paso a paso}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    \node[hdr] (B) at (0,0) {Bob (dueño de las claves)};
+    \node[hdr] (A) at (9,0) {Alice (quiere enviar $m$)};
+    \draw[dashed, gray!60] (0,-0.3) -- (0,-5.7);
+    \draw[dashed, gray!60] (9,-0.3) -- (9,-5.7);
+
+    \node[sec, text width=4.2cm, anchor=north] (kg) at (0,-0.55)
+      {\textbf{1.} genera sus claves\\
+       primos $p,q$ \;\textcolor{UGRgreen}{(secretos)}\\
+       $n = p\,q$,\; $\varphi(n)=(p{-}1)(q{-}1)$\\
+       $e = 65537$ \;(público)\\
+       $d = e^{-1} \bmod \varphi(n)$ \;\textcolor{UGRgreen}{(privada)}};
+
+    \draw[flow] (2.3,-2.5) -- node[above]{clave pública $(n,e)$} (9,-2.5);
+
+    \node[pub, text width=3.4cm, anchor=north] (enc) at (9,-2.9)
+      {\textbf{2.} cifra con $(n,e)$:\\ $c = m^{e} \bmod n$};
+
+    \draw[flow] (9,-4.1) -- node[below]{texto cifrado $c$} (2.3,-4.1);
+
+    \node[pub, text width=3.9cm, anchor=north] (dec) at (0,-4.5)
+      {\textbf{3.} descifra con $d$:\\ $m = c^{d} \bmod n$ \;(acelera con CRT)};
+  \end{tikzpicture}
+
+  \vspace{0.3em}
+  {\scriptsize \textcolor{UGRgreen}{verde = secreto}, azul = público.\;
+   Romper RSA $=$ \alert{factorizar $n$} (subexponencial) $\Rightarrow$ claves grandes.}
+  \note{RSA: Bob genera p,q secretos; n=pq, phi=(p-1)(q-1); e=65537 publico; d=e^-1 mod phi
+  privada. Publica (n,e). Alice cifra c=m^e mod n. Bob descifra m=c^d mod n (CRT ~3.5x).
+  Seguridad: factorizar n es subexponencial, por eso claves grandes. Contraste directo con ECC:
+  misma seguridad con claves mucho menores (Eje 1). La firma RSA es analoga (m^d / m^e).}
+\end{frame}
+
+%==============================================================================
+\section{Metodología experimental e implementación}
+
+\begin{frame}{Elección del \emph{stack}: C++17 + NTL/GMP}
+  \small
+  \begin{columns}[t]
+    \begin{column}{0.54\textwidth}
+      \textbf{Lo elegido}
+      \begin{itemize}\footnotesize
+        \setlength{\itemsep}{2pt}
+        \item \alert{C++17}: control total; sin recolector de basura
+              ni intérprete que contaminen los tiempos.
+        \item \alert{NTL 11.5.1 sobre GMP 6.3.0}: la referencia en aritmética de precisión
+              arbitraria (\texttt{ZZ\_p} para $\mathbb{F}_p$, \texttt{GF2E} para
+              $\mathbb{F}_{2^m}$).
+        \item OpenSSL 3.0.2: \textbf{solo} como baseline externo de contraste.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Lo descartado}
+      \begin{itemize}\footnotesize
+        \setlength{\itemsep}{2pt}
+        \item \textbf{Python / Sage}: esconden justo la aritmética que se quiere estudiar
+              y medir.
+        \item \textbf{Rust}: alternativa moderna razonable, pero con un ecosistema de
+              multiprecisión menos maduro que NTL/GMP.
+        \item \textbf{Construir sobre OpenSSL}: mediríamos su ensamblador a mano, no los
+              algoritmos.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \note{C++17: control del camino caliente, sin GC ni interprete. NTL sobre GMP: estandar de
+  oro en multiprecision; ZZ_p para Fp (delega en ensamblador GMP), GF2E para F2m. SHA-256
+  propio por integridad academica y para que ninguna dependencia altere los tiempos. OpenSSL
+  solo baseline. Descartes: Python/Sage esconden la aritmetica (justo lo que se estudia);
+  Rust razonable pero ecosistema bignum menos maduro; construir sobre OpenSSL mediria su
+  ensamblador, no los algoritmos.}
+\end{frame}
+
+\begin{frame}{Los retos}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{1. Medición precisa}
+        \scriptsize
+        \begin{itemize}\scriptsize
+          \setlength{\itemsep}{1pt}
+          \item Enemigos: ruido del SO, cachés frías, \emph{outliers}
+          \item \alert{3 calentamientos} descartados
+          \item \alert{$N=100$} medidas (\texttt{std::chrono}, µs)
+          \item \alert{Mediana} como métrica principal
+        \end{itemize}
+      \end{block}
+      \begin{block}{2. Entorno determinista}
+        \scriptsize
+        \begin{itemize}\scriptsize
+          \setlength{\itemsep}{1pt}
+          \item \alert{Docker}: Ubuntu 22.04, GMP/NTL desde fuente
+          \item \texttt{g++ -O2} fijo, sin \texttt{-march=native}
+          \item Ejecución \alert{monohilo}
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{3. Comparar con las mismas entradas}
+        \scriptsize
+        \begin{itemize}\scriptsize
+          \setlength{\itemsep}{1pt}
+          \item \alert{Semilla fija} ($s{=}0$) $\Rightarrow$ comparación \alert{pareada}
+          \item RNG \alert{validado}: $\chi^2$, K--S, rachas, autocorrelación, entropía
+        \end{itemize}
+      \end{block}
+      \begin{alertblock}{En cifras}
+        \scriptsize 72 configuraciones medidas (24 RSA $+$ 18 ECC afín $+$ 15 Jacobiano
+        $+$ 15 binario)\\[0.3ex]
+        Hardware: AMD Ryzen 9 7950X, 64\,GB RAM
+      \end{alertblock}
+    \end{column}
+  \end{columns}
+  \note{Reto 1, medir sin enganarse: ruido del SO y caches frias -> 3 calentamientos
+  descartados, N=100, chrono en microsegundos; mediana como metrica principal (robusta a
+  outliers como keygen RSA); media, desviacion, P5/P95 en los CSV. Reto 2, entorno
+  determinista: Docker Ubuntu 22.04 con GMP/NTL desde fuente, g++ -O2 fijo sin march=native
+  (portabilidad), monohilo. Reto 3, mismas entradas: semilla fija s=0 -> comparacion pareada;
+  el RNG validado estadisticamente (chi cuadrado, KS, rachas, autocorrelacion, entropia).
+  En cifras: 72 configuraciones, Ryzen 9 7950X, 64GB.}
+\end{frame}
+
+\begin{frame}{Arquitectura del proyecto}
+% Capturamos primero la figura en una caja y despues la escalamos a la diapositiva.
+\begin{lrbox}{\arqbox}%
+\begin{tikzpicture}[
+    every node/.style={font=\small\ttfamily, draw, rounded corners,
+                       minimum height=0.8cm, minimum width=2cm, align=center, fill=blue!5},
+    small/.style={font=\footnotesize\ttfamily, draw, rounded corners, align=center,
+                  minimum height=0.6cm, minimum width=2.4cm, fill=blue!5},
+    band/.style={font=\footnotesize\ttfamily, draw, rounded corners, align=center,
+                 text width=3.4cm, inner sep=3pt, minimum height=0.9cm},
+    cluster/.style={draw, rounded corners, inner sep=6pt,
+                    minimum width=0pt, minimum height=0pt},
+    docker/.style={draw=blue!55!black, dashed, very thick, rounded corners,
+                   fill=none, inner sep=6pt, minimum width=0pt, minimum height=0pt},
+    arrow/.style={->, >=latex, thick},
+    rel/.style={->, >=latex, thick, gray!55!black},
+    cirel/.style={->, >=latex, thick, dashed, violet!60!black},
+    lbl/.style={draw=none, fill=none, font=\scriptsize\sffamily,
+                inner sep=1.5pt, minimum width=0pt, minimum height=0pt},
+    node distance=0.4cm and 0.6cm
+]
+
+% ===================== Banda central: codigo fuente =====================
+    \node (main) [fill=orange!15] {main.cpp};
+    % fila de modulos centrada bajo main (ecc y eccb a ambos lados, rsa/sha en los extremos)
+    \node (ecc)  [below left=1.4cm and 0.9cm of main]  {ecc.\{hpp,cpp\}};
+    \node (eccb) [below right=1.4cm and 0.9cm of main] {ecc\_binary.\{hpp,cpp\}};
+    \node (rsa)  [left=1.4cm of ecc]   {rsa.\{hpp,cpp\}};
+    \node (sha)  [right=1.4cm of eccb] {sha256.\{hpp,cpp\}};
+    \node (rng)    [below=1.4cm of ecc, fill=green!10] {rng.\{hpp,cpp\}};
+    \node (common) [right=2.6cm of rng, fill=green!10] {common.hpp};
+
+    \draw [arrow] (main) -- (rsa);
+    \draw [arrow] (main) -- (ecc);
+    \draw [arrow] (main) -- (eccb);
+    \draw [arrow] (main.east) to[bend left=15] (sha);
+    \draw [arrow] (rsa) -- (rng);
+    \draw [arrow] (rsa.south) -- (common.north west);
+    \draw [arrow] (ecc) -- (rng);
+    \draw [arrow] (ecc.south east) -- (common.north);
+    \draw [arrow] (eccb.south west) -- (common.north east);
+    \draw [arrow] (eccb) -- (rng.north east);
+    \draw [arrow] (sha.south) -- (common.north east);
+
+    % --- una sola caja con fit + etiqueta ---
+    \begin{scope}[on background layer]
+        \node[cluster, fill=blue!3, draw=blue!40,
+              fit=(main)(rsa)(ecc)(eccb)(sha)(rng)(common),
+              label={[font=\scriptsize\bfseries, text=blue!45!black, anchor=south west]%
+                     north west:Codigo fuente (C++17)}] (srcbox) {};
+    \end{scope}
+
+% ===================== Banda superior: configuracion y build =====================
+    \node[small, fill=orange!12, anchor=south west] (dockerfile)
+          at ([yshift=12mm]srcbox.north west) {Dockerfile};
+    \node[small, fill=orange!12, right=9mm of dockerfile] (compose)  {docker-compose.yml};
+    \node[small, fill=orange!12, right=9mm of compose]    (makefile) {Makefile};
+    \node[small, fill=orange!12, right=9mm of makefile]   (reqs)     {requirements.txt};
+
+    \begin{scope}[on background layer]
+        \node[cluster, fill=orange!4, draw=orange!55,
+              fit=(dockerfile)(compose)(makefile)(reqs),
+              label={[font=\scriptsize\bfseries, text=orange!55!black, anchor=south west]%
+                     north west:Configuracion y build}] (cfgbox) {};
+    \end{scope}
+
+% ===================== Banda inferior: CI / scripts / artefactos =====================
+    \node[band, fill=teal!15, anchor=north] (scripts) at ([yshift=-12mm]srcbox.south)
+          {{\normalfont\bfseries Scripts}\\ \texttt{scripts/}\\[1pt] *.sh~$\cdot$~*.py};
+    \node[band, fill=violet!15, left=14mm of scripts] (ci)
+          {{\normalfont\bfseries CI/CD}\\ \texttt{.github/workflows/}\\[1pt]
+           ci~$\cdot$~lint~$\cdot$~codeql\\ latex~$\cdot$~docker};
+    \node[band, fill=yellow!20, right=14mm of scripts] (bindir)
+          {{\normalfont\bfseries Bin}\\ \texttt{bin/}\\[1pt] binarios~ECC};
+    \node[band, fill=green!12, right=14mm of bindir] (artef)
+          {{\normalfont\bfseries Artefactos}\\ results/~CSV\\ graficas~PNG\\ memoria~LaTeX};
+
+% ===================== Relaciones entre bandas =====================
+    \draw[rel]  (cfgbox.south) -- node[lbl, right]{compila} (srcbox.north);
+    \draw[rel]  (srcbox.south east) -- node[lbl, right, pos=0.55]{binarios}
+          (bindir.north);
+    \draw[rel]  (scripts.east) -- node[lbl, above]{ejecutan} (bindir.west);
+    \draw[rel]  (scripts.north east) to[bend left=18]
+          node[lbl, above, pos=0.35]{generan} (artef.north west);
+    \draw[cirel] (ci.north) to[bend left=10]
+          node[lbl, above, pos=0.6]{build~$\cdot$~test} (srcbox.south west);
+
+% ===================== Contenedor Docker (caja exterior) =====================
+    \coordinate (padTop) at ([yshift=0.85cm]cfgbox.north);
+    \begin{scope}[on background layer]
+        \node[docker, fit=(padTop)(cfgbox)(srcbox)(ci)(scripts)(bindir)(artef),
+              label={[font=\footnotesize\bfseries, text=white, fill=blue!60!black,
+                      rounded corners, inner sep=3pt, anchor=north west,
+                      xshift=8pt, yshift=-3pt]north west:%
+                      {Contenedor Docker -- \texttt{leonfullxr/ecc-benchmarks:latest}}}]
+              (dockerbox) {};
+    \end{scope}
+
+\end{tikzpicture}%
+\end{lrbox}%
+  \centering
+  \resizebox{!}{0.80\textheight}{\usebox{\arqbox}}
+  \note{Arquitectura modular dentro del contenedor Docker reproducible: codigo fuente C++17
+  (main.cpp orquesta rsa, ecc, ecc_binary, sha256; rng y common.hpp compartidos); banda de
+  configuracion y build (Dockerfile, compose, Makefile, requirements); CI/CD en GitHub
+  Actions, scripts que ejecutan los binarios y generan artefactos (CSV, graficas, memoria).
+  Todo encapsulado en la imagen leonfullxr/ecc-benchmarks:latest para reproducibilidad.}
+\end{frame}
+
+\begin{frame}{Orquestación: todo el capítulo de resultados, un comando}
+  \centering
+  \resizebox{\textwidth}{!}{%
+  \begin{tikzpicture}[font=\scriptsize,
+      stage/.style={draw, rounded corners, align=center, fill=blue!6, inner sep=5pt,
+                    minimum height=1.0cm},
+      art/.style={draw, rounded corners, align=center, fill=green!9, inner sep=5pt,
+                  minimum height=1.0cm},
+      pipe/.style={-{Stealth}, thick, UGRsoft}]
+    \node[stage, fill=orange!14] (make)  {\texttt{make}\\\texttt{reproduce}};
+    \node[stage, right=0.55cm of make]   (bench)  {\texttt{bench} (C++)\\5 modos ·
+                                                   72 configs};
+    \node[stage, right=0.55cm of bench]  (csv)    {CSV\\\texttt{raw} $+$ \texttt{summary}};
+    \node[stage, right=0.55cm of csv]    (py)     {Python\\matplotlib};
+    \node[art, right=0.55cm of py]       (charts) {11 gráficas\\$+$ 3 collages};
+    \node[art, right=0.55cm of charts]   (mem)    {memoria\\LaTeX};
+    \draw[pipe] (make)   -- node[above, font=\tiny]{compila}  (bench);
+    \draw[pipe] (bench)  -- node[above, font=\tiny]{mide}     (csv);
+    \draw[pipe] (csv)    -- node[above, font=\tiny]{analiza}  (py);
+    \draw[pipe] (py)     -- node[above, font=\tiny]{dibuja}   (charts);
+    \draw[pipe] (charts) -- node[above, font=\tiny]{ilustra}  (mem);
+  \end{tikzpicture}}
+
+  \vspace{0.9em}
+  \begin{tikzpicture}[font=\scriptsize,
+      actor/.style={draw, rounded corners, align=center, fill=orange!14, inner sep=5pt,
+                    minimum height=0.95cm, minimum width=1.9cm},
+      hub/.style={draw, rounded corners, align=center, fill=UGRdark, text=white,
+                  inner sep=5pt, minimum height=0.95cm, minimum width=1.9cm},
+      wf/.style={draw=violet!60!black, rounded corners, align=center, fill=violet!8,
+                 inner sep=3pt, minimum width=3.1cm, minimum height=1.15cm},
+      okbadge/.style={circle, fill=UGRgreen, text=white, inner sep=1.4pt,
+                      font=\tiny\bfseries},
+      pipe/.style={-{Stealth}, thick, UGRsoft},
+      trig/.style={-{Stealth}, semithick, violet!60!black}]
+
+    % del commit local a GitHub
+    \node[actor] (dev) {código local\\\texttt{git commit}};
+    \node[hub, right=2.2cm of dev] (gh) {GitHub\\Actions};
+    \draw[pipe] (dev) -- node[above, font=\tiny\ttfamily]{git push} (gh);
+
+    % los workflows, cada uno con su check verde
+    \node[wf, below=0.9cm of gh] (latexwf) {\texttt{latex}\\compila la\\memoria (PDF)};
+    \node[wf, left=0.5cm of latexwf] (ciwf) {\texttt{ci}\\compila $+$ tests\\verificación
+                                             del código C++};
+    \node[wf, right=0.5cm of latexwf] (dock) {\texttt{docker}\\imagen $\to$\\Docker Hub};
+
+    \foreach \w in {ciwf,latexwf,dock}{
+      \draw[trig] (gh.south) -- (\w.north);
+      \node[okbadge] at (\w.north east) {\checkmark};
+    }
+  \end{tikzpicture}
+  \note{Arriba, el pipeline de extremo a extremo: make reproduce compila dentro del
+  contenedor, ejecuta el motor bench (5 modos, 72 configuraciones), vuelca CSV crudos y
+  agregados, los scripts Python generan las 11 graficas y 3 collages, y estas alimentan la
+  memoria LaTeX. Abajo, la integracion continua: cada git push a GitHub dispara los
+  workflows, que deben quedar en verde: ci (compila + smoke test + reproducibilidad con
+  semilla fija + ASan/UBSan; agrupa tambien los linters y el analisis CodeQL de seguridad),
+  latex (compila la memoria y sube el PDF) y docker (publica la imagen en Docker Hub).
+  Mensaje: cada numero y cada grafica se regeneran con un comando en cualquier maquina con
+  Docker.}
+\end{frame}
+
+\begin{frame}{El flujo estadístico: de 100 medidas a una gráfica}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize,
+      fase/.style={draw, rounded corners, align=center, fill=blue!6, inner sep=4pt,
+                   minimum height=1.05cm, minimum width=2.6cm},
+      discard/.style={draw, dashed, rounded corners, align=center, fill=black!6,
+                      text=black!60, inner sep=4pt, minimum height=1.05cm,
+                      minimum width=2.6cm},
+      data/.style={draw, rounded corners, align=center, fill=green!9, inner sep=4pt,
+                   minimum height=1.05cm, minimum width=2.6cm},
+      pick/.style={draw=UGRaccent, thick, rounded corners, align=center,
+                   fill=UGRaccent!10, inner sep=4pt, minimum height=1.05cm,
+                   minimum width=2.6cm},
+      pipe/.style={-{Stealth}, thick, UGRsoft}]
+
+    % ------- fila 1: la medición -------
+    \node[fase] (op) {1 configuración\\\texttt{(algoritmo, curva, op.)}};
+    \node[discard, right=0.55cm of op] (warm) {3 iteraciones de\\calentamiento\\
+                                               \textbf{descartadas}};
+    \node[fase, right=0.55cm of warm] (iters) {\alert{$\times$100} medidas\\
+                                               \texttt{std::chrono} (µs)};
+    \node[data, right=0.55cm of iters] (raw) {\texttt{raw.csv}\\todas las muestras};
+
+    % ------- fila 2: el análisis (en serpiente, de derecha a izquierda) -------
+    \node[fase, below=0.55cm of raw] (stats) {media · desviación\\mín/máx · P5/P95};
+    \node[pick, left=0.55cm of stats] (median) {\textbf{mediana}\\métrica principal};
+    \node[data, left=0.55cm of median] (summary) {\texttt{summary.csv}\\72 configuraciones};
+    \node[data, left=0.55cm of summary] (charts) {gráficas y tablas\\del capítulo de
+                                                  resultados};
+
+    \draw[pipe] (op) -- (warm);
+    \draw[pipe] (warm) -- (iters);
+    \draw[pipe] (iters) -- (raw);
+    \draw[pipe] (raw) -- (stats);
+    \draw[pipe] (stats) -- (median);
+    \draw[pipe] (median) -- (summary);
+    \draw[pipe] (summary) -- (charts);
+
+    % ------- por qué la mediana: outliers reales de keygen RSA -------
+    \begin{scope}[shift={(0.3,-3.75)}]
+      \node[anchor=west, font=\scriptsize\bfseries, text=UGRdark] at (-0.3,0.62)
+        {¿Por qué la mediana?};
+      \draw[black!45] (0,0) -- (10.8,0);
+      \foreach \x in {0.5,0.75,0.95,1.15,1.3,1.5,1.65,1.85,2.05,2.3}
+        \fill[UGRsoft] (\x,0) circle (2.3pt);
+      \fill[UGRsoft] (10.2,0) circle (2.3pt);
+      \node[font=\tiny, text=black!60, anchor=north east] at (10.9,-0.18)
+        {\emph{outlier} (búsqueda de primos con mala suerte)};
+      \draw[UGRgreen, very thick] (1.4,-0.22) -- (1.4,0.22);
+      \node[font=\tiny\bfseries, text=UGRgreen, anchor=east] at (1.25,0.42) {mediana};
+      \draw[UGRaccent, very thick] (2.4,-0.22) -- (2.4,0.22);
+      \node[font=\tiny\bfseries, text=UGRaccent, anchor=west] at (2.55,0.42)
+        {media (arrastrada por el \emph{outlier})};
+    \end{scope}
+  \end{tikzpicture}
+  \note{Flujo estadistico por configuracion: se ejecutan 3 iteraciones de calentamiento que
+  se descartan (caches frias, inicializacion perezosa de NTL), despues 100 medidas con
+  std::chrono en microsegundos; todas las muestras van a raw.csv. Sobre ellas se calculan
+  media, desviacion tipica, min/max y percentiles P5/P95, pero la METRICA PRINCIPAL de
+  tablas y graficas es la mediana. Por que: keygen RSA busca primos por ensayo y error y
+  una busqueda con mala suerte produce outliers enormes (min 6 ms, max 596 ms en RSA-4096);
+  la media se arrastra hacia el outlier, la mediana no. El resultado agregado (summary.csv,
+  72 configuraciones) alimenta las graficas y tablas del capitulo de resultados.}
+\end{frame}
+
+\begin{frame}{Experimento previo: elección de las opciones de compilación}
+  \centering
+  \figordemo[width=0.62\textwidth]{imagenes/chart_compiler_flags.png}
+
+  \scriptsize De $-$O0 a $-$O1 se gana $\sim$1.25$\times$; por encima de $-$O2 las mejoras
+  son marginales (el cálculo pesado vive en GMP, ya precompilado) y $-$O3 puede introducir
+  ruido. Se fijó \alert{$-$O2} como estándar de compilación del TFG.
+  \note{De O0 a O1 se gana 1.25x. Por encima de O2 marginal: GMP ya precompilado. O3 mete
+  ruido. Elegimos O2 como estandar. Sostiene la reproducibilidad del benchmark.}
+\end{frame}
+
+%==============================================================================
+\section{Resultados: los tres ejes}
+
+\begin{frame}{Eje 1 - RSA frente a ECC: generación de claves}
+  \centering
+  \figordemo[width=0.88\textwidth]{imagenes/chart_keygen_comparison.png}
+
+  \footnotesize RSA debe \alert{buscar primos grandes} por ensayo y error; ECC solo
+  \alert{elige un escalar}. RSA-3072 $\approx 58$ ms frente a ECC Jacobiano
+  $\approx 0{.}42$ ms: \alert{$\sim$138$\times$} (escala logarítmica).
+  \note{RSA busca primos, ECC elige escalar. RSA-3072 58 ms vs ECC Jacobiano 0.42 ms = 138x.
+  Log: RSA-4096 156 ms. Ventaja habilitante para TLS efimero.}
+\end{frame}
+
+\begin{frame}{Eje 1 - RSA frente a ECC: firma y verificación}
+  \centering
+  \figordemo[width=0.88\textwidth]{imagenes/chart_sign_verify_comparison.png}
+
+  \footnotesize \textbf{Firma:} ECC $\sim$2.6$\times$ más rápida \; · \;
+  \textbf{Verificación:} \alert{RSA} $\sim$38$\times$ más rápida (exponente público
+  $e=65537$, solo 2 bits a 1).\\
+  \note{Firma ECC 2.6x. Verificacion RSA 38x por e=65537. No hay ganador absoluto: un
+  servidor que emite firmas en masa prefiere ECC; un cliente que valida certificados, RSA.}
+\end{frame}
+
+\begin{frame}{Eje 2 - Coordenadas afines vs Jacobianas}
+  \begin{columns}[c]
+    \begin{column}{0.66\textwidth}
+      \centering
+      \figordemo[width=\textwidth]{imagenes/chart_jacobian_speedup.png}
+    \end{column}
+    \begin{column}{0.34\textwidth}
+      \footnotesize
+      \begin{itemize}\footnotesize
+        \item Las Jacobianas \alert{evitan la inversión modular}.
+        \item Medido: \alert{1.70--1.93$\times$} (media $\sim$1.8$\times$).
+      \end{itemize}
+      \vfill
+      \begin{block}{La brecha ES el hallazgo}
+        \footnotesize La teoría predice $\sim$8$\times$; NTL/GMP hacen la inversión barata,
+        y el ahorro real es mucho menor.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \note{Jacobianas evitan inversion. Medido 1.70-1.93x. Teoria 8x: brecha = hallazgo, GMP
+  inversion barata.}
+\end{frame}
+
+\begin{frame}{Eje 3 - Cuerpos primos vs binarios}
+  \centering
+  \figordemo[width=0.88\textwidth]{imagenes/chart_prime_vs_binary.png}
+
+  \footnotesize A 128 bits el binario es \alert{$\sim$1.7$\times$ más lento} que el primo
+  (ambos en afín): \texttt{GF2E} genérico frente al ensamblador de GMP.\;
+  Es un \alert{artefacto de software}, no del álgebra.
+  \note{128-bit: binario 1.7x mas lento (afin vs afin, comparacion justa). GF2E generico vs
+  GMP asm, y el binario solo se midio en afin. Artefacto de software, no del algebra. Con
+  PCLMULQDQ o FPGA el binario suele ganar.}
+\end{frame}
+
+\begin{frame}{Validación: contraste con OpenSSL}
+  \begin{columns}[c]
+    \begin{column}{0.52\textwidth}
+      \footnotesize
+      \begin{tabular}{lc}
+        \toprule
+        & OpenSSL vs propia \\
+        \midrule
+        P-256 (operaciones) & 14--34$\times$ más rápido \\
+        P-384 & 1.7--4$\times$ más rápido \\
+        RSA-4096 verificación & \alert{más lento} ($0.92\times$) \\
+        \bottomrule
+      \end{tabular}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{Por qué la diferencia}
+        \footnotesize Ensamblador a mano + \alert{blinding} contra canales laterales que mi
+        versión académica no incorpora. \\[0.5ex]
+        En RSA verify, la excepción: sin padding OAEP/PSS ni las capas EVP de OpenSSL, la
+        versión propia es algo más rápida.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vfill
+  \footnotesize Objetivo del TFG: \textbf{entender y comparar}, no competir con código de
+  producción.
+  \note{OpenSSL 14-34x P-256 por asm y blinding. RSA-4096 verify: OpenSSL mas lento (0.92x),
+  la propia es 1.08x mas rapida por no tener padding OAEP/PSS ni capas EVP. Honesto sobre el
+  alcance.}
+\end{frame}
+
+%==============================================================================
+\section{Conclusiones y trabajo futuro}
+
+\begin{frame}{Conclusiones: ECC frente a RSA}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{ECC — cuándo elegirla}
+        \footnotesize
+        \textbf{Pros:} claves pequeñas (256\,b $\approx$ RSA-3072); generación de claves y
+        \emph{firma} rápidas; menos ancho de banda, memoria y energía.\\[0.5ex]
+        \textbf{Ideal para:} TLS 1.3 efímero, móvil/IoT, \emph{passkeys}, Signal/WhatsApp,
+        Bitcoin/Ethereum (secp256k1).
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{RSA — cuándo sigue ganando}
+        \footnotesize
+        \textbf{Pros:} \emph{verificación} muy rápida ($e=65537$); esquema simple y ubicuo;
+        enorme base instalada y compatibilidad.\\[0.5ex]
+        \textbf{Ideal para:} PKI/certificados heredados, \emph{tokens}/JWT verificados muchas
+        veces, sistemas legados de larga vida.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vfill
+  \footnotesize\centering
+  \alert{No hay ganador absoluto:} la ventaja de ECC en tamaño de clave es \textbf{estructural}
+  (ECDLP exponencial) y \textbf{crece} con la seguridad; RSA conserva la ventaja en
+  \textbf{verificación}. \\[0.3ex]
+  \alert{El valor del trabajo: separar el álgebra de la ingeniería.}
+  \note{ECC: claves pequenas, keygen y firma rapidas, menos ancho de banda/energia; ideal TLS
+  1.3, movil/IoT, passkeys, Signal, Bitcoin. RSA: verificacion muy rapida (e=65537), simple,
+  ubicuo, compatibilidad; ideal PKI heredada, JWT verificados muchas veces, legados. No hay
+  ganador absoluto: ventaja de ECC estructural y crece; RSA gana en verificacion. Separar
+  algebra de ingenieria.}
+\end{frame}
+
+\begin{frame}{Trabajo futuro}
+  \begin{itemize}
+    \item Padding seguro: \alert{OAEP} (cifrado) y \alert{PSS} (firma) en RSA.
+    \item Optimizaciones: \alert{Lopez-Dahab} en cuerpos binarios. 
+    \item \textbf{Horizonte post-cuántico:} Shor rompe \alert{RSA y ECC a la vez}.
+          \\ NIST (2024): ML-KEM, ML-DSA, SLH-DSA (retículos y hashes).
+  \end{itemize}
+  \vfill
+  \begin{alertblock}{Recorrido}
+    El banco de pruebas construido es \textbf{directamente reutilizable} para comparar los
+    esquemas post-cuánticos frente a ECC.
+  \end{alertblock}
+  \note{OAEP/PSS, NAF, binario en Jacobiano. Post-cuantico: Shor rompe ambos; NIST 2024
+  reticulos. Banco reutilizable.}
+\end{frame}
+
+\begin{frame}[standout]
+  Gracias por su atención
+  \vspace{1em}
+
+  {\normalsize \texttt{github.com/leonfullxr/ECC-Thesis}}
+\end{frame}
+
+%-------------------------------------------- Backup ---
+\appendix
+
+\begin{frame}[noframenumbering]{Respaldo - de dónde sale el $\sim$8$\times$ teórico (y el
+    1{,}8$\times$ real)}
+  \footnotesize
+  Conteo para $kP$ de 256 bits ($\approx$256 duplicaciones $+$ 128 sumas), con
+  $S\approx0{,}8M$:
+  \begin{itemize}\footnotesize
+    \item \textbf{Afín} ($1I+2M+2S$ por paso): $\approx 384\,I + 1280\,M$-equivalentes.
+    \item \textbf{Jacobiana} (dupl.\ $4M+4S$, suma $12M+4S$, $+1$ inversión final):
+          $\approx 3900\,M$-equivalentes.
+  \end{itemize}
+  \vspace{0.5ex}
+  \begin{columns}[t]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Con el coste de libro ($I\approx80M$)}
+        Afín $\approx 32\,000\,M$ $\Rightarrow$ razón $\approx$ \alert{8$\times$}
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Con el coste real de GMP ($I\approx14M$)}
+        Afín $\approx 6\,600\,M$ $\Rightarrow$ razón $\approx$ \alert{1{,}7$\times$}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.5ex}
+  Las Jacobianas no eliminan coste: \alert{intercambian} 1 inversión por $\sim$10
+  multiplicaciones extra por paso. El intercambio solo es muy rentable si $I$ es cara, y
+  NTL/GMP la hacen barata ($I/M$ real $\sim$10--20). Por eso el ahorro \textbf{crece} con el
+  tamaño del cuerpo (1{,}72$\times$ en 256 bits $\to$ $\sim$2$\times$ en P-384).
+\end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo - de la ecuación general a la forma corta}
+  \scriptsize
+  Partimos de la \alert{ecuación general de Weierstrass} (char$(K)\neq 2,3$):
+  \[ y^2 + a_1 xy + a_3 y = x^3 + a_2 x^2 + a_4 x + a_6. \]
+
+  \textbf{Paso 1 — completar el cuadrado en $y$} (usa char$\neq 2$). El miembro izquierdo es
+  $y^2 + (a_1 x + a_3)\,y$; con $y \mapsto y - \tfrac{1}{2}(a_1 x + a_3)$ se anula el término
+  lineal en $y$ y queda
+  \[ y^2 = x^3 + \tfrac{b_2}{4}x^2 + \tfrac{b_4}{2}x + \tfrac{b_6}{4},
+     \qquad
+     b_2 = a_1^2 + 4a_2,\;\; b_4 = 2a_4 + a_1 a_3,\;\; b_6 = a_3^2 + 4a_6. \]
+
+  \textbf{Paso 2 — eliminar el término en $x^2$} (usa char$\neq 3$). Para el cúbico
+  $x^3 + p x^2 + qx + r$ (aquí $p=\tfrac{b_2}{4},\,q=\tfrac{b_4}{2},\,r=\tfrac{b_6}{4}$), la
+  traslación $x \mapsto x - \tfrac{p}{3} = x - \tfrac{b_2}{12}$ lo \emph{deprime}:
+  \[ \boxed{\,y^2 = x^3 + a x + b\,},\qquad
+     a = \tfrac{b_4}{2} - \tfrac{b_2^2}{48},\qquad
+     b = \tfrac{b_6}{4} - \tfrac{b_2 b_4}{24} + \tfrac{b_2^3}{864}. \]
+  Las divisiones por $2$ (paso 1) y por $3$ (paso 2) son exactamente la razón de exigir
+  char$(K)\neq 2,3$. El discriminante resulta $\Delta = -16(4a^3 + 27b^2)$.
+\end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo - corrección de la verificación ECDSA}
+  \footnotesize
+  Si la firma es honesta, $s = k^{-1}(e + d\,r)\bmod n$, luego
+  \[ k = s^{-1}(e + d\,r) = \underbrace{s^{-1}e}_{u_1} + \underbrace{s^{-1}r}_{u_2}\,d
+       = u_1 + u_2\,d \pmod n. \]
+  Por tanto $R' = u_1 G + u_2 Q = u_1 G + u_2\,d\,G = (u_1 + u_2 d)\,G = k\,G = R$, de donde
+  $x_{R'}\bmod n = x_R \bmod n = r$ y la firma se acepta. \qed
+\end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo - panorama completo de tiempos}
+  \centering
+  \figordemo[height=0.86\textheight,keepaspectratio]{imagenes/chart_summary_table.png}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo - razón de rendimiento RSA/ECC}
+  \centering
+  \figordemo[width=0.78\textwidth]{imagenes/chart_speedup_ratios.png}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo - CRT en el descifrado RSA}
+  \footnotesize
+  Se calcula $d_p=d\bmod(p-1)$, $d_q=d\bmod(q-1)$, $q_{inv}=q^{-1}\bmod p$. Recombinación de
+  Garner: $m_1=c^{d_p}\bmod p$, $m_2=c^{d_q}\bmod q$, $h=q_{inv}(m_1-m_2)\bmod p$,
+  $m=m_2+hq$. Acelera $\approx 3.5\times$ (dos exponenciaciones a la mitad de bits).
+\end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo - ECC hoy en día: ¿dónde se usa?}
+  \footnotesize
+  \begin{itemize}\footnotesize
+    \item \textbf{Web (TLS 1.3):} $\sim$97--98\% de los handshakes usan ECDHE; \alert{X25519}
+      por defecto en navegadores.
+    \item \textbf{Passkeys / FIDO2:} firmadas con \alert{ECDSA P-256}.
+    \item \textbf{Mensajería y redes:} Signal, WhatsApp, SSH, WireGuard $\to$
+      \alert{Curve25519 / Ed25519}.
+    \item \textbf{Criptomonedas:} Bitcoin y Ethereum $\to$ \alert{secp256k1} (la curva de
+      Koblitz del TFG).
+    \item \textbf{Documentos:} pasaportes electrónicos (ICAO Doc 9303).
+  \end{itemize}
+  \vspace{0.5ex}
+  \begin{alertblock}{La transición post-cuántica es \emph{híbrida}, no una retirada}
+    \scriptsize \texttt{X25519MLKEM768} (X25519 $+$ ML-KEM-768) ya cubre $>$40\% del tráfico
+    HTTPS humano en Cloudflare, por defecto en Chrome, Firefox, OpenSSL y Apple. X25519 sigue
+    como \alert{salvaguarda clásica}.
+  \end{alertblock}
+\end{frame}
+
+\begin{frame}[noframenumbering]{Respaldo - la asociatividad de la ley de grupo}
+  \footnotesize
+  $(E(K),+)$ es grupo abeliano. Neutro $\mathcal{O}$, inversos (reflexión) y conmutatividad
+  son inmediatos. El axioma no trivial es la \alert{asociatividad}: se prueba con el teorema
+  de Cayley--Bacharach o, más elegantemente, identificando $E$ con su grupo de clases de
+  divisores $\mathrm{Pic}^0(E)$ (Riemann--Roch).
+\end{frame}
+
+\end{document}

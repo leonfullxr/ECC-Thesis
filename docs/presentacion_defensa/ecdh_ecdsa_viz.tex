@@ -1,0 +1,117 @@
+%==============================================================================
+%  Visualizacion paso a paso de ECDH y ECDSA (Alice <-> Bob).
+%  Frames drop-in para presentacion_defensa(_v2).tex  -- mismo tema/colores.
+%  Compilar suelto: pdflatex ecdh_ecdsa_viz.tex
+%==============================================================================
+\documentclass[aspectratio=169,11pt]{beamer}
+\usetheme{metropolis}
+\metroset{block=fill, numbering=none}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds}
+
+\definecolor{UGRdark}{HTML}{1F2933}
+\definecolor{UGRaccent}{HTML}{A6192E}
+\definecolor{UGRsoft}{HTML}{3E5C76}
+\definecolor{UGRgreen}{HTML}{2E7D32}
+\setbeamercolor{frametitle}{bg=UGRdark}
+\setbeamercolor{alerted text}{fg=UGRaccent}
+\setbeamercolor{block title}{bg=UGRsoft,fg=white}
+
+% Estilos compartidos
+\tikzset{
+  sec/.style={draw=UGRgreen, fill=UGRgreen!10, rounded corners, align=left, inner sep=4pt},
+  pub/.style={draw=UGRsoft, fill=UGRsoft!14, rounded corners, align=left, inner sep=4pt},
+  sh/.style ={draw=UGRaccent, fill=UGRaccent!10, rounded corners, align=center, inner sep=4pt},
+  hdr/.style={align=center, font=\footnotesize\bfseries},
+  lbl/.style={UGRaccent, font=\scriptsize\bfseries},
+  flow/.style={-{Stealth}, thick, UGRaccent},
+}
+
+\begin{document}
+
+%------------------------------------------------------------------ ECDH
+\begin{frame}{ECDH: intercambio de claves, paso a paso}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    % cabeceras y lineas de vida
+    \node[hdr] (A) at (0,0) {Alice};
+    \node[hdr] (B) at (9,0) {Bob};
+    \draw[dashed, gray!60] (A) -- (0,-6.5);
+    \draw[dashed, gray!60] (B) -- (9,-6.5);
+
+    % 0. parametros del dominio (compartidos)
+    \node[sh, text width=6.2cm] (T) at (4.5,-0.95)
+      {\textbf{0.} Acuerdan el dominio $T=(p,a,b,G,n,h)$ \;— $G$ es público};
+
+    % 1. par de claves
+    \node[sec, text width=3.2cm, anchor=north] (ka) at (0,-1.9)
+      {\textbf{1.} genera su clave\\ $d_A \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(privada)}\\ $Q_A = d_A\,G$ \;(pública)};
+    \node[sec, text width=3.2cm, anchor=north] (kb) at (9,-1.9)
+      {\textbf{1.} genera su clave\\ $d_B \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(privada)}\\ $Q_B = d_B\,G$ \;(pública)};
+
+    % 2. intercambio por canal publico
+    \draw[flow] (1.7,-4.05) -- node[above]{$Q_A$} (7.3,-4.05);
+    \draw[flow] (7.3,-4.55) -- node[below]{$Q_B$} (1.7,-4.55);
+    \node[lbl] at (4.5,-4.3) {2. canal público};
+
+    % 3. cada uno calcula el secreto
+    \node[pub, text width=2.7cm, anchor=north] (sa) at (0,-5.0)
+      {\textbf{3.} $S = d_A\,Q_B$};
+    \node[pub, text width=2.7cm, anchor=north] (sb) at (9,-5.0)
+      {\textbf{3.} $S = d_B\,Q_A$};
+
+    % 4. secreto comun
+    \node[sh, text width=7.6cm, anchor=north] (res) at (4.5,-6.0)
+      {\textbf{4.} $S = d_A Q_B = d_B Q_A = d_A d_B\,G$ \;(el \alert{mismo} punto)\\[2pt]
+       $\Rightarrow$ clave de sesión $=\mathrm{KDF}(x_S)$};
+  \end{tikzpicture}
+
+  \vspace{0.3em}
+  {\scriptsize \textcolor{UGRgreen}{verde = secreto} \quad azul = público \quad
+   $\bullet$ un intruso ve $G,Q_A,Q_B$, pero hallar $d_A,d_B$ es el \alert{ECDLP}.}
+\end{frame}
+
+%------------------------------------------------------------------ ECDSA
+\begin{frame}{ECDSA: firma y verificación, paso a paso}
+  \centering
+  \begin{tikzpicture}[font=\scriptsize]
+    % FIRMANTE
+    \node[hdr, anchor=north] (Sh) at (0,0.1)
+      {Firmante (Alice) — privada $d$};
+    \node[sec, text width=5.0cm, anchor=north] (sign) at (0,-0.4)
+      {\textbf{1.} $e = H(m)$\\
+       \textbf{2.} nonce $k \in_R [1,n{-}1]$ \;\textcolor{UGRgreen}{(secreto, único)}\\
+       \textbf{3.} $R = kG = (x_R,y_R)$,\; $r = x_R \bmod n$\\
+       \textbf{4.} $s = k^{-1}(e + d\,r) \bmod n$\\[2pt]
+       $\Rightarrow$ firma $\boxed{(r,s)}$};
+
+    % VERIFICADOR
+    \node[hdr, anchor=north] (Vh) at (8.8,0.1)
+      {Verificador (Bob) — pública $Q=dG$};
+    \node[pub, text width=5.0cm, anchor=north] (ver) at (6.4,-0.4)
+      {\textbf{1.} $e = H(m)$,\; $w = s^{-1} \bmod n$\\
+       \textbf{2.} $u_1 = e\,w$,\; $u_2 = r\,w \pmod n$\\
+       \textbf{3.} $R' = u_1 G + u_2 Q$\\
+       \textbf{4.} aceptar si $x_{R'} \bmod n = r$};
+
+    % transmision
+    \draw[flow] (sign.east) -- node[above, font=\scriptsize]{$m,\,(r,s)$} (ver.west);
+
+    % correccion
+    \node[sh, text width=6.4cm, anchor=north] (ok) at (4.4,-3.6)
+      {\textbf{Por qué cuadra:} $k = u_1 + u_2\,d \Rightarrow R' = (u_1+u_2 d)G = kG = R$};
+  \end{tikzpicture}
+
+  \vspace{0.2em}
+  \begin{block}{\footnotesize El nonce $k$ es crítico}
+    \footnotesize Reutilizarlo o predecirlo $\Rightarrow$ se despeja $d$ (PlayStation 3, Bitcoin).
+    Solución: nonce determinista (RFC 6979).
+  \end{block}
+\end{frame}
+
+\end{document}
