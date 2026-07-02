@@ -73,7 +73,15 @@
 
 \begin{document}
 
-\maketitle
+\begin{frame}[plain,noframenumbering]
+  \titlepage
+  \begin{tikzpicture}[remember picture, overlay]
+    \node[anchor=south east, xshift=-0.7cm, yshift=0.6cm] at (current page.south east) {%
+      \includegraphics[height=0.9cm]{imagenes/ugr2.png}\hspace{0.5cm}%
+      \includegraphics[height=0.9cm]{imagenes/etsiit_logo.png}%
+    };
+  \end{tikzpicture}
+\end{frame}
 
 \begin{frame}{Índice}
   \setbeamertemplate{section in toc}[sections numbered]
